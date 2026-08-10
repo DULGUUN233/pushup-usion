@@ -1,0 +1,7 @@
+{
+  "name": "pushup-usion",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  }
+}

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Push-up тоолуур</title>
+<style>
+  :root{
+    --bg:#0b0f14; --fg:#e8eef5; --dim:#7b8a9c;
+    --accent:#39d98a; --warn:#ffb020; --bad:#ff5c5c;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+  #stage{position:fixed;inset:0;overflow:hidden;background:#000}
+  video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  video{visibility:hidden}
+  .mirror{transform:scaleX(-1)}
+
+  #hud{position:absolute;inset:0;pointer-events:none;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 16px)}
+
+  #top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  #count{font-size:clamp(64px,22vw,140px);line-height:.85;font-weight:800;
+    letter-spacing:-.04em;text-shadow:0 2px 24px rgba(0,0,0,.7);font-variant-numeric:tabular-nums}
+  #count small{display:block;font-size:14px;font-weight:600;letter-spacing:.18em;
+    color:var(--dim);margin-top:8px}
+  #stats{text-align:right;font-size:13px;color:var(--dim);line-height:1.7;
+    text-shadow:0 1px 8px rgba(0,0,0,.8);font-variant-numeric:tabular-nums}
+  #stats b{color:var(--fg);font-weight:600}
+
+  #meterWrap{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+    width:10px;height:38vh;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden}
+  #meter{position:absolute;left:0;right:0;bottom:0;height:0%;background:var(--accent);
+    transition:height .06s linear}
+
+  #bottom{display:flex;flex-direction:column;gap:14px;align-items:center}
+  #msg{font-size:15px;font-weight:600;padding:8px 16px;border-radius:999px;
+    background:rgba(0,0,0,.55);backdrop-filter:blur(8px);min-height:36px;
+    display:flex;align-items:center;text-align:center}
+  #btns{display:flex;gap:10px;pointer-events:auto}
+  button{pointer-events:auto;border:0;border-radius:999px;padding:13px 22px;font-size:15px;
+    font-weight:700;background:rgba(255,255,255,.14);color:var(--fg);backdrop-filter:blur(8px)}
+  button:active{transform:scale(.96)}
+  button.primary{background:var(--accent);color:#04140c}
+
+  #start{position:absolute;inset:0;background:var(--bg);z-index:10;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:18px;padding:28px;text-align:center}
+  #start h1{margin:0;font-size:30px;letter-spacing:-.02em}
+  #start p{margin:0;max-width:340px;color:var(--dim);font-size:14px;line-height:1.65}
+  #err{color:var(--bad);font-size:13px;max-width:340px;line-height:1.6}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="video" playsinline muted autoplay></video>
+  <canvas id="canvas"></canvas>
+
+  <div id="hud">
+    <div id="top">
+      <div id="count">0<small>PUSH-UP</small></div>
+      <div id="stats">
+        <div>Өнцөг <b id="angle">–</b></div>
+        <div>Хамгийн гүн <b id="deep">–</b></div>
+        <div>Хугацаа <b id="time">0:00</b></div>
+        <div><b id="fps">–</b> fps</div>
+      </div>
+    </div>
+    <div id="meterWrap"><div id="meter"></div></div>
+    <div id="bottom">
+      <div id="msg">Бэлдэж байна…</div>
+      <div id="btns">
+        <button id="reset">Дахин эхлэх</button>
+        <button id="flip">Камер солих</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="start">
+    <h1>Push-up тоолуур</h1>
+    <p>Утсаа хажуу талд, шалнаас 30–50 см өндөрт тавьж, <b>бүтэн биеэ</b> камерт багтаана.
+       Тохойн өнцгөөр push-up автоматаар тоологдоно.</p>
+    <button class="primary" id="go">Камер асаах</button>
+    <div id="err" class="hidden"></div>
+  </div>
+</div>
+
+<script type="module">
+import { PoseLandmarker, FilesetResolver, DrawingUtils }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const $ = id => document.getElementById(id);
+const video = $("video"), canvas = $("canvas"), ctx = canvas.getContext("2d");
+
+// ---- тохируулга ----
+const DOWN_ANGLE = 95;    // энэ өнцгөөс доош бол "буусан"
+const UP_ANGLE   = 155;   // энэ өнцгөөс дээш бол "гарсан"
+const MIN_REP_MS = 500;   // үүнээс богино rep-ийг чимээ гэж үзнэ
+const VIS_MIN    = 0.5;   // цэгийн итгэлцүүр
+
+// ---- төлөв ----
+let landmarker = null, running = false, facing = "environment", stream = null;
+let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
+let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
+
+// мөр(11,12) → тохой(13,14) → бугуй(15,16)
+const ARMS = [[11,13,15],[12,14,16]];
+
+function angleAt(a, b, c, aspect){
+  const ax=(a.x-b.x)*aspect, ay=a.y-b.y;
+  const cx=(c.x-b.x)*aspect, cy=c.y-b.y;
+  const dot = ax*cx + ay*cy;
+  const m = Math.hypot(ax,ay) * Math.hypot(cx,cy);
+  if(!m) return null;
+  return Math.acos(Math.max(-1, Math.min(1, dot/m))) * 180/Math.PI;
+}
+
+function elbowAngle(lm, aspect){
+  const vals = [];
+  for(const [s,e,w] of ARMS){
+    if(lm[s].visibility>VIS_MIN && lm[e].visibility>VIS_MIN && lm[w].visibility>VIS_MIN){
+      const a = angleAt(lm[s], lm[e], lm[w], aspect);
+      if(a!=null) vals.push(a);
+    }
+  }
+  if(!vals.length) return null;
+  return vals.reduce((x,y)=>x+y,0)/vals.length;
+}
+
+function setMsg(text, color){
+  const el = $("msg");
+  el.textContent = text;
+  el.style.color = color || "var(--fg)";
+}
+
+function countRep(deg, now){
+  if(deg < repMinAngle) repMinAngle = deg;
+
+  if(phase === "up" && deg < DOWN_ANGLE){
+    phase = "down"; repStart = now; repMinAngle = deg;
+    if(navigator.vibrate) navigator.vibrate(12);
+    setMsg("Доошоо ✓", "var(--warn)");
+  }
+  else if(phase === "down" && deg > UP_ANGLE){
+    phase = "up";
+    if(now - repStart >= MIN_REP_MS){
+      count++;
+      $("count").firstChild.nodeValue = count;
+      if(bestDepth === null || repMinAngle < bestDepth){
+        bestDepth = repMinAngle;
+        $("deep").textContent = Math.round(bestDepth) + "°";
+      }
+      if(navigator.vibrate) navigator.vibrate([18,40,18]);
+      setMsg(`${count} — сайн байна!`, "var(--accent)");
+    } else {
+      setMsg("Хэт хурдан — бүтэн хий", "var(--bad)");
+    }
+    repMinAngle = 180;
+  }
+}
+
+function loop(){
+  if(!running) return;
+  requestAnimationFrame(loop);
+  if(video.readyState < 2 || video.currentTime === lastVideoTime) return;
+  lastVideoTime = video.currentTime;
+
+  const now = performance.now();
+  if(lastFrame){
+    const f = 1000/(now-lastFrame);
+    fpsEma = fpsEma ? fpsEma*0.9 + f*0.1 : f;
+    $("fps").textContent = Math.round(fpsEma);
+  }
+  lastFrame = now;
+
+  if(canvas.width !== video.videoWidth){
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+  }
+
+  const res = landmarker.detectForVideo(video, now);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const lm = res.landmarks && res.landmarks[0];
+  if(!lm){
+    setMsg("Хүн олдсонгүй — бүтэн биеэ багтаа", "var(--dim)");
+    $("angle").textContent = "–";
+    smooth = null;
+    return;
+  }
+
+  const du = new DrawingUtils(ctx);
+  du.drawConnectors(lm, PoseLandmarker.POSE_CONNECTIONS, {color:"rgba(255,255,255,.55)", lineWidth:3});
+  du.drawLandmarks(lm, {color:"#39d98a", radius:3, lineWidth:1});
+
+  const raw = elbowAngle(lm, canvas.width/canvas.height);
+  if(raw === null){
+    setMsg("Гар харагдахгүй байна", "var(--dim)");
+    $("angle").textContent = "–";
+    return;
+  }
+
+  smooth = smooth === null ? raw : smooth*0.6 + raw*0.4;
+  const deg = smooth;
+  $("angle").textContent = Math.round(deg) + "°";
+
+  // 0% = бүтэн доош, 100% = бүтэн дээш
+  const pct = Math.max(0, Math.min(1, (deg - DOWN_ANGLE) / (UP_ANGLE - DOWN_ANGLE)));
+  $("meter").style.height = (pct*100) + "%";
+  $("meter").style.background = pct < 0.05 ? "var(--warn)" : "var(--accent)";
+
+  countRep(deg, now);
+
+  const s = Math.floor((now - t0)/1000);
+  $("time").textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+}
+
+function reset(){
+  count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
+  t0 = performance.now();
+  $("count").firstChild.nodeValue = 0;
+  $("deep").textContent = "–";
+  $("time").textContent = "0:00";
+  setMsg("Эхлэхэд бэлэн");
+}
+
+async function openCamera(){
+  if(stream) stream.getTracks().forEach(t => t.stop());
+  stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: facing, width:{ideal:1280}, height:{ideal:720} },
+    audio: false
+  });
+  video.srcObject = stream;
+  await video.play();
+  const front = facing === "user";
+  video.classList.toggle("mirror", front);
+  canvas.classList.toggle("mirror", front);
+}
+
+async function start(){
+  const err = $("err");
+  try{
+    $("go").disabled = true;
+    $("go").textContent = "Ачаалж байна…";
+    if(!navigator.mediaDevices?.getUserMedia)
+      throw new Error("Камер дэмжихгүй байна. HTTPS эсвэл localhost дээр нээнэ үү.");
+
+    const fileset = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+    landmarker = await PoseLandmarker.createFromOptions(fileset, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO",
+      numPoses: 1,
+      minPoseDetectionConfidence: 0.5,
+      minPosePresenceConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+
+    await openCamera();
+    $("start").classList.add("hidden");
+    running = true;
+    reset();
+    loop();
+  }catch(e){
+    err.classList.remove("hidden");
+    err.textContent = e.message || String(e);
+    $("go").disabled = false;
+    $("go").textContent = "Дахин оролдох";
+  }
+}
+
+$("go").onclick = start;
+$("reset").onclick = reset;
+$("flip").onclick = async () => {
+  facing = facing === "user" ? "environment" : "user";
+  try{ await openCamera(); }catch(e){ setMsg("Камер солиход алдаа гарлаа", "var(--bad)"); }
+};
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden) lastFrame = 0;
+});
+</script>
+</body>
+</html>
