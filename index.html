@@ -98,19 +98,21 @@ const $ = id => document.getElementById(id);
 const video = $("video"), canvas = $("canvas"), ctx = canvas.getContext("2d");
 
 // ---- тохируулга ----
-const DOWN_ANGLE = 100;   // энэ өнцгөөс доош бол "буусан"
-const UP_ANGLE   = 150;   // энэ өнцгөөс дээш бол "гарсан"
-const MIN_REP_MS = 500;   // үүнээс богино rep-ийг чимээ гэж үзнэ
+// Тогтмол босго ажиллахгүй: камерын байрлал, биеийн харьцаанаас шалтгаалж
+// нэг хүний доод цэг 129°, нөгөөгийнх 70° байж болно. Тиймээс ажиглагдсан
+// хэлбэлзлийн мужаас босгыг өөрөө гаргана.
+const MIN_REP_MS = 180;   // үүнээс богино rep-ийг чимээ гэж үзнэ
+const MIN_SWING  = 35;    // тохой ийм хэмжээгээр хэлбэлзээгүй бол rep биш
+const BAD_FRAMES = 5;     // байрлал алдагдсан кадар ийм тоо дараалвал rep цуцлана
 const VIS_MIN    = 0.5;   // цэгийн итгэлцүүр
-const STRAIGHT   = 140;   // мөр–аарцаг–өвдөг өнцөг үүнээс дээш бол бие шулуун
 
 // ---- төлөв ----
 let landmarker = null, running = false, facing = "environment", stream = null;
 let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
 let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
+let loSeen = null, hiSeen = null, badFrames = 0;
 
-const ARMS  = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
-const TORSO = [[11,23,25],[12,24,26]];  // мөр → аарцаг → өвдөг
+const ARMS = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
 
 const seen = (lm,i) => (lm[i].visibility ?? 1) > VIS_MIN;
 
@@ -176,8 +178,9 @@ function positionCheck(lm, world, aspect){
     const { horiz, fore } = bodyAxis(lm, world, aspect);
     if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
   }
-  const torso = meanAngle(world, lm, TORSO);
-  if(torso !== null && torso < STRAIGHT) return "Биеэ шулуун барь";
+  // Мөр–аарцаг–өвдөг өнцгөөр "бие шулуун уу" гэж шалгахыг больсон: камер
+  // ойрхон, бие нь камераас хол чиглэсэн үед доод биеийн цэгүүд таамаглал
+  // болж, өнцөг нь утгагүй гарч ирээд тоолохыг бүрмөсөн хаадаг байсан.
   return null;
 }
 
@@ -187,15 +190,25 @@ function setMsg(text, color){
   el.style.color = color || "var(--fg)";
 }
 
-function countRep(deg, now){
+// Ажиглагдсан доод/дээд өнцгийн муж. Шинэ хязгаарт шууд тэлж, дараа нь
+// аажим нарийсдаг тул хэрэглэгч гүнзгий/гүехэн хийхээ өөрчилвөл дагаж тохирно.
+function envelope(deg){
+  loSeen = loSeen === null ? deg : Math.min(deg, loSeen + 0.03);
+  hiSeen = hiSeen === null ? deg : Math.max(deg, hiSeen - 0.03);
+  const range = hiSeen - loSeen;
+  if(range < MIN_SWING) return null;
+  return { down: loSeen + range*0.35, up: loSeen + range*0.65, range };
+}
+
+function countRep(deg, now, th){
   if(deg < repMinAngle) repMinAngle = deg;
 
-  if(phase === "up" && deg < DOWN_ANGLE){
+  if(phase === "up" && deg < th.down){
     phase = "down"; repStart = now; repMinAngle = deg;
     if(navigator.vibrate) navigator.vibrate(12);
     setMsg("Доошоо ✓", "var(--warn)");
   }
-  else if(phase === "down" && deg > UP_ANGLE){
+  else if(phase === "down" && deg > th.up){
     phase = "up";
     if(now - repStart >= MIN_REP_MS){
       count++;
@@ -246,7 +259,7 @@ function loop(){
   const world = res.worldLandmarks && res.worldLandmarks[0];
   if(!lm || !world){
     setMsg("Хүн олдсонгүй — бүтэн биеэ багтаа", "var(--dim)");
-    idle();
+    if(++badFrames >= BAD_FRAMES) idle();
     return;
   }
 
@@ -259,35 +272,45 @@ function loop(){
   // оношлогоо: аль шүүлтүүр саатуулж байгааг утсан дээрээс харах
   const asp = canvas.width/canvas.height;
   const ax = (seen(lm,11)&&seen(lm,12)&&seen(lm,23)&&seen(lm,24)) ? bodyAxis(lm,world,asp) : null;
-  const tor = meanAngle(world, lm, TORSO);
   const f2 = v => v === null ? "–" : v.toFixed(2);
-  $("poseDiag").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)} t${tor===null?"–":Math.round(tor)}`
-    + ` wr${f2(mean(lm,[15,16]))} hp${f2(mean(lm,[23,24]))}`;
+  const r0 = v => v === null ? "–" : Math.round(v);
+  $("poseDiag").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)}`
+    + ` lo${r0(loSeen)} hi${r0(hiSeen)} ${phase}`;
 
   const bad = positionCheck(lm, world, asp);
   if(bad){
     setMsg(bad, "var(--dim)");
-    idle();
+    // Нэг муу кадарт rep-ийг цуцлахгүй — доод цэгт бугуй халхлагдахад
+    // цэгийн итгэлцүүр хэсэг зуур унадаг тул бүх rep алдагдаж байсан.
+    if(++badFrames >= BAD_FRAMES) idle();
     return;
   }
 
   const raw = meanAngle(world, lm, ARMS);
   if(raw === null){
     setMsg("Гар харагдахгүй байна", "var(--dim)");
-    idle();
+    if(++badFrames >= BAD_FRAMES) idle();
     return;
   }
+  badFrames = 0;
 
-  smooth = smooth === null ? raw : smooth*0.6 + raw*0.4;
+  smooth = smooth === null ? raw : smooth*0.5 + raw*0.5;
   const deg = smooth;
   $("angle").textContent = Math.round(deg) + "°";
 
+  const th = envelope(deg);
+  if(!th){
+    setMsg("Тохируулж байна — нэг удаа бүтэн хий", "var(--dim)");
+    $("meter").style.height = "0%";
+    return;
+  }
+
   // 0% = бүтэн доош, 100% = бүтэн дээш
-  const pct = Math.max(0, Math.min(1, (deg - DOWN_ANGLE) / (UP_ANGLE - DOWN_ANGLE)));
+  const pct = Math.max(0, Math.min(1, (deg - th.down) / (th.up - th.down)));
   $("meter").style.height = (pct*100) + "%";
   $("meter").style.background = pct < 0.05 ? "var(--warn)" : "var(--accent)";
 
-  countRep(deg, now);
+  countRep(deg, now, th);
 
   const s = Math.floor((now - t0)/1000);
   $("time").textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
@@ -295,6 +318,7 @@ function loop(){
 
 function reset(){
   count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
+  loSeen = null; hiSeen = null; badFrames = 0;
   t0 = performance.now();
   $("count").firstChild.nodeValue = 0;
   $("deep").textContent = "–";
@@ -327,7 +351,9 @@ async function start(){
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
     landmarker = await PoseLandmarker.createFromOptions(fileset, {
       baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+        // full: 60 fps гарч байгаа тул нөөц бий. lite нь доод биеийн цэгүүдийг
+        // ойрын өнцгөөс сайн танихгүй байсан.
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",
         delegate: "GPU"
       },
       runningMode: "VIDEO",
