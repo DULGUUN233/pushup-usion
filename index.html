@@ -66,7 +66,9 @@
         <div>Хамгийн гүн <b id="deep">–</b></div>
         <div>Хугацаа <b id="time">0:00</b></div>
         <div><b id="fps">–</b> fps</div>
-        <div id="dbg" style="opacity:.6;font-size:11px">–</div>
+        <!-- id нь window дээр глобал болдог тул MediaPipe-ийн WASM доторх
+             нэрстэй мөргөлдөхгүй нэр сонгох ёстой (id="dbg" нь мөргөлдсөн) -->
+        <div id="poseDiag" style="opacity:.6;font-size:11px">–</div>
       </div>
     </div>
     <div id="meterWrap"><div id="meter"></div></div>
@@ -259,7 +261,7 @@ function loop(){
   const ax = (seen(lm,11)&&seen(lm,12)&&seen(lm,23)&&seen(lm,24)) ? bodyAxis(lm,world,asp) : null;
   const tor = meanAngle(world, lm, TORSO);
   const f2 = v => v === null ? "–" : v.toFixed(2);
-  $("dbg").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)} t${tor===null?"–":Math.round(tor)}`
+  $("poseDiag").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)} t${tor===null?"–":Math.round(tor)}`
     + ` wr${f2(mean(lm,[15,16]))} hp${f2(mean(lm,[23,24]))}`;
 
   const bad = positionCheck(lm, world, asp);
