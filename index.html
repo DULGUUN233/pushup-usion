@@ -3,35 +3,82 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Push-up тоолуур</title>
+<title>Push-up</title>
+<script src="https://usions.com/usion-sdk.js"></script>
 <style>
   :root{
     --bg:#0b0f14; --fg:#e8eef5; --dim:#7b8a9c;
     --accent:#39d98a; --warn:#ffb020; --bad:#ff5c5c; --gold:#ffd21e;
+    --card:#141b23;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
-  #stage{position:fixed;inset:0;overflow:hidden;background:#000}
+  .screen{position:fixed;inset:0;overflow-y:auto;
+    padding:calc(env(safe-area-inset-top) + 20px) 18px calc(env(safe-area-inset-bottom) + 20px)}
+  .hidden{display:none!important}
+
+  button{border:0;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;
+    background:rgba(255,255,255,.13);color:rgba(255,255,255,.85);backdrop-filter:blur(10px)}
+  button:active:not(:disabled){transform:scale(.96)}
+  button:disabled{opacity:.4}
+  button.primary{background:var(--accent);color:#04140c;padding:13px 22px;font-size:15px}
+
+  /* ---------- цэс ---------- */
+  #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto}
+  #who{display:flex;align-items:center;gap:12px}
+  #who img{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--card)}
+  #who .nm{font-weight:700}
+  #who .sub{font-size:12px;color:var(--dim)}
+
+  #card{background:var(--card);border-radius:18px;padding:16px;display:flex;gap:8px}
+  #card div{flex:1;text-align:center}
+  #card b{display:block;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em}
+  #card span{font-size:11px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+
+  .mode{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;
+    padding:16px 18px;border-radius:16px;width:100%;font-size:17px}
+  .mode small{font-size:12px;font-weight:500;opacity:.75}
+  .mode.go{background:var(--gold);color:#231a00}
+  .mode.duel{background:#2a1e3d;color:#e6dcff}
+
+  #note{font-size:12px;line-height:1.6;color:var(--dim);min-height:18px}
+  #note.bad{color:var(--bad)}
+  #note.ok{color:var(--accent)}
+
+  /* ---------- тэргүүлэгчид ---------- */
+  #board h2{margin:0 0 14px;font-size:20px}
+  #rows{display:flex;flex-direction:column;gap:2px;max-width:460px;margin:0 auto}
+  .row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;
+    background:var(--card)}
+  .row.me{background:#1c2b22;outline:1px solid rgba(57,217,138,.4)}
+  .row .pos{width:26px;font-weight:800;color:var(--dim);font-variant-numeric:tabular-nums}
+  .row .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .tot{font-weight:800;font-variant-numeric:tabular-nums}
+  .row .tot small{font-size:11px;font-weight:600;color:var(--dim);margin-left:4px}
+
+  /* ---------- тоолох дэлгэц ---------- */
+  #play{padding:0;overflow:hidden;background:#000}
   video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .mirror{transform:scaleX(-1)}
 
   #hud{position:absolute;inset:0;pointer-events:none;
     display:flex;flex-direction:column;justify-content:space-between;
     padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 16px)}
+  #hud button{pointer-events:auto}
 
   #top{display:flex;align-items:flex-start;justify-content:flex-end}
   #stats{text-align:right;font-size:12px;color:rgba(255,255,255,.55);line-height:1.8;
-    text-shadow:0 1px 6px rgba(0,0,0,.9);font-variant-numeric:tabular-nums;
-    letter-spacing:.02em}
+    text-shadow:0 1px 6px rgba(0,0,0,.9);font-variant-numeric:tabular-nums;letter-spacing:.02em}
   #stats b{color:rgba(255,255,255,.95);font-weight:700}
+  #poseDiag{opacity:.45;font-size:10px;letter-spacing:0}
 
   #meterWrap{position:absolute;right:14px;top:50%;transform:translateY(-50%);
     width:6px;height:30vh;border-radius:999px;background:rgba(255,255,255,.16);
     overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.5)}
   #meter{position:absolute;left:0;right:0;bottom:0;height:0%;background:var(--accent);
     transition:height .06s linear}
-  #poseDiag{opacity:.45;font-size:10px;letter-spacing:0}
 
   #bottom{display:flex;flex-direction:column;gap:12px;align-items:center}
   #msg{font-size:15px;font-weight:700;padding:8px 18px;border-radius:999px;
@@ -51,24 +98,51 @@
                   to{box-shadow:0 0 0 30px rgba(255,210,30,0)}}
   #counter.pop{animation:pop .34s cubic-bezier(.34,1.56,.64,1), ring .55s ease-out}
 
-  #btns{display:flex;gap:8px;pointer-events:auto}
-  button{pointer-events:auto;border:0;border-radius:999px;padding:10px 18px;font-size:13px;
-    font-weight:700;background:rgba(255,255,255,.13);color:rgba(255,255,255,.85);
-    backdrop-filter:blur(10px)}
-  button:active{transform:scale(.96)}
-  button.primary{background:var(--accent);color:#04140c;padding:13px 22px;font-size:15px}
+  #btns{display:flex;gap:8px}
+  #done{background:var(--accent);color:#04140c;padding:12px 24px;font-size:15px}
 
   #start{position:absolute;inset:0;background:var(--bg);z-index:10;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:18px;padding:28px;text-align:center}
-  #start h1{margin:0;font-size:30px;letter-spacing:-.02em}
+  #start h2{margin:0;font-size:24px;letter-spacing:-.02em}
   #start p{margin:0;max-width:340px;color:var(--dim);font-size:14px;line-height:1.65}
   #err{color:var(--bad);font-size:13px;max-width:340px;line-height:1.6}
-  .hidden{display:none!important}
 </style>
 </head>
 <body>
-<div id="stage">
+
+<!-- ================= ЦЭС ================= -->
+<section id="menu" class="screen">
+  <div id="who">
+    <img id="avatar" alt="">
+    <div>
+      <div class="nm" id="nm">…</div>
+      <div class="sub" id="sub">ачаалж байна</div>
+    </div>
+  </div>
+
+  <div id="card">
+    <div><b id="cTotal">–</b><span>нийт</span></div>
+    <div><b id="cRank">–</b><span>байр</span></div>
+    <div><b id="cElo">–</b><span>elo</span></div>
+  </div>
+
+  <button class="mode go" id="mPush">Push Up<small>Чөлөөтэй тоол — нийт дүнд нэмэгдэнэ</small></button>
+  <button class="mode duel" id="mBattle">Battle<small>30 секунд, 1v1, ELO</small></button>
+  <button id="mBoard">Тэргүүлэгчид</button>
+
+  <div id="note"></div>
+</section>
+
+<!-- ================= ТЭРГҮҮЛЭГЧИД ================= -->
+<section id="board" class="screen hidden">
+  <h2>Тэргүүлэгчид</h2>
+  <div id="rows"></div>
+  <div style="max-width:460px;margin:16px auto 0"><button id="bBack">← Буцах</button></div>
+</section>
+
+<!-- ================= ТООЛОХ ================= -->
+<section id="play" class="screen hidden">
   <video id="video" playsinline muted autoplay></video>
   <canvas id="canvas"></canvas>
 
@@ -89,20 +163,22 @@
       <div id="msg">Бэлдэж байна…</div>
       <div id="counter"><span id="count">0</span></div>
       <div id="btns">
-        <button id="reset">Дахин эхлэх</button>
-        <button id="flip">Камер солих</button>
+        <button id="reset">Тэглэх</button>
+        <button id="done">Дуусгах</button>
+        <button id="flip">Камер</button>
       </div>
     </div>
   </div>
 
   <div id="start">
-    <h1>Push-up тоолуур</h1>
+    <h2>Push Up</h2>
     <p>Утсаа хажуу талд, шалнаас 30–50 см өндөрт тавьж, <b>бүтэн биеэ</b> камерт багтаана.
        Тохойн өнцгөөр push-up автоматаар тоологдоно.</p>
     <button class="primary" id="go">Камер асаах</button>
+    <button id="pBack">← Буцах</button>
     <div id="err" class="hidden"></div>
   </div>
-</div>
+</section>
 
 <script type="module">
 import { PoseLandmarker, FilesetResolver }
@@ -110,6 +186,86 @@ import { PoseLandmarker, FilesetResolver }
 
 const $ = id => document.getElementById(id);
 const video = $("video"), canvas = $("canvas"), ctx = canvas.getContext("2d");
+
+// ======================= Usion + сервер =======================
+
+const sdk = () => (window.Usion && typeof window.Usion.init === "function") ? window.Usion : null;
+let profile = null;   // серверээс ирсэн бидний бүртгэл
+
+/**
+ * Usion хостын гадна (жишээ нь шууд Railway линкээр орвол) `init` хэзээ ч
+ * дуудагдахгүй тул хугацаагаар таслана. Тэр үед локал ID-гаар ажиллана —
+ * сервер нь ALLOW_DEV_AUTH асаалттай үед л хүлээж авна.
+ */
+function usionInit(){
+  return new Promise(resolve => {
+    const s = sdk();
+    if(!s) return resolve(null);
+    let settled = false;
+    const once = cfg => { if(!settled){ settled = true; resolve(cfg ?? null); } };
+    try { s.init(once); } catch { return resolve(null); }
+    setTimeout(() => once(null), 2000);
+  });
+}
+
+function devId(){
+  let id = localStorage.getItem("pushup:devId");
+  if(!id){
+    id = "dev_" + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem("pushup:devId", id);
+  }
+  return id;
+}
+
+/** Token-ыг хүсэлт бүрд шинээр уншина — хост нь үе үе шинэчилдэг. */
+function authHeaders(){
+  const token = sdk()?.user?.getToken?.();
+  return token ? { authorization: `Bearer ${token}` } : { "x-dev-user": devId() };
+}
+
+async function api(path, opts = {}){
+  const res = await fetch("/api" + path, {
+    ...opts,
+    headers: { "content-type": "application/json", ...authHeaders(), ...(opts.headers || {}) },
+  });
+  const body = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+  return body;
+}
+
+function note(text, kind){
+  const el = $("note");
+  el.textContent = text || "";
+  el.className = kind || "";
+}
+
+function renderProfile(){
+  if(!profile) return;
+  $("nm").textContent = profile.name || "Тоглогч";
+  $("sub").textContent = `${profile.wins}W · ${profile.losses}L · шилдэг сет ${profile.bestSet}`;
+  $("cTotal").textContent = profile.totalReps;
+  $("cRank").textContent = profile.totalReps > 0 ? "#" + profile.rank : "–";
+  $("cElo").textContent = profile.rating;
+}
+
+async function loadProfile(){
+  try {
+    profile = await api("/me");
+    renderProfile();
+    note("");
+  } catch(e) {
+    $("sub").textContent = "офлайн";
+    note(`Сервертэй холбогдсонгүй: ${e.message}. Тоолуур ажиллана, дүн хадгалагдахгүй.`, "bad");
+  }
+}
+
+// ======================= дэлгэц солих =======================
+
+function show(id){
+  for(const s of document.querySelectorAll(".screen")) s.classList.toggle("hidden", s.id !== id);
+}
+
+// ======================= тоолох хөдөлгүүр =======================
 
 // ---- тохируулга ----
 // Тогтмол босго ажиллахгүй: камерын байрлал, биеийн харьцаанаас шалтгаалж
@@ -191,9 +347,6 @@ const mean = (lm, idx) => {
   return v.length ? v.reduce((s,i) => s + lm[i].y, 0)/v.length : null;
 };
 
-// Push-up байрлалд байгаа эсэх. Тохойн өнцөг ганцаараа хангалтгүй —
-// сууж байгаад гараа нугалахад ч тохой яг адилхан нугалагдана.
-// Буцаах утга: болзол хангасан бол null, үгүй бол шалтгаан.
 // Бие босоо байна уу. Хөл кадрт багтахыг шаардахгүйн тулд мөр→аарцаг
 // тэнхлэгээр шүүнэ:
 //   horiz — тэнхлэг зурган дээр хэр хэвтээ байна (хажуугаас харах push-up)
@@ -216,6 +369,9 @@ function bodyAxis(lm, world, aspect){
   return { horiz, fore: expected ? len/expected : 1 };
 }
 
+// Push-up байрлалд байгаа эсэх. Тохойн өнцөг ганцаараа хангалтгүй —
+// сууж байгаад гараа нугалахад ч тохой яг адилхан нугалагдана.
+// Буцаах утга: болзол хангасан бол null, үгүй бол шалтгаан.
 function positionCheck(lm, world, aspect){
   const wristY = mean(lm, [15,16]);
   const hipY   = mean(lm, [23,24]);
@@ -372,9 +528,11 @@ function loop(){
 
   countRep(deg, now, th);
 
-  const s = Math.floor((now - t0)/1000);
-  $("time").textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+  $("time").textContent = clock(elapsed());
 }
+
+const elapsed = () => Math.floor((performance.now() - t0)/1000);
+const clock = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
 
 function reset(){
   count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
@@ -400,6 +558,13 @@ async function openCamera(){
   canvas.classList.toggle("mirror", front);
 }
 
+function stopCamera(){
+  running = false;
+  stream?.getTracks().forEach(t => t.stop());
+  stream = null;
+  video.srcObject = null;
+}
+
 async function start(){
   const err = $("err");
   try{
@@ -408,21 +573,24 @@ async function start(){
     if(!navigator.mediaDevices?.getUserMedia)
       throw new Error("Камер дэмжихгүй байна. HTTPS эсвэл localhost дээр нээнэ үү.");
 
-    const fileset = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
-    landmarker = await PoseLandmarker.createFromOptions(fileset, {
-      baseOptions: {
-        // full: 60 fps гарч байгаа тул нөөц бий. lite нь доод биеийн цэгүүдийг
-        // ойрын өнцгөөс сайн танихгүй байсан.
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",
-        delegate: "GPU"
-      },
-      runningMode: "VIDEO",
-      numPoses: 1,
-      minPoseDetectionConfidence: 0.5,
-      minPosePresenceConfidence: 0.5,
-      minTrackingConfidence: 0.5
-    });
+    // Модель нэг л удаа ачаална — горим руу дахин орох бүрд 9 MB татахгүй.
+    if(!landmarker){
+      const fileset = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+      landmarker = await PoseLandmarker.createFromOptions(fileset, {
+        baseOptions: {
+          // full: 60 fps гарч байгаа тул нөөц бий. lite нь доод биеийн цэгүүдийг
+          // ойрын өнцгөөс сайн танихгүй байсан.
+          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO",
+        numPoses: 1,
+        minPoseDetectionConfidence: 0.5,
+        minPosePresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5
+      });
+    }
 
     await openCamera();
     $("start").classList.add("hidden");
@@ -437,15 +605,69 @@ async function start(){
   }
 }
 
-$("go").onclick = start;
-$("reset").onclick = reset;
-$("flip").onclick = async () => {
+/** Сетийг хааж, дүнг сервер рүү бүртгэнэ. */
+async function finish(){
+  const reps = count, seconds = elapsed();
+  stopCamera();
+  show("menu");
+  if(reps < 1){ note("Тоологдсон push-up алга.", ""); return; }
+
+  note(`${reps} бүртгэж байна…`, "");
+  try{
+    profile = await api("/session", { method: "POST", body: JSON.stringify({ reps, seconds }) });
+    renderProfile();
+    note(`+${reps} бүртгэгдлээ. Нийт ${profile.totalReps}, #${profile.rank}`, "ok");
+  }catch(e){
+    note(`${reps} хадгалагдсангүй: ${e.message}`, "bad");
+  }
+}
+
+// ======================= тэргүүлэгчид =======================
+
+async function openBoard(){
+  show("board");
+  const rows = $("rows");
+  rows.textContent = "Ачаалж байна…";
+  try{
+    const list = await api("/leaderboard?limit=50");
+    rows.textContent = "";
+    if(!list.length){ rows.textContent = "Хараахан хэн ч бүртгүүлээгүй байна."; return; }
+    for(const r of list){
+      const el = document.createElement("div");
+      el.className = "row" + (profile && r.userId === profile.userId ? " me" : "");
+      el.innerHTML = `<div class="pos">${r.rank}</div><div class="nm"></div>`
+        + `<div class="tot">${r.totalReps}<small>нийт</small></div>`;
+      el.querySelector(".nm").textContent = r.name || r.userId;
+      rows.appendChild(el);
+    }
+  }catch(e){
+    rows.textContent = "Ачаалж чадсангүй: " + e.message;
+  }
+}
+
+// ======================= холболт =======================
+
+$("mPush").onclick  = () => { show("play"); $("start").classList.remove("hidden"); };
+// Battle хараахан баригдаагүй — товчийг чимээгүй үхүүлэхгүй, шалтгааныг хэлнэ.
+$("mBattle").onclick = () => note("Battle хараахан бэлэн болоогүй байна.", "");
+$("mBoard").onclick = openBoard;
+$("bBack").onclick  = () => show("menu");
+$("pBack").onclick  = () => { stopCamera(); show("menu"); };
+$("go").onclick     = start;
+$("reset").onclick  = reset;
+$("done").onclick   = finish;
+$("flip").onclick   = async () => {
   facing = facing === "user" ? "environment" : "user";
-  try{ await openCamera(); }catch(e){ setMsg("Камер солиход алдаа гарлаа", "var(--bad)"); }
+  try{ await openCamera(); }catch{ setMsg("Камер солиход алдаа гарлаа", "var(--bad)"); }
 };
+
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) lastFrame = 0;
 });
+
+const cfg = await usionInit();
+if(cfg?.userAvatar) $("avatar").src = cfg.userAvatar;
+await loadProfile();
 </script>
 </body>
 </html>
