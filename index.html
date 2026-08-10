@@ -128,6 +128,14 @@
   #tugYou{height:100%;width:50%;background:var(--accent);
     border-right:3px solid #fff;transition:width .25s ease}
 
+  /* Хайж байх үед камер ард нь харагдана — хүн байрлалаа урьдчилж тохируулна */
+  #seek{position:absolute;inset:0;background:rgba(9,14,32,.72);backdrop-filter:blur(3px);z-index:9;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;padding:28px;text-align:center}
+  #seek h2{margin:0;font-size:22px;animation:breathe 1.6s ease-in-out infinite}
+  #seek p{margin:0;max-width:320px;color:var(--dim);font-size:13px;line-height:1.6}
+  @keyframes breathe{0%,100%{opacity:1}50%{opacity:.45}}
+
   #over{position:absolute;inset:0;background:rgba(8,12,20,.94);z-index:11;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:14px;padding:28px;text-align:center;backdrop-filter:blur(6px)}
@@ -235,6 +243,12 @@
     <button class="primary" id="go">Камер асаах</button>
     <button id="pBack">← Буцах</button>
     <div id="err" class="hidden"></div>
+  </div>
+
+  <div id="seek" class="hidden">
+    <h2 id="seekTitle">Өрсөлдөгч хайж байна…</h2>
+    <p>Энэ зуур байрлалаа тохируулаарай. Өрсөлдөгч олдмогц 5 секунд тоолоод эхэлнэ.</p>
+    <button id="seekCancel">Болих</button>
   </div>
 
   <div id="over" class="hidden">
@@ -792,19 +806,27 @@ async function startBattle(){
   show("play");
   $("start").classList.add("hidden");
   $("over").classList.add("hidden");
-  $("duelBar").classList.remove("hidden");
+  // Хос олдтол тулааны мөр хоосон нэр, 0:0 оноогоор гарч ирвэл эвдэрсэн
+  // мэт харагдана — олдсоны дараа л үзүүлнэ.
+  $("duelBar").classList.add("hidden");
+  $("seek").classList.remove("hidden");
+  $("seekTitle").textContent = "Камер бэлдэж байна…";
   // Тулааны мөр статистикийн байрыг эзэлнэ — дарагдахаас нь хойш нуух нь дээр
   $("stats").classList.add("hidden");
-  $("btns").classList.add("hidden");
+  // Камер солих товч ҮЛДЭНЭ — тоолуулах өнцгөө тохируулах цорын ганц арга.
+  // Тэглэх, Дуусгах хоёрыг л нуулаа: rated тулааныг дундуур нь эвдэнэ.
+  $("reset").classList.add("hidden");
+  $("done").classList.add("hidden");
   $("clock").textContent = "…";
 
   try{
     // Камерыг ХОС ОЛОХООС ӨМНӨ асаана — эс тэгвээс зөвшөөрлийн цонх
     // тэмцээн эхэлсэн хойно гарч ирж, эхний секундүүд алдагдана.
-    setMsg("Камер бэлдэж байна…", "var(--dim)");
     await startEngine();
-    setMsg("Өрсөлдөгч хайж байна…", "var(--dim)");
+    $("seekTitle").textContent = "Өрсөлдөгч хайж байна…";
     const match = await findOpponent();
+    $("seek").classList.add("hidden");
+    $("duelBar").classList.remove("hidden");
     applyDuel(await api("/battle", { method: "POST", body: JSON.stringify(match) }));
     openSocket(match.roomId);
     startClock();
@@ -821,8 +843,10 @@ function leaveBattle(){
   stopCamera();
   sdk()?.matchmaking?.cancel?.();
   $("duelBar").classList.add("hidden");
+  $("seek").classList.add("hidden");
   $("stats").classList.remove("hidden");
-  $("btns").classList.remove("hidden");
+  $("reset").classList.remove("hidden");
+  $("done").classList.remove("hidden");
   $("over").classList.add("hidden");
   show("menu");
   loadProfile();
@@ -858,6 +882,7 @@ $("mBattle").onclick = startBattle;
 $("mBoard").onclick  = openBoard;
 $("bBack").onclick   = () => show("menu");
 $("oBack").onclick   = leaveBattle;
+$("seekCancel").onclick = leaveBattle;
 $("pBack").onclick   = () => { if(mode === "battle") leaveBattle(); else { stopCamera(); show("menu"); } };
 $("go").onclick      = startSolo;
 $("reset").onclick  = reset;
