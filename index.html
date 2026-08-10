@@ -101,6 +101,41 @@
   #btns{display:flex;gap:8px}
   #done{background:var(--accent);color:#04140c;padding:12px 24px;font-size:15px}
 
+  /* ---------- тулааны мөр ---------- */
+  #duelBar{position:absolute;top:calc(env(safe-area-inset-top) + 8px);left:10px;right:10px;
+    background:rgba(9,14,32,.88);backdrop-filter:blur(12px);border-radius:18px;
+    padding:8px 14px 12px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .dTitle{text-align:center;font-size:10px;font-weight:800;letter-spacing:.22em;
+    color:var(--gold);opacity:.9}
+  .dTop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:4px}
+  .dSide{display:flex;flex-direction:column;align-items:center;width:96px}
+  .av{width:44px;height:44px;border-radius:14px;object-fit:cover;background:#1b2440;
+    border:2px solid var(--accent)}
+  .av.opp{border-color:var(--bad)}
+  .dNm{font-size:13px;font-weight:800;margin-top:4px;max-width:96px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .dElo{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .dTime{text-align:center;padding-top:6px}
+  .dTime span{display:block;font-size:9px;letter-spacing:.2em;color:var(--dim);font-weight:700}
+  #clock{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1}
+
+  .dScore{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .dScore b{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;
+    min-width:46px}
+  .sYou{color:var(--accent);text-align:left}
+  .sOpp{color:var(--bad);text-align:right}
+  #tug{flex:1;height:12px;border-radius:999px;background:var(--bad);overflow:hidden}
+  #tugYou{height:100%;width:50%;background:var(--accent);
+    border-right:3px solid #fff;transition:width .25s ease}
+
+  #over{position:absolute;inset:0;background:rgba(8,12,20,.94);z-index:11;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;padding:28px;text-align:center;backdrop-filter:blur(6px)}
+  #oTitle{margin:0;font-size:30px;letter-spacing:-.02em}
+  #oScore{font-size:40px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+  #oElo{font-size:15px;color:var(--dim)}
+  #oElo b{color:var(--fg)}
+
   #start{position:absolute;inset:0;background:var(--bg);z-index:10;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:18px;padding:28px;text-align:center}
@@ -147,6 +182,29 @@
   <canvas id="canvas"></canvas>
 
   <div id="hud">
+    <div id="duelBar" class="hidden">
+      <div class="dTitle">RANKED MATCH</div>
+      <div class="dTop">
+        <div class="dSide">
+          <img id="youAv" class="av" alt=""
+            src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+          <div class="dNm" id="youName">Чи</div>
+          <div class="dElo" id="youElo">–</div>
+        </div>
+        <div class="dTime"><span>TIME</span><div id="clock">…</div></div>
+        <div class="dSide">
+          <img id="oppAv" class="av opp" alt=""
+            src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+          <div class="dNm" id="oppName">…</div>
+          <div class="dElo" id="oppElo">–</div>
+        </div>
+      </div>
+      <div class="dScore">
+        <b id="youReps" class="sYou">0</b>
+        <div id="tug"><div id="tugYou"></div></div>
+        <b id="oppReps" class="sOpp">0</b>
+      </div>
+    </div>
     <div id="top">
       <div id="stats">
         <div>Өнцөг <b id="angle">–</b></div>
@@ -177,6 +235,13 @@
     <button class="primary" id="go">Камер асаах</button>
     <button id="pBack">← Буцах</button>
     <div id="err" class="hidden"></div>
+  </div>
+
+  <div id="over" class="hidden">
+    <h2 id="oTitle">—</h2>
+    <div id="oScore">—</div>
+    <div id="oElo">—</div>
+    <button class="primary" id="oBack">Цэс рүү</button>
   </div>
 </section>
 
@@ -281,6 +346,7 @@ let landmarker = null, running = false, facing = "environment", stream = null;
 let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
 let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
 let loSeen = null, hiSeen = null, badFrames = 0, dipMin = 999;
+let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
 
 const ARMS = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
 
@@ -438,7 +504,7 @@ function countRep(deg, now, th){
         $("deep").textContent = Math.round(bestDepth) + "°";
       }
       if(navigator.vibrate) navigator.vibrate([18,40,18]);
-      setMsg(`${count} — сайн байна!`, "var(--accent)");
+      if(mode === "battle") sendRep(); else setMsg(`${count} — сайн байна!`, "var(--accent)");
     } else {
       setMsg("Хэт хурдан — бүтэн хий", "var(--bad)");
     }
@@ -565,38 +631,42 @@ function stopCamera(){
   video.srcObject = null;
 }
 
-async function start(){
+async function startEngine(){
+  if(!navigator.mediaDevices?.getUserMedia)
+    throw new Error("Камер дэмжихгүй байна. HTTPS эсвэл localhost дээр нээнэ үү.");
+
+  // Модель нэг л удаа ачаална — горим руу дахин орох бүрд 9 MB татахгүй.
+  if(!landmarker){
+    const fileset = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+    landmarker = await PoseLandmarker.createFromOptions(fileset, {
+      baseOptions: {
+        // full: 60 fps гарч байгаа тул нөөц бий. lite нь доод биеийн цэгүүдийг
+        // ойрын өнцгөөс сайн танихгүй байсан.
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO",
+      numPoses: 1,
+      minPoseDetectionConfidence: 0.5,
+      minPosePresenceConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+  }
+
+  await openCamera();
+  running = true;
+  reset();
+  loop();
+}
+
+async function startSolo(){
   const err = $("err");
   try{
     $("go").disabled = true;
     $("go").textContent = "Ачаалж байна…";
-    if(!navigator.mediaDevices?.getUserMedia)
-      throw new Error("Камер дэмжихгүй байна. HTTPS эсвэл localhost дээр нээнэ үү.");
-
-    // Модель нэг л удаа ачаална — горим руу дахин орох бүрд 9 MB татахгүй.
-    if(!landmarker){
-      const fileset = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
-      landmarker = await PoseLandmarker.createFromOptions(fileset, {
-        baseOptions: {
-          // full: 60 fps гарч байгаа тул нөөц бий. lite нь доод биеийн цэгүүдийг
-          // ойрын өнцгөөс сайн танихгүй байсан.
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",
-          delegate: "GPU"
-        },
-        runningMode: "VIDEO",
-        numPoses: 1,
-        minPoseDetectionConfidence: 0.5,
-        minPosePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5
-      });
-    }
-
-    await openCamera();
+    await startEngine();
     $("start").classList.add("hidden");
-    running = true;
-    reset();
-    loop();
   }catch(e){
     err.classList.remove("hidden");
     err.textContent = e.message || String(e);
@@ -620,6 +690,142 @@ async function finish(){
   }catch(e){
     note(`${reps} хадгалагдсангүй: ${e.message}`, "bad");
   }
+}
+
+// ======================= тулаан =======================
+//
+// Usion-ыг ЗӨВХӨН хос олоход ашиглана. Цаг, оноо, ялагч, рейтинг бүгд манай
+// сервер дээр — тоглогчийн өөрийнх нь хэлсэн үр дүнд итгэх боломжгүй.
+
+function findOpponent(){
+  // Локал турших зам: ?room=r1&vs=нөгөө_ID — хоёр таб нээж шалгана
+  const q = new URLSearchParams(location.search);
+  const room = q.get("room"), vs = q.get("vs");
+  if(room && vs) return Promise.resolve({ roomId: room, players: [devId(), vs] });
+
+  const s = sdk();
+  if(!s) return Promise.reject(new Error("Usion олдсонгүй — өрсөлдөгч хайх боломжгүй"));
+  return s.matchmaking.find({ size: 2, timeout: 30_000 }).then(async m => {
+    // Платформын өрөөнд бас нэгдэнэ. Транспортыг нь ашиглахгүй ч хос энэ
+    // өрөөгөөр тодорхойлогддог тул платформын бүртгэлд орсон байх ёстой.
+    try { await s.game.connect(); await s.game.join(m.roomId); } catch { /* заавал биш */ }
+    return { roomId: m.roomId, players: m.players };
+  });
+}
+
+function openSocket(roomId){
+  ws?.close();
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  ws = new WebSocket(`${proto}://${location.host}/api/battle/socket`);
+  ws.onopen = () => ws.send(JSON.stringify({
+    type: "auth", roomId,
+    token: sdk()?.user?.getToken?.() ?? undefined,
+    devUser: devId(),
+  }));
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if(m.type === "state") applyDuel(m.state);
+  };
+}
+
+function sendRep(){
+  if(ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "rep", n: 1 }));
+}
+
+function applyDuel(state){
+  duel = state;
+  const y = state.you, o = state.opponent ?? { reps: 0, name: "Хүлээж байна", rating: null };
+  $("youName").textContent = y.name || "Чи";
+  $("oppName").textContent = o.name || "Өрсөлдөгч";
+  $("youElo").textContent = y.rating ?? "–";
+  $("oppElo").textContent = o.rating ?? "–";
+  if(y.avatar) $("youAv").src = y.avatar;
+  if(o.avatar) $("oppAv").src = o.avatar;
+  $("youReps").textContent = y.reps;
+  $("oppReps").textContent = o.reps;
+  const total = y.reps + o.reps;
+  $("tugYou").style.width = (total ? (y.reps / total) * 100 : 50) + "%";
+  if(state.status === "finished") endDuel(state);
+}
+
+function startClock(){
+  clearInterval(tick);
+  tick = setInterval(() => {
+    if(!duel) return;
+    const now = Date.now();
+    const begin = new Date(duel.startsAt).getTime();
+    const end = new Date(duel.endsAt).getTime();
+    if(now < begin){
+      $("clock").textContent = Math.ceil((begin - now) / 1000);
+      setMsg("Бэлдэж бай…", "var(--warn)");
+    } else {
+      const left = Math.max(0, Math.ceil((end - now) / 1000));
+      $("clock").textContent = "0:" + String(left).padStart(2, "0");
+      if(left === 0) setMsg("Дууслаа", "var(--dim)");
+    }
+  }, 200);
+}
+
+function endDuel(state){
+  clearInterval(tick); tick = null;
+  stopCamera();
+  ws?.close(); ws = null;
+
+  const y = state.you, o = state.opponent;
+  const draw = state.winnerId === null;
+  const win = state.winnerId === y.userId;
+  $("oTitle").textContent = draw ? "Тэнцлээ" : win ? "Хожлоо!" : "Хожигдлоо";
+  $("oTitle").style.color = draw ? "var(--fg)" : win ? "var(--accent)" : "var(--bad)";
+  $("oScore").textContent = `${y.reps} : ${o?.reps ?? 0}`;
+  const r = state.ratings?.[y.userId];
+  if(r){
+    const d = r.after - r.before;
+    $("oElo").innerHTML = `ELO <b>${r.before} → ${r.after}</b> (${d >= 0 ? "+" : ""}${d})`;
+  } else {
+    $("oElo").textContent = "";
+  }
+  $("over").classList.remove("hidden");
+}
+
+async function startBattle(){
+  mode = "battle"; duel = null;
+  show("play");
+  $("start").classList.add("hidden");
+  $("over").classList.add("hidden");
+  $("duelBar").classList.remove("hidden");
+  // Тулааны мөр статистикийн байрыг эзэлнэ — дарагдахаас нь хойш нуух нь дээр
+  $("stats").classList.add("hidden");
+  $("btns").classList.add("hidden");
+  $("clock").textContent = "…";
+
+  try{
+    // Камерыг ХОС ОЛОХООС ӨМНӨ асаана — эс тэгвээс зөвшөөрлийн цонх
+    // тэмцээн эхэлсэн хойно гарч ирж, эхний секундүүд алдагдана.
+    setMsg("Камер бэлдэж байна…", "var(--dim)");
+    await startEngine();
+    setMsg("Өрсөлдөгч хайж байна…", "var(--dim)");
+    const match = await findOpponent();
+    applyDuel(await api("/battle", { method: "POST", body: JSON.stringify(match) }));
+    openSocket(match.roomId);
+    startClock();
+  }catch(e){
+    leaveBattle();
+    note("Тулаан эхэлсэнгүй: " + e.message, "bad");
+  }
+}
+
+function leaveBattle(){
+  clearInterval(tick); tick = null;
+  ws?.close(); ws = null;
+  duel = null; mode = "solo";
+  stopCamera();
+  sdk()?.matchmaking?.cancel?.();
+  $("duelBar").classList.add("hidden");
+  $("stats").classList.remove("hidden");
+  $("btns").classList.remove("hidden");
+  $("over").classList.add("hidden");
+  show("menu");
+  loadProfile();
 }
 
 // ======================= тэргүүлэгчид =======================
@@ -647,13 +853,13 @@ async function openBoard(){
 
 // ======================= холболт =======================
 
-$("mPush").onclick  = () => { show("play"); $("start").classList.remove("hidden"); };
-// Battle хараахан баригдаагүй — товчийг чимээгүй үхүүлэхгүй, шалтгааныг хэлнэ.
-$("mBattle").onclick = () => note("Battle хараахан бэлэн болоогүй байна.", "");
-$("mBoard").onclick = openBoard;
-$("bBack").onclick  = () => show("menu");
-$("pBack").onclick  = () => { stopCamera(); show("menu"); };
-$("go").onclick     = start;
+$("mPush").onclick   = () => { mode = "solo"; show("play"); $("start").classList.remove("hidden"); };
+$("mBattle").onclick = startBattle;
+$("mBoard").onclick  = openBoard;
+$("bBack").onclick   = () => show("menu");
+$("oBack").onclick   = leaveBattle;
+$("pBack").onclick   = () => { if(mode === "battle") leaveBattle(); else { stopCamera(); show("menu"); } };
+$("go").onclick      = startSolo;
 $("reset").onclick  = reset;
 $("done").onclick   = finish;
 $("flip").onclick   = async () => {

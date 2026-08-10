@@ -57,6 +57,37 @@ export async function findOrCreateUser({ userId, name, avatar = null }) {
   )
 }
 
+/**
+ * Тулаанд орох хүмүүсийг заавал бүртгэлтэй болгоно.
+ * Өрсөлдөгч апп руугаа орж амжаагүй байж болох тул нэрийг нь түр ID-гаар
+ * тавина — тэр өөрөө орж ирэхэд Usion-ы жинхэнэ нэрээр солигдоно.
+ */
+export async function ensureUsers(userIds) {
+  const now = new Date()
+  await users().bulkWrite(
+    userIds.map((id) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: {
+          $setOnInsert: {
+            name: id,
+            avatar: null,
+            totalReps: 0,
+            bestSet: 0,
+            rating: START_RATING,
+            battles: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            createdAt: now,
+          },
+        },
+        upsert: true,
+      },
+    })),
+  )
+}
+
 /** Нийт тоогоор хэдэн дүгээрт байгаа — өөрөөс нь илүү тоотой хүний тоо + 1. */
 export async function rankOf(totalReps) {
   return (await users().countDocuments({ totalReps: { $gt: totalReps } })) + 1
