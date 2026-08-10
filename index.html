@@ -66,6 +66,7 @@
         <div>Хамгийн гүн <b id="deep">–</b></div>
         <div>Хугацаа <b id="time">0:00</b></div>
         <div><b id="fps">–</b> fps</div>
+        <div id="dbg" style="opacity:.6;font-size:11px">–</div>
       </div>
     </div>
     <div id="meterWrap"><div id="meter"></div></div>
@@ -141,17 +142,38 @@ const mean = (lm, idx) => {
 // Push-up байрлалд байгаа эсэх. Тохойн өнцөг ганцаараа хангалтгүй —
 // сууж байгаад гараа нугалахад ч тохой яг адилхан нугалагдана.
 // Буцаах утга: болзол хангасан бол null, үгүй бол шалтгаан.
-function positionCheck(lm, world){
+// Бие босоо байна уу. Хөл кадрт багтахыг шаардахгүйн тулд мөр→аарцаг
+// тэнхлэгээр шүүнэ:
+//   horiz — тэнхлэг зурган дээр хэр хэвтээ байна (хажуугаас харах push-up)
+//   fore  — тэнхлэг хэр богиносч харагдаж байна. Мөрний бодит өргөнөөр
+//           масштаб гаргаж, бие камер руу чиглэснийг таана (нүүрээрээ push-up)
+// Зогсож байгаа хүн хоёуланд нь унана.
+function bodyAxis(lm, world, aspect){
+  const shX=(lm[11].x+lm[12].x)/2*aspect, shY=(lm[11].y+lm[12].y)/2;
+  const hpX=(lm[23].x+lm[24].x)/2*aspect, hpY=(lm[23].y+lm[24].y)/2;
+  const len = Math.hypot(shX-hpX, shY-hpY);
+  const horiz = len ? Math.abs(shX-hpX)/len : 0;
+
+  const shImg = Math.hypot((lm[11].x-lm[12].x)*aspect, lm[11].y-lm[12].y);
+  const shW = Math.hypot(world[11].x-world[12].x, world[11].y-world[12].y, world[11].z-world[12].z);
+  const torsoW = Math.hypot(
+    (world[11].x+world[12].x - world[23].x-world[24].x)/2,
+    (world[11].y+world[12].y - world[23].y-world[24].y)/2,
+    (world[11].z+world[12].z - world[23].z-world[24].z)/2);
+  const expected = shW ? torsoW * (shImg/shW) : 0;
+  return { horiz, fore: expected ? len/expected : 1 };
+}
+
+function positionCheck(lm, world, aspect){
   const wristY = mean(lm, [15,16]);
   const hipY   = mean(lm, [23,24]);
-  const ankleY = mean(lm, [27,28]);
   if(wristY === null || hipY === null) return "Бүтэн биеэ камерт багтаа";
   // зурган дээр y доошоо өснө: гар шалан дээр бол бугуй аарцгаас доогуур байна
   if(wristY <= hipY) return "Гараа шалан дээр тавь";
-  // Гар ба хөл хоёул шалан дээр байх ёстой. Үүнгүйгээр зогсоод гараа
-  // нугалахад л тоологдчихно — бугуй аарцгаас доогуур байх нь тэнд ч биелдэг.
-  if(ankleY === null) return "Хөлөө камерт багтаа";
-  if(wristY < ankleY - 0.10) return "Push-up байрлалд ор";
+  if(seen(lm,11) && seen(lm,12) && seen(lm,23) && seen(lm,24)){
+    const { horiz, fore } = bodyAxis(lm, world, aspect);
+    if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
+  }
   const torso = meanAngle(world, lm, TORSO);
   if(torso !== null && torso < STRAIGHT) return "Биеэ шулуун барь";
   return null;
@@ -232,7 +254,15 @@ function loop(){
   du.drawConnectors(lm, PoseLandmarker.POSE_CONNECTIONS, {color:"#ffffff", lineWidth:w});
   du.drawLandmarks(lm, {color:"#ffd21e", fillColor:"#ffd21e", radius:w*1.3, lineWidth:1});
 
-  const bad = positionCheck(lm, world);
+  // оношлогоо: аль шүүлтүүр саатуулж байгааг утсан дээрээс харах
+  const asp = canvas.width/canvas.height;
+  const ax = (seen(lm,11)&&seen(lm,12)&&seen(lm,23)&&seen(lm,24)) ? bodyAxis(lm,world,asp) : null;
+  const tor = meanAngle(world, lm, TORSO);
+  const f2 = v => v === null ? "–" : v.toFixed(2);
+  $("dbg").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)} t${tor===null?"–":Math.round(tor)}`
+    + ` wr${f2(mean(lm,[15,16]))} hp${f2(mean(lm,[23,24]))}`;
+
+  const bad = positionCheck(lm, world, asp);
   if(bad){
     setMsg(bad, "var(--dim)");
     idle();
