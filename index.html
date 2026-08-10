@@ -110,7 +110,7 @@ const VIS_MIN    = 0.5;   // цэгийн итгэлцүүр
 let landmarker = null, running = false, facing = "environment", stream = null;
 let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
 let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
-let loSeen = null, hiSeen = null, badFrames = 0;
+let loSeen = null, hiSeen = null, badFrames = 0, dipMin = 999;
 
 const ARMS = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
 
@@ -193,20 +193,33 @@ function setMsg(text, color){
 // Ажиглагдсан доод/дээд өнцгийн муж. Шинэ хязгаарт шууд тэлж, дараа нь
 // аажим нарийсдаг тул хэрэглэгч гүнзгий/гүехэн хийхээ өөрчилвөл дагаж тохирно.
 function envelope(deg){
-  loSeen = loSeen === null ? deg : Math.min(deg, loSeen + 0.03);
-  hiSeen = hiSeen === null ? deg : Math.max(deg, hiSeen - 0.03);
+  // Нарийсах хурд удаан байх ёстой: хурдан нарийсвал хагас push-up дараалан
+  // хийхэд lo нь дээшилж, хагас нь "бүтэн" болж хувирдаг. 0.005/кадар
+  // гэдэг нь 60 fps дээр секундэд 0.3° — нэг гүн rep удаан хугацаанд жишиг
+  // болж үлдэнэ.
+  loSeen = loSeen === null ? deg : Math.min(deg, loSeen + 0.005);
+  hiSeen = hiSeen === null ? deg : Math.max(deg, hiSeen - 0.005);
   const range = hiSeen - loSeen;
   if(range < MIN_SWING) return null;
-  return { down: loSeen + range*0.35, up: loSeen + range*0.65, range };
+  // мужийн 75%-ийг буусан үед л "буусан" гэж тооцно
+  return { down: loSeen + range*0.25, up: loSeen + range*0.70, range };
 }
 
 function countRep(deg, now, th){
   if(deg < repMinAngle) repMinAngle = deg;
 
-  if(phase === "up" && deg < th.down){
-    phase = "down"; repStart = now; repMinAngle = deg;
-    if(navigator.vibrate) navigator.vibrate(12);
-    setMsg("Доошоо ✓", "var(--warn)");
+  if(phase === "up"){
+    if(deg < dipMin) dipMin = deg;
+    if(deg < th.down){
+      phase = "down"; repStart = now; repMinAngle = deg; dipMin = 999;
+      if(navigator.vibrate) navigator.vibrate(12);
+      setMsg("Доошоо ✓", "var(--warn)");
+    }
+    // Буусан ч гүнд хүрээгүй бол яагаад тоологдоогүйг хэлнэ
+    else if(deg > th.up && dipMin < th.up - 5){
+      setMsg("Гүн дутуу — доошоо буу", "var(--bad)");
+      dipMin = 999;
+    }
   }
   else if(phase === "down" && deg > th.up){
     phase = "up";
@@ -318,7 +331,7 @@ function loop(){
 
 function reset(){
   count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
-  loSeen = null; hiSeen = null; badFrames = 0;
+  loSeen = null; hiSeen = null; badFrames = 0; dipMin = 999;
   t0 = performance.now();
   $("count").firstChild.nodeValue = 0;
   $("deep").textContent = "–";
