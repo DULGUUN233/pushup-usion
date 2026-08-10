@@ -354,12 +354,19 @@ const MIN_REP_MS = 180;   // үүнээс богино rep-ийг чимээ г�
 const MIN_SWING  = 35;    // тохой ийм хэмжээгээр хэлбэлзээгүй бол rep биш
 const BAD_FRAMES = 5;     // байрлал алдагдсан кадар ийм тоо дараалвал rep цуцлана
 const VIS_MIN    = 0.5;   // цэгийн итгэлцүүр
+// Бие хатуу нэгж болж буусан эсэх. Мөр ийм хэмжээгээр (кадрын өндрийн хувь)
+// буусан үед л шалгана — бага хөдөлгөөнд хэмжилтийн чимээ давамгайлна.
+const RIGID_DROP  = 0.02;
+// Аарцаг мөрний доод тал нь хүртэл буугаагүй бол push-up биш. Өвдөг дээрээ
+// сууж цээжээ сунгахад мөр бууж, аарцаг байрандаа үлддэг.
+const RIGID_RATIO = 0.25;
 
 // ---- төлөв ----
 let landmarker = null, running = false, facing = "environment", stream = null;
 let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
 let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
 let loSeen = null, hiSeen = null, badFrames = 0, dipMin = 999;
+let shTop = null, hpTop = null, shBot = null, hpBot = null;   // rep доторх биеийн явалт
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
 
 const ARMS = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
@@ -489,13 +496,30 @@ function envelope(deg){
   return { down: loSeen + range*0.25, up: loSeen + range*0.70, range };
 }
 
-function countRep(deg, now, th){
+/**
+ * Мөр буухдаа аарцгаа дагуулсан эсэх. Push-up-д бие хатуу нэгж болж эргэдэг
+ * тул аарцаг мөртэй хамт бууна. Өвдөг дээрээ сууж цээжээ сунгахад аарцаг
+ * байрандаа үлддэг — тэрийг л барина. Цэг харагдахгүй бол шалгахгүй.
+ */
+/** Зурган дээр y доошоо өснө: илүү дээд байрлал нь илүү бага y. */
+const higher = (cur, v) => v === null ? cur : cur === null ? v : Math.min(cur, v);
+const lower  = (cur, v) => v === null ? cur : cur === null ? v : Math.max(cur, v);
+
+function rigid(){
+  if([shTop, hpTop, shBot, hpBot].some(v => v === null)) return true;
+  const dSh = shBot - shTop;
+  if(dSh < RIGID_DROP) return true;
+  return (hpBot - hpTop) >= RIGID_RATIO * dSh;
+}
+
+function countRep(deg, now, th, body){
   if(deg < repMinAngle) repMinAngle = deg;
 
   if(phase === "up"){
     if(deg < dipMin) dipMin = deg;
     if(deg < th.down){
       phase = "down"; repStart = now; repMinAngle = deg; dipMin = 999;
+      shBot = body.sh; hpBot = body.hp;
       if(navigator.vibrate) navigator.vibrate(12);
       setMsg("Доошоо ✓", "var(--warn)");
     }
@@ -504,10 +528,21 @@ function countRep(deg, now, th){
       setMsg("Гүн дутуу — доошоо буу", "var(--bad)");
       dipMin = 999;
     }
+    return;
   }
-  else if(phase === "down" && deg > th.up){
+
+  if(phase === "down"){
+    shBot = lower(shBot, body.sh);
+    hpBot = lower(hpBot, body.hp);
+  }
+
+  if(phase === "down" && deg > th.up){
     phase = "up";
-    if(now - repStart >= MIN_REP_MS){
+    if(now - repStart < MIN_REP_MS){
+      setMsg("Хэт хурдан — бүтэн хий", "var(--bad)");
+    } else if(!rigid()){
+      setMsg("Биеэ бүхэлд нь буулга", "var(--bad)");
+    } else {
       count++;
       $("count").textContent = count;
       // reflow-гүйгээр дахин ижил класс өгвөл анимаци дахин эхлэхгүй
@@ -519,16 +554,17 @@ function countRep(deg, now, th){
       }
       if(navigator.vibrate) navigator.vibrate([18,40,18]);
       if(mode === "battle") sendRep(); else setMsg(`${count} — сайн байна!`, "var(--accent)");
-    } else {
-      setMsg("Хэт хурдан — бүтэн хий", "var(--bad)");
     }
     repMinAngle = 180;
+    // Дараагийн rep өөрийн дээд цэгээ шинээр олно
+    shTop = hpTop = shBot = hpBot = null;
   }
 }
 
 // Байрлал алдагдсан үед хагас rep-ийг цуцалж, дараа нь дуусгахаас сэргийлнэ
 function idle(){
   phase = "up"; repMinAngle = 180; smooth = null;
+  shTop = hpTop = shBot = hpBot = null;
   $("angle").textContent = "–";
   $("meter").style.height = "0%";
 }
@@ -570,8 +606,10 @@ function loop(){
   const ax = (seen(lm,11)&&seen(lm,12)&&seen(lm,23)&&seen(lm,24)) ? bodyAxis(lm,world,asp) : null;
   const f2 = v => v === null ? "–" : v.toFixed(2);
   const r0 = v => v === null ? "–" : Math.round(v);
+  const dSh = shTop !== null && shBot !== null ? shBot - shTop : null;
+  const dHp = hpTop !== null && hpBot !== null ? hpBot - hpTop : null;
   $("poseDiag").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)}`
-    + ` lo${r0(loSeen)} hi${r0(hiSeen)} ${phase}`;
+    + ` lo${r0(loSeen)} hi${r0(hiSeen)} sh${f2(dSh)} hp${f2(dHp)} ${phase}`;
 
   const bad = positionCheck(lm, world, asp);
   if(bad){
@@ -594,6 +632,15 @@ function loop(){
   const deg = smooth;
   $("angle").textContent = Math.round(deg) + "°";
 
+  // Хөдөлгөөний ХАМГИЙН ДЭЭД цэгийг хадгална (зурган дээр y хамгийн бага).
+  // "up" фаз нь буултын эхний 75%-д үнэн хэвээр байдаг тул сүүлийн утгыг
+  // авбал лавлагаа доошоо мөлхөж, явалт дутуу хэмжигдэнэ.
+  const body = { sh: mean(lm, [11,12]), hp: mean(lm, [23,24]) };
+  if(phase === "up"){
+    shTop = higher(shTop, body.sh);
+    hpTop = higher(hpTop, body.hp);
+  }
+
   const th = envelope(deg);
   if(!th){
     setMsg("Тохируулж байна — нэг удаа бүтэн хий", "var(--dim)");
@@ -606,7 +653,7 @@ function loop(){
   $("meter").style.height = (pct*100) + "%";
   $("meter").style.background = pct < 0.05 ? "var(--warn)" : "var(--accent)";
 
-  countRep(deg, now, th);
+  countRep(deg, now, th, body);
 
   $("time").textContent = clock(elapsed());
 }
@@ -617,6 +664,7 @@ const clock = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
 function reset(){
   count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
   loSeen = null; hiSeen = null; badFrames = 0; dipMin = 999;
+  shTop = hpTop = shBot = hpBot = null;
   t0 = performance.now();
   $("count").textContent = 0;
   $("counter").classList.remove("pop");
