@@ -389,9 +389,10 @@ const ARMS = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
 const LEGS = [[23,25,27],[24,26,28]];  // аарцаг → өвдөг → шагай
 // Хөл шулуун бол өвдөг шалнаас дээш. Өвдөг дээрээ хийвэл ~90° болно.
 const KNEE_STRAIGHT = 150;
-// Хөлийн шалгуурт өндөр итгэлцүүр шаардана: камер ойрхон үед доод биеийн
-// цэгүүд таамаглал болдог ба тэр таамаг дээр rep-ийг хаах нь буруу.
-const SURE = 0.7;
+// Хөлийн шалгуурт итгэлцүүр шаардана: камер ойрхон үед доод биеийн цэгүүд
+// таамаглал болдог ба тэр таамаг дээр rep-ийг хаах нь буруу. 0.7 нь хэт
+// өндөр байсан — хөл бүтэн харагдаж байхад ч шалгуур асахгүй өнгөрдөг байв.
+const SURE = 0.5;
 
 // Зөвхөн бие. MediaPipe-ийн бэлэн POSE_CONNECTIONS нүүрэн дээр 11 цэг,
 // алга/ул дээр бас цэг зурдаг тул зураг эмх замбараагүй болдог.
@@ -428,7 +429,6 @@ function drawSkeleton(lm){
 }
 
 const seen = (lm,i) => (lm[i].visibility ?? 1) > VIS_MIN;
-const sure = (lm,i) => (lm[i].visibility ?? 1) > SURE;
 
 // Өнцгийг worldLandmarks (метр, 3D) дээр бодно. 2D зураг дээр бодвол камерын
 // өнцгөөс болж өнцөг богиносч, тохой бүрэн нугалсныг ч танихгүй байдаг.
@@ -482,6 +482,25 @@ function bodyAxis(lm, world, aspect){
 // Push-up байрлалд байгаа эсэх. Тохойн өнцөг ганцаараа хангалтгүй —
 // сууж байгаад гараа нугалахад ч тохой яг адилхан нугалагдана.
 // Буцаах утга: болзол хангасан бол null, үгүй бол шалтгаан.
+/**
+ * Аарцаг→өвдөг→шагай өнцөг. Хоёр хөлийн дунджаар — нэг хөл буруу
+ * танигдсанаас болж rep алдагдахгүйн тулд. `vis` нь хамгийн сайн харагдаж
+ * буй хөлийн итгэлцүүр: шалгуур яагаад аслаа/асаагүйг оношлоход хэрэгтэй.
+ */
+function kneeAngle(lm, world){
+  const vals = [];
+  let best = 0;
+  for(const [h,k,a] of LEGS){
+    const v = Math.min(lm[h].visibility ?? 1, lm[k].visibility ?? 1, lm[a].visibility ?? 1);
+    if(v > best) best = v;
+    if(v > SURE){
+      const x = angle3(world[h], world[k], world[a]);
+      if(x !== null) vals.push(x);
+    }
+  }
+  return { deg: vals.length ? vals.reduce((p,q) => p + q, 0)/vals.length : null, vis: best };
+}
+
 function positionCheck(lm, world, aspect){
   const wristY = mean(lm, [15,16]);
   const hipY   = mean(lm, [23,24]);
@@ -492,18 +511,11 @@ function positionCheck(lm, world, aspect){
     const { horiz, fore } = bodyAxis(lm, world, aspect);
     if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
   }
-  // Өвдөг шалан дээр бол хөл нугалагдана. Хоёр хөлийн дунджаар шүүнэ —
-  // нэг хөл буруу танигдсанаас болж rep алдагдахгүйн тулд.
-  const knees = []
-  for(const [h,k,a] of LEGS){
-    if(sure(lm,h) && sure(lm,k) && sure(lm,a)){
-      const v = angle3(world[h], world[k], world[a]);
-      if(v !== null) knees.push(v);
-    }
-  }
-  if(knees.length && knees.reduce((x,y)=>x+y,0)/knees.length < KNEE_STRAIGHT){
-    return "Өвдгөө шалнаас өргө";
-  }
+  // Өвдөг шалан дээр бол хөл нугалагдана. Аарцгийн явалтаар үүнийг барих
+  // боломжгүй: өвдөг дээр цээжээ буулгахад аарцаг өвдгөө тойрон эргэж хамт
+  // бууна — өвдөг дээрх push-up-аас ялгарахгүй. Зөвхөн өнцөг ялгана.
+  const knee = kneeAngle(lm, world);
+  if(knee.deg !== null && knee.deg < KNEE_STRAIGHT) return "Өвдгөө шалнаас өргө";
   // Мөр–аарцаг–өвдөг өнцгөөр "бие шулуун уу" гэж шалгахыг больсон: камер
   // ойрхон, бие нь камераас хол чиглэсэн үед доод биеийн цэгүүд таамаглал
   // болж, өнцөг нь утгагүй гарч ирээд тоолохыг бүрмөсөн хаадаг байсан.
@@ -643,8 +655,10 @@ function loop(){
   const r0 = v => v === null ? "–" : Math.round(v);
   const dSh = shTop !== null && shBot !== null ? shBot - shTop : null;
   const dHp = hpTop !== null && hpBot !== null ? hpBot - hpTop : null;
+  const kn = kneeAngle(lm, world);
   $("poseDiag").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)}`
-    + ` lo${r0(loSeen)} hi${r0(hiSeen)} sh${f2(dSh)} hp${f2(dHp)} ${phase}`;
+    + ` lo${r0(loSeen)} hi${r0(hiSeen)} sh${f2(dSh)} hp${f2(dHp)}`
+    + ` kn${kn.deg === null ? "–" : Math.round(kn.deg)}/${f2(kn.vis)} ${phase}`;
 
   const bad = positionCheck(lm, world, asp);
   if(bad){
