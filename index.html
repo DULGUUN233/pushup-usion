@@ -122,6 +122,13 @@
     height:50%;width:100%;object-fit:cover;background:#0d1117}
   #play.duel #video, #play.duel #canvas{top:50%;bottom:auto;height:50%}
   #play.duel #deepGlow{top:50%;bottom:auto;height:50%}
+  /* Өрсөлдөгчийн видео зогсвол хөлдсөн кадар үлддэг — юу болсныг хэлнэ */
+  #oppNote{display:none}
+  #play.duel #oppNote{display:block;position:absolute;top:12px;left:50%;
+    transform:translateX(-50%);z-index:2;font-size:12px;font-weight:700;
+    padding:6px 14px;border-radius:999px;background:rgba(0,0,0,.7);
+    backdrop-filter:blur(8px);color:var(--warn);white-space:nowrap}
+  #play.duel #oppNote.hidden{display:none!important}
   #play.duel #counter{display:none}
   #play.duel #meterWrap{top:74%;height:20vh}
 
@@ -221,6 +228,7 @@
   <video id="video" playsinline muted autoplay></video>
   <canvas id="canvas"></canvas>
   <div id="deepGlow"></div>
+  <div id="oppNote" class="hidden"></div>
 
   <div id="hud">
     <div id="duelBar" class="hidden">
@@ -757,7 +765,9 @@ function loop(){
   lastKnee = kn;
   $("poseDiag").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)}`
     + ` lo${r0(loSeen)} hi${r0(hiSeen)} sh${f2(dSh)} hp${f2(dHp)}`
-    + ` kn${kn.deg === null ? "–" : Math.round(kn.deg)}/${f2(kn.vis)} ${phase}`;
+    + ` kn${kn.deg === null ? "–" : Math.round(kn.deg)}/${f2(kn.vis)} ${phase}`
+    // Видео яагаад зогссоныг ялгах: миний тал зогсоов уу, холболт унав уу
+    + (mode === "battle" ? ` vid:${videoPaused ? "off" : "on"} ${pc ? pc.connectionState : "–"}` : "");
 
   const bad = positionCheck(lm, world, asp);
   if(bad){
@@ -1010,7 +1020,15 @@ async function startVideo(myId, otherId){
   startFpsGuard();
 }
 
+const oppNote = text => {
+  const el = $("oppNote");
+  el.textContent = text || "";
+  el.classList.toggle("hidden", !text);
+};
+
 async function onSignal(data){
+  // Видео зогссоныг мэдэгдэх нь холболтоос үл хамаарна — pc-гүй ч ирж болно
+  if(data.vid){ oppNote(data.vid === "off" ? "Өрсөлдөгчийн видео түр зогслоо" : ""); return; }
   if(!pc) return;
   try{
     if(data.sdp){
@@ -1040,6 +1058,7 @@ function startFpsGuard(){
       if(++low >= 3){
         low = 0; videoPaused = true;
         vidSender.replaceTrack(null).catch(() => {});
+        signal({ vid: "off" });
       }
     } else if(videoPaused && fps > FPS_RESUME){
       // Хурд сэргэвэл видеог БУЦААЖ асаана. Өмнө нь sender-ээ хаячихдаг
@@ -1048,6 +1067,7 @@ function startFpsGuard(){
         ok = 0; videoPaused = false;
         const t = stream.getVideoTracks()[0];
         if(t) vidSender.replaceTrack(t).catch(() => {});
+        signal({ vid: "on" });
       }
     } else { low = 0; ok = 0; }
   }, 1000);
@@ -1069,7 +1089,8 @@ function watchConnection(){
   pc.onconnectionstatechange = () => {
     const s = pc?.connectionState;
     clearTimeout(iceTimer); iceTimer = null;
-    if(s === "failed") restartIce();
+    if(s === "connected") oppNote("");
+    if(s === "failed"){ oppNote("Холболт тасарлаа — сэргээж байна"); restartIce(); }
     // "disconnected" нь өөрөө сэргэдэг тул хэсэг хүлээгээд л оролдоно
     else if(s === "disconnected") iceTimer = setTimeout(() => {
       if(pc && pc.connectionState !== "connected") restartIce();
@@ -1083,6 +1104,7 @@ function stopVideo(){
   videoPaused = false; isOfferer = false;
   pc?.close(); pc = null; vidSender = null;
   $("oppVid").srcObject = null;
+  oppNote("");
 }
 
 /** Профайл зураг, байхгүй бол нэрний эхний үсэг. */
