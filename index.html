@@ -547,6 +547,34 @@ function positionCheck(lm, world, aspect){
   return null;
 }
 
+// ---------- дуу ----------
+// Файл татахгүй, Web Audio-гоор шууд синтезлэнэ. Хөтөч хэрэглэгчийн дарлагаас
+// өмнө дуу гаргахыг хориглодог тул камер асаах товчоор эхэлж нээнэ.
+
+let audio = null;
+
+function ac(){
+  if(!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  if(audio.state === "suspended") audio.resume();
+  return audio;
+}
+
+function tone(freq, ms, delay = 0, gain = 0.14, type = "triangle"){
+  try{
+    const a = ac(), t = a.currentTime + delay;
+    const osc = a.createOscillator(), amp = a.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    amp.gain.setValueAtTime(0.0001, t);
+    amp.gain.exponentialRampToValueAtTime(gain, t + 0.008);
+    amp.gain.exponentialRampToValueAtTime(0.0001, t + ms/1000);
+    osc.connect(amp).connect(a.destination);
+    osc.start(t); osc.stop(t + ms/1000 + 0.02);
+  }catch{ /* дуугүй ажиллана */ }
+}
+
+const sndRep = () => { tone(660, 70); tone(990, 90, 0.06); };
+
 function setMsg(text, color){
   const el = $("msg");
   el.textContent = text;
@@ -631,6 +659,7 @@ function countRep(deg, now, th, body){
         $("deep").textContent = Math.round(bestDepth) + "°";
       }
       if(navigator.vibrate) navigator.vibrate([18,40,18]);
+      sndRep();
       // Яагаад тоологдсоныг дараа нь харах боломжтой болгоно
       const dSh = shBot - shTop, dHp = hpBot - hpTop;
       $("repDiag").textContent = `#${count} kn`
@@ -795,6 +824,9 @@ function stopCamera(){
 }
 
 async function startEngine(){
+  // Дуу нээх ЦОРЫН ГАНЦ боломж бол хэрэглэгчийн дарлага. Энэ функц товч
+  // дарснаас л дуудагддаг тул audio-г яг энд асаана.
+  try{ ac(); }catch{ /* дуугүй ажиллана */ }
   if(!navigator.mediaDevices?.getUserMedia)
     throw new Error("Камер дэмжихгүй байна. HTTPS эсвэл localhost дээр нээнэ үү.");
 
