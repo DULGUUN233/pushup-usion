@@ -992,9 +992,11 @@ async function startVideo(myId, otherId){
   const track = stream.getVideoTracks()[0];
   if(track){
     vidSender = pc.addTrack(track, stream);
-    // Pose таних ажилтай нэг чипийг хуваана — видеог зориуд жижиг байлгана
+    // Дэлгэцийн хагасыг эзэлдэг тул 320x180 бүрхэг харагдана. 640x360 руу
+    // өргөсгөв — зурвасын өргөн асуудал биш (сард 1000 GB үнэгүй), харин
+    // pose таних ажилтай нэг чипийг хуваадаг тул fps-ийн хамгаалалт хэвээр.
     const p = vidSender.getParameters();
-    p.encodings = [{ maxBitrate: 250_000, maxFramerate: 15, scaleResolutionDownBy: 4 }];
+    p.encodings = [{ maxBitrate: 800_000, maxFramerate: 20, scaleResolutionDownBy: 2 }];
     vidSender.setParameters(p).catch(() => {});
   }
 
