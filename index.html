@@ -76,10 +76,13 @@
   #repDiag{opacity:.85;font-size:10px;letter-spacing:0;color:var(--gold)}
 
   #meterWrap{position:absolute;right:14px;top:50%;transform:translateY(-50%);
-    width:6px;height:30vh;border-radius:999px;background:rgba(255,255,255,.16);
-    overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.5)}
-  #meter{position:absolute;left:0;right:0;bottom:0;height:0%;background:var(--accent);
-    transition:height .06s linear}
+    width:12px;height:34vh;border-radius:999px;background:rgba(0,0,0,.45);
+    overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.25), 0 2px 10px rgba(0,0,0,.6)}
+  #meter{position:absolute;left:0;right:0;bottom:0;height:0%;background:var(--warn);
+    transition:height .06s linear, background .12s linear}
+  /* Хаана хүртэл буух ёстойг заана — үүнээс доош оруулбал л тоологдоно */
+  #meterLine{position:absolute;left:0;right:0;height:3px;bottom:31%;background:#fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,.55)}
 
   #bottom{display:flex;flex-direction:column;gap:12px;align-items:center}
   #msg{font-size:15px;font-weight:700;padding:8px 18px;border-radius:999px;
@@ -232,7 +235,7 @@
         <div id="repDiag">–</div>
       </div>
     </div>
-    <div id="meterWrap"><div id="meter"></div></div>
+    <div id="meterWrap"><div id="meter"></div><div id="meterLine"></div></div>
     <div id="bottom">
       <div id="msg">Бэлдэж байна…</div>
       <div id="counter"><span id="count">0</span></div>
@@ -421,8 +424,9 @@ function drawSkeleton(lm){
   const ok = i => (lm[i].visibility ?? 1) > DRAW_VIS;
 
   ctx.lineCap = "round"; ctx.lineJoin = "round";
-  // сүүдрийг эхлээд — цайвар дэвсгэр дээр цагаан шугам алга болохоос сэргийлнэ
-  for(const [color, width] of [["rgba(0,0,0,.4)", lw*2], ["#ffffff", lw]]){
+  // Шар улаан шугам + цагаан үе: цагаан шугам цайвар шалан дээр бүдгэрдэг.
+  // Доор нь бараан сүүдэр — бараан дэвсгэр дээр ч тодорхой хэвээр байна.
+  for(const [color, width] of [["rgba(0,0,0,.45)", lw*2.1], ["#ff6a3d", lw]]){
     ctx.strokeStyle = color; ctx.lineWidth = width;
     ctx.beginPath();
     for(const [a,b] of BONES){
@@ -435,9 +439,9 @@ function drawSkeleton(lm){
   for(const i of JOINTS){
     if(!ok(i)) continue;
     const [x,y] = at(i);
-    ctx.beginPath(); ctx.arc(x, y, lw*1.8, 0, Math.PI*2);
-    ctx.fillStyle = "#ffd21e"; ctx.fill();
-    ctx.lineWidth = lw*0.4; ctx.strokeStyle = "rgba(0,0,0,.45)"; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, lw*1.7, 0, Math.PI*2);
+    ctx.fillStyle = "#ffffff"; ctx.fill();
+    ctx.lineWidth = lw*0.55; ctx.strokeStyle = "#ff6a3d"; ctx.stroke();
   }
 }
 
@@ -722,10 +726,14 @@ function loop(){
     return;
   }
 
-  // 0% = бүтэн доош, 100% = бүтэн дээш
-  const pct = Math.max(0, Math.min(1, (deg - th.down) / (th.up - th.down)));
+  // Хэмжүүрийг босгоос 25° ГҮНЗГИЙ хүртэл сунгана — эс тэгвээс босго нь
+  // мөрний ёроол өөрөө болж, шугам зурах зай үлдэхгүй.
+  const floor = th.down - 25, span = th.up - floor;
+  const pct = Math.max(0, Math.min(1, (deg - floor) / span));
+  const deep = deg <= th.down;
   $("meter").style.height = (pct*100) + "%";
-  $("meter").style.background = pct < 0.05 ? "var(--warn)" : "var(--accent)";
+  $("meter").style.background = deep ? "var(--accent)" : "var(--warn)";
+  $("meterLine").style.bottom = ((th.down - floor) / span * 100) + "%";
 
   countRep(deg, now, th, body);
 
