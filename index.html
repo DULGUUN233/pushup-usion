@@ -374,7 +374,9 @@ const RIGID_DROP  = 0.02;
 const RIGID_RATIO = 0.25;
 
 // ---- төлөв ----
-let landmarker = null, running = false, facing = "environment", stream = null;
+// Урд камер анхдагч: хэрэглэгч дэлгэцээ хараад тоолуур, цагаа харах ёстой
+// тул дэлгэцтэй нэг талын камер л түүнийг харна.
+let landmarker = null, running = false, facing = "user", stream = null;
 let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
 let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
 let loSeen = null, hiSeen = null, badFrames = 0, dipMin = 999;
