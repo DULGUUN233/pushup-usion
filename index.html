@@ -370,6 +370,12 @@ let shTop = null, hpTop = null, shBot = null, hpBot = null;   // rep дотор�
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
 
 const ARMS = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
+const LEGS = [[23,25,27],[24,26,28]];  // аарцаг → өвдөг → шагай
+// Хөл шулуун бол өвдөг шалнаас дээш. Өвдөг дээрээ хийвэл ~90° болно.
+const KNEE_STRAIGHT = 150;
+// Хөлийн шалгуурт өндөр итгэлцүүр шаардана: камер ойрхон үед доод биеийн
+// цэгүүд таамаглал болдог ба тэр таамаг дээр rep-ийг хаах нь буруу.
+const SURE = 0.7;
 
 // Зөвхөн бие. MediaPipe-ийн бэлэн POSE_CONNECTIONS нүүрэн дээр 11 цэг,
 // алга/ул дээр бас цэг зурдаг тул зураг эмх замбараагүй болдог.
@@ -406,6 +412,7 @@ function drawSkeleton(lm){
 }
 
 const seen = (lm,i) => (lm[i].visibility ?? 1) > VIS_MIN;
+const sure = (lm,i) => (lm[i].visibility ?? 1) > SURE;
 
 // Өнцгийг worldLandmarks (метр, 3D) дээр бодно. 2D зураг дээр бодвол камерын
 // өнцгөөс болж өнцөг богиносч, тохой бүрэн нугалсныг ч танихгүй байдаг.
@@ -468,6 +475,18 @@ function positionCheck(lm, world, aspect){
   if(seen(lm,11) && seen(lm,12) && seen(lm,23) && seen(lm,24)){
     const { horiz, fore } = bodyAxis(lm, world, aspect);
     if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
+  }
+  // Өвдөг шалан дээр бол хөл нугалагдана. Хоёр хөлийн дунджаар шүүнэ —
+  // нэг хөл буруу танигдсанаас болж rep алдагдахгүйн тулд.
+  const knees = []
+  for(const [h,k,a] of LEGS){
+    if(sure(lm,h) && sure(lm,k) && sure(lm,a)){
+      const v = angle3(world[h], world[k], world[a]);
+      if(v !== null) knees.push(v);
+    }
+  }
+  if(knees.length && knees.reduce((x,y)=>x+y,0)/knees.length < KNEE_STRAIGHT){
+    return "Өвдгөө шалнаас өргө";
   }
   // Мөр–аарцаг–өвдөг өнцгөөр "бие шулуун уу" гэж шалгахыг больсон: камер
   // ойрхон, бие нь камераас хол чиглэсэн үед доод биеийн цэгүүд таамаглал
