@@ -73,6 +73,7 @@
     text-shadow:0 1px 6px rgba(0,0,0,.9);font-variant-numeric:tabular-nums;letter-spacing:.02em}
   #stats b{color:rgba(255,255,255,.95);font-weight:700}
   #poseDiag{opacity:.45;font-size:10px;letter-spacing:0}
+  #repDiag{opacity:.85;font-size:10px;letter-spacing:0;color:var(--gold)}
 
   #meterWrap{position:absolute;right:14px;top:50%;transform:translateY(-50%);
     width:6px;height:30vh;border-radius:999px;background:rgba(255,255,255,.16);
@@ -226,6 +227,9 @@
         <!-- id нь window дээр глобал болдог тул MediaPipe-ийн WASM доторх
              нэрстэй мөргөлдөхгүй нэр сонгох ёстой (id="dbg" нь мөргөлдсөн) -->
         <div id="poseDiag">–</div>
+        <!-- Тоологдсон rep бүрийн хэмжилтийг үлдээнэ: хөдөлгөөний дунд
+             өөрчлөгддөг мөр уншихад хэцүү, дараа нь тайван харна. -->
+        <div id="repDiag">–</div>
       </div>
     </div>
     <div id="meterWrap"><div id="meter"></div></div>
@@ -381,6 +385,7 @@ let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
 let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
 let loSeen = null, hiSeen = null, badFrames = 0, dipMin = 999;
 let shTop = null, hpTop = null, shBot = null, hpBot = null;   // rep доторх биеийн явалт
+let lastKnee = { deg: null, vis: 0 };   // rep тоологдох агшинд бичих оношлогоо
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
 // Утасны цаг серверийнхээс зөрдөг. Зөрүүг тооцоогүй бол хоёр тоглогч
 // өөр өөр секунд хараад, нэг нь илүү хугацаа хийж байна гэж бодно.
@@ -602,6 +607,11 @@ function countRep(deg, now, th, body){
         $("deep").textContent = Math.round(bestDepth) + "°";
       }
       if(navigator.vibrate) navigator.vibrate([18,40,18]);
+      // Яагаад тоологдсоныг дараа нь харах боломжтой болгоно
+      const dSh = shBot - shTop, dHp = hpBot - hpTop;
+      $("repDiag").textContent = `#${count} kn`
+        + `${lastKnee.deg === null ? "–" : Math.round(lastKnee.deg)}/${lastKnee.vis.toFixed(2)}`
+        + ` sh${dSh.toFixed(3)} hp${dHp.toFixed(3)} r${(dHp/dSh).toFixed(2)}`;
       if(mode === "battle") sendRep(); else setMsg(`${count} — сайн байна!`, "var(--accent)");
     }
     repMinAngle = 180;
@@ -658,6 +668,7 @@ function loop(){
   const dSh = shTop !== null && shBot !== null ? shBot - shTop : null;
   const dHp = hpTop !== null && hpBot !== null ? hpBot - hpTop : null;
   const kn = kneeAngle(lm, world);
+  lastKnee = kn;
   $("poseDiag").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)}`
     + ` lo${r0(loSeen)} hi${r0(hiSeen)} sh${f2(dSh)} hp${f2(dHp)}`
     + ` kn${kn.deg === null ? "–" : Math.round(kn.deg)}/${f2(kn.vis)} ${phase}`;
@@ -720,6 +731,7 @@ function reset(){
   $("count").textContent = 0;
   $("counter").classList.remove("pop");
   $("deep").textContent = "–";
+  $("repDiag").textContent = "–";
   $("time").textContent = "0:00";
   setMsg("Эхлэхэд бэлэн");
 }
