@@ -161,6 +161,7 @@
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:18px;padding:28px;text-align:center}
   #start h2{margin:0;font-size:24px;letter-spacing:-.02em}
+  #howto{width:min(280px,80vw);height:auto}
   #start p{margin:0;max-width:340px;color:var(--dim);font-size:14px;line-height:1.65}
   #err{color:var(--bad);font-size:13px;max-width:340px;line-height:1.6}
 </style>
@@ -257,8 +258,25 @@
 
   <div id="start">
     <h2>Push Up</h2>
-    <p>Утсаа хажуу талд, шалнаас 30–50 см өндөрт тавьж, <b>бүтэн биеэ</b> камерт багтаана.
-       Тохойн өнцгөөр push-up автоматаар тоологдоно.</p>
+    <svg id="howto" viewBox="0 0 280 168" aria-label="Тохойгоо задгай байлгах зураг">
+      <line x1="18" y1="132" x2="262" y2="132" stroke="rgba(255,255,255,.28)" stroke-width="3"/>
+      <path d="M140,70 L140,106" stroke="#ff6a3d" stroke-width="6" stroke-linecap="round"/>
+      <path d="M110,70 L170,70" stroke="#ff6a3d" stroke-width="6" stroke-linecap="round"/>
+      <path d="M110,70 L58,80 L44,132" stroke="#ff6a3d" stroke-width="6" fill="none"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M170,70 L222,80 L236,132" stroke="#ff6a3d" stroke-width="6" fill="none"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="140" cy="58" r="19" fill="#ff6a3d"/>
+      <circle cx="110" cy="70" r="5" fill="#fff"/><circle cx="170" cy="70" r="5" fill="#fff"/>
+      <circle cx="44" cy="132" r="5" fill="#fff"/><circle cx="236" cy="132" r="5" fill="#fff"/>
+      <circle cx="58" cy="80" r="5" fill="#fff"/><circle cx="222" cy="80" r="5" fill="#fff"/>
+      <circle cx="58" cy="80" r="14" fill="none" stroke="#ffd21e" stroke-width="2.5"/>
+      <circle cx="222" cy="80" r="14" fill="none" stroke="#ffd21e" stroke-width="2.5"/>
+      <text x="140" y="160" text-anchor="middle" font-size="13" font-weight="700"
+            fill="#ffd21e">тохой хоёулаа ил, задгай</text>
+    </svg>
+    <p>Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга — биедээ
+       наавал халхлагдаж, өнцөг буруу уншина.</p>
     <button class="primary" id="go">Камер асаах</button>
     <button id="pBack">← Буцах</button>
     <div id="err" class="hidden"></div>
