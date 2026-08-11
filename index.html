@@ -1007,6 +1007,11 @@ async function startVideo(myId, otherId){
     // pose таних ажилтай нэг чипийг хуваадаг тул fps-ийн хамгаалалт хэвээр.
     const p = vidSender.getParameters();
     p.encodings = [{ maxBitrate: 800_000, maxFramerate: 20, scaleResolutionDownBy: 2 }];
+    // Push-up бол хөдөлгөөн ихтэй. Анхдагчаар кодлогч нягтралаа хадгалахын
+    // тулд кадраа хаядаг — тэр үед хүлээн авагч дараагийн түлхүүр кадрыг
+    // хүлээж хөлддөг. Нягтралаа золиослож, урсгалаа тасалдуулахгүй байхыг
+    // сонгоно: бүдэгхэн ч гэсэн үргэлжилсэн дүрс дээр.
+    p.degradationPreference = "maintain-framerate";
     vidSender.setParameters(p).catch(() => {});
   }
 
