@@ -175,6 +175,7 @@
   <button id="mBoard">Тэргүүлэгчид</button>
 
   <div id="note"></div>
+  <button id="retrySave" class="hidden">Дахин хадгалах</button>
 </section>
 
 <!-- ================= ТЭРГҮҮЛЭГЧИД ================= -->
@@ -302,11 +303,19 @@ function authHeaders(){
   return token ? { authorization: `Bearer ${token}` } : { "x-dev-user": devId() };
 }
 
+const send = (path, opts) => fetch("/api" + path, {
+  ...opts,
+  headers: { "content-type": "application/json", ...authHeaders(), ...(opts.headers || {}) },
+});
+
 async function api(path, opts = {}){
-  const res = await fetch("/api" + path, {
-    ...opts,
-    headers: { "content-type": "application/json", ...authHeaders(), ...(opts.headers || {}) },
-  });
+  let res = await send(path, opts);
+  // Удаан нээлттэй байсны дараа token хуучирч 401 ирдэг. Хост шинийг өгөх
+  // зуур түр хүлээгээд толгойг ДАХИН уншиж (шинэ token) нэг удаа давтана.
+  if(res.status === 401 && sdk()){
+    await new Promise(r => setTimeout(r, 1500));
+    res = await send(path, opts);
+  }
   const body = await res.json().catch(() => ({}));
   if(!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
   return body;
@@ -756,21 +765,34 @@ async function startSolo(){
   }
 }
 
-/** Сетийг хааж, дүнг сервер рүү бүртгэнэ. */
+/**
+ * Дүнг сервер рүү бүртгэнэ. Амжилтгүй болбол тоог АЛДАХГҮЙ — хүн 100 удаа
+ * хийчихээд token хуучирсны улмаас бүгдийг алдах нь хамгийн муу төгсгөл.
+ */
+let pendingSet = null;
+
+async function saveSet(reps, seconds){
+  note(`${reps} бүртгэж байна…`, "");
+  try{
+    profile = await api("/session", { method: "POST", body: JSON.stringify({ reps, seconds }) });
+    pendingSet = null;
+    $("retrySave").classList.add("hidden");
+    renderProfile();
+    note(`+${reps} бүртгэгдлээ. Нийт ${profile.totalReps}, #${profile.rank}`, "ok");
+  }catch(e){
+    pendingSet = { reps, seconds };
+    $("retrySave").classList.remove("hidden");
+    note(`${reps} хадгалагдсангүй: ${e.message} — тоо алдагдаагүй, дахин оролдоно уу.`, "bad");
+  }
+}
+
+/** Сетийг хааж, дүнг бүртгэнэ. */
 async function finish(){
   const reps = count, seconds = elapsed();
   stopCamera();
   show("menu");
   if(reps < 1){ note("Тоологдсон push-up алга.", ""); return; }
-
-  note(`${reps} бүртгэж байна…`, "");
-  try{
-    profile = await api("/session", { method: "POST", body: JSON.stringify({ reps, seconds }) });
-    renderProfile();
-    note(`+${reps} бүртгэгдлээ. Нийт ${profile.totalReps}, #${profile.rank}`, "ok");
-  }catch(e){
-    note(`${reps} хадгалагдсангүй: ${e.message}`, "bad");
-  }
+  await saveSet(reps, seconds);
 }
 
 // ======================= тулаан =======================
@@ -947,6 +969,7 @@ async function openBoard(){
 $("mPush").onclick   = () => { mode = "solo"; show("play"); $("start").classList.remove("hidden"); };
 $("mBattle").onclick = startBattle;
 $("mBoard").onclick  = openBoard;
+$("retrySave").onclick = () => pendingSet && saveSet(pendingSet.reps, pendingSet.seconds);
 $("bBack").onclick   = () => show("menu");
 $("oBack").onclick   = leaveBattle;
 $("seekCancel").onclick = leaveBattle;
