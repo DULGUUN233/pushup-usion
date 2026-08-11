@@ -971,6 +971,10 @@ function sendRep(){
 // локалд хоёр табаар шалгаж болно.
 
 let pc = null, vidSender = null, fpsGuard = null;
+let videoPaused = false, isOfferer = false, iceTimer = null;
+// Зогсоох босгыг доогуур, сэргээхийг дээгүүр авна — хоёрын хооронд зай
+// байхгүй бол хурд хэлбэлзэхэд видео байнга асаж унтарна.
+const FPS_PAUSE = 12, FPS_RESUME = 20;
 
 const signal = data => {
   if(ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "signal", data }));
@@ -995,7 +999,9 @@ async function startVideo(myId, otherId){
   }
 
   // Хоёр тал зэрэг offer явуулбал мөргөлдөнө — ID-гаар эрэмбэлж нэгийг сонгоно
-  if(myId < otherId){
+  isOfferer = myId < otherId;
+  watchConnection();
+  if(isOfferer){
     await pc.setLocalDescription(await pc.createOffer());
     signal({ sdp: pc.localDescription });
   }
@@ -1024,21 +1030,55 @@ async function onSignal(data){
  */
 function startFpsGuard(){
   clearInterval(fpsGuard);
-  let low = 0;
+  let low = 0, ok = 0;
   fpsGuard = setInterval(() => {
-    if(!vidSender) return;
-    if(fpsEma && fpsEma < 18){
+    if(!vidSender || !stream) return;
+    const fps = fpsEma || 0;
+    if(!videoPaused && fps && fps < FPS_PAUSE){
       if(++low >= 3){
+        low = 0; videoPaused = true;
         vidSender.replaceTrack(null).catch(() => {});
-        vidSender = null;
-        setMsg("Видео унтраалаа — тоолуур чухал", "var(--warn)");
       }
-    } else low = 0;
+    } else if(videoPaused && fps > FPS_RESUME){
+      // Хурд сэргэвэл видеог БУЦААЖ асаана. Өмнө нь sender-ээ хаячихдаг
+      // байсан тул нэг доголдоход дуустал гацдаг байв.
+      if(++ok >= 3){
+        ok = 0; videoPaused = false;
+        const t = stream.getVideoTracks()[0];
+        if(t) vidSender.replaceTrack(t).catch(() => {});
+      }
+    } else { low = 0; ok = 0; }
   }, 1000);
+}
+
+/**
+ * Сүлжээ солигдох, IP өөрчлөгдөхөд ICE унана. Зөвхөн offer хийсэн тал
+ * шинэчилнэ — хоёулаа зэрэг оролдвол хоорондоо мөргөлдөнө.
+ */
+async function restartIce(){
+  if(!pc || !isOfferer) return;
+  try{
+    await pc.setLocalDescription(await pc.createOffer({ iceRestart: true }));
+    signal({ sdp: pc.localDescription });
+  }catch{ /* дараагийн төлвийн өөрчлөлт дээр дахин оролдоно */ }
+}
+
+function watchConnection(){
+  pc.onconnectionstatechange = () => {
+    const s = pc?.connectionState;
+    clearTimeout(iceTimer); iceTimer = null;
+    if(s === "failed") restartIce();
+    // "disconnected" нь өөрөө сэргэдэг тул хэсэг хүлээгээд л оролдоно
+    else if(s === "disconnected") iceTimer = setTimeout(() => {
+      if(pc && pc.connectionState !== "connected") restartIce();
+    }, 4000);
+  };
 }
 
 function stopVideo(){
   clearInterval(fpsGuard); fpsGuard = null;
+  clearTimeout(iceTimer); iceTimer = null;
+  videoPaused = false; isOfferer = false;
   pc?.close(); pc = null; vidSender = null;
   $("oppVid").srcObject = null;
 }
