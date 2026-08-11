@@ -110,7 +110,9 @@
   .dTop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:4px}
   .dSide{display:flex;flex-direction:column;align-items:center;width:96px}
   .av{width:44px;height:44px;border-radius:14px;object-fit:cover;background:#1b2440;
-    border:2px solid var(--accent)}
+    border:2px solid var(--accent);display:block}
+  /* Өрсөлдөгчийн видео аватарын байрыг эзэлнэ — хоёулаа ижил хэмжээтэй */
+  video.av{transform:scaleX(-1)}
   .av.opp{border-color:var(--bad)}
   .dNm{font-size:13px;font-weight:800;margin-top:4px;max-width:96px;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
@@ -204,6 +206,7 @@
         <div class="dSide">
           <img id="oppAv" class="av opp" alt=""
             src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+          <video id="oppVid" class="av opp hidden" playsinline autoplay muted></video>
           <div class="dNm" id="oppName">…</div>
           <div class="dElo" id="oppElo">–</div>
         </div>
@@ -712,6 +715,12 @@ async function openCamera(){
   const front = facing === "user";
   video.classList.toggle("mirror", front);
   canvas.classList.toggle("mirror", front);
+  // Тулааны дунд камер солиход хуучин track үхнэ — өрсөлдөгч рүү явах
+  // урсгалыг шинэ track-аар солино, эс тэгвээс дүрс нь хөлдөнө.
+  if(vidSender){
+    const t = stream.getVideoTracks()[0];
+    if(t) vidSender.replaceTrack(t).catch(() => {});
+  }
 }
 
 function stopCamera(){
@@ -828,11 +837,95 @@ function openSocket(roomId){
   ws.onmessage = ev => {
     const m = JSON.parse(ev.data);
     if(m.type === "state") applyDuel(m.state);
+    else if(m.type === "signal") onSignal(m.data);
   };
 }
 
 function sendRep(){
   if(ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "rep", n: 1 }));
+}
+
+// ---------- өрсөлдөгчийн видео (WebRTC) ----------
+// Signaling нь ӨӨРИЙН socket-оор явна — Usion-ы relay-гээс хамаарахгүй тул
+// локалд хоёр табаар шалгаж болно.
+
+let pc = null, vidSender = null, fpsGuard = null;
+
+const signal = data => {
+  if(ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "signal", data }));
+};
+
+async function startVideo(myId, otherId){
+  if(pc || !stream) return;
+  let iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+  try { ({ iceServers } = await api("/ice")); } catch { /* STUN-ээр үргэлжилнэ */ }
+
+  pc = new RTCPeerConnection({ iceServers });
+  pc.onicecandidate = e => { if(e.candidate) signal({ candidate: e.candidate }); };
+  pc.ontrack = e => {
+    $("oppVid").srcObject = e.streams[0];
+    $("oppVid").classList.remove("hidden");
+    $("oppAv").classList.add("hidden");
+  };
+
+  const track = stream.getVideoTracks()[0];
+  if(track){
+    vidSender = pc.addTrack(track, stream);
+    // Pose таних ажилтай нэг чипийг хуваана — видеог зориуд жижиг байлгана
+    const p = vidSender.getParameters();
+    p.encodings = [{ maxBitrate: 250_000, maxFramerate: 15, scaleResolutionDownBy: 4 }];
+    vidSender.setParameters(p).catch(() => {});
+  }
+
+  // Хоёр тал зэрэг offer явуулбал мөргөлдөнө — ID-гаар эрэмбэлж нэгийг сонгоно
+  if(myId < otherId){
+    await pc.setLocalDescription(await pc.createOffer());
+    signal({ sdp: pc.localDescription });
+  }
+  startFpsGuard();
+}
+
+async function onSignal(data){
+  if(!pc) return;
+  try{
+    if(data.sdp){
+      await pc.setRemoteDescription(data.sdp);
+      if(data.sdp.type === "offer"){
+        await pc.setLocalDescription(await pc.createAnswer());
+        signal({ sdp: pc.localDescription });
+      }
+    } else if(data.candidate){
+      await pc.addIceCandidate(data.candidate);
+    }
+  }catch{ /* хожуу ирсэн нэр дэвшигч — холболтыг зогсоохгүй */ }
+}
+
+/**
+ * Тоолуур бол аппын гол цөм. Видео кодлолт pose-ийн fps-ийг унагаавал
+ * видеог золиослоно. Камерын track нь MediaPipe-д ч ашиглагддаг тул түүнийг
+ * унтраахгүй — зөвхөн илгээхээ болино.
+ */
+function startFpsGuard(){
+  clearInterval(fpsGuard);
+  let low = 0;
+  fpsGuard = setInterval(() => {
+    if(!vidSender) return;
+    if(fpsEma && fpsEma < 18){
+      if(++low >= 3){
+        vidSender.replaceTrack(null).catch(() => {});
+        vidSender = null;
+        setMsg("Видео унтраалаа — тоолуур чухал", "var(--warn)");
+      }
+    } else low = 0;
+  }, 1000);
+}
+
+function stopVideo(){
+  clearInterval(fpsGuard); fpsGuard = null;
+  pc?.close(); pc = null; vidSender = null;
+  $("oppVid").srcObject = null;
+  $("oppVid").classList.add("hidden");
+  $("oppAv").classList.remove("hidden");
 }
 
 function applyDuel(state){
@@ -848,6 +941,7 @@ function applyDuel(state){
   $("oppReps").textContent = o.reps;
   const total = y.reps + o.reps;
   $("tugYou").style.width = (total ? (y.reps / total) * 100 : 50) + "%";
+  if(state.status === "playing" && state.opponent) startVideo(y.userId, state.opponent.userId);
   if(state.status === "finished") endDuel(state);
 }
 
@@ -871,6 +965,7 @@ function startClock(){
 
 function endDuel(state){
   clearInterval(tick); tick = null;
+  stopVideo();
   stopCamera();
   ws?.close(); ws = null;
 
@@ -927,6 +1022,7 @@ async function startBattle(){
 
 function leaveBattle(){
   clearInterval(tick); tick = null;
+  stopVideo();
   ws?.close(); ws = null;
   duel = null; mode = "solo";
   stopCamera();

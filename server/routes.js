@@ -57,6 +57,23 @@ router.post('/session', requireUser, async (req, res) => {
   res.json(publicUser(user, await rankOf(user.totalReps)))
 })
 
+/**
+ * WebRTC-д хэрэглэх ICE серверүүд. TURN-ыг орчны хувьсагчаар өгнө — итгэмжлэл
+ * кодонд байхгүй, нэмэхэд клиентээ дахин байршуулах шаардлагагүй.
+ * TURN байхгүй бол хоёр утас өөр сүлжээнд байхад видео заримдаа холбогдохгүй.
+ */
+router.get('/ice', requireUser, (_req, res) => {
+  const iceServers = [{ urls: process.env.STUN_URL || 'stun:stun.l.google.com:19302' }]
+  if (process.env.TURN_URL) {
+    iceServers.push({
+      urls: process.env.TURN_URL,
+      username: process.env.TURN_USERNAME,
+      credential: process.env.TURN_CREDENTIAL,
+    })
+  }
+  res.json({ iceServers })
+})
+
 router.get('/leaderboard', async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100)
   const top = await users()

@@ -96,6 +96,15 @@ export function attachBattleSocket(server) {
         return
       }
 
+      // WebRTC-ийн offer/answer/ICE-ийг нөгөө тал руу дамжуулна. Агуулгыг нь
+      // сервер уншихгүй — зөвхөн ижил өрөөний нөгөө оролцогч руу хүргэнэ.
+      if (message.type === 'signal') {
+        for (const peer of rooms.get(socket.roomId) ?? []) {
+          if (peer !== socket) send(peer, { type: 'signal', from: socket.user.userId, data: message.data })
+        }
+        return
+      }
+
       if (message.type === 'ping') send(socket, { type: 'pong' })
     })
 
