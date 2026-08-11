@@ -2,7 +2,7 @@ import { battles, ensureUsers, sessions, users } from './db.js'
 import { settleBattle } from './elo.js'
 
 /** Тулааны үргэлжлэх хугацаа. */
-export const BATTLE_MS = 30_000
+export const BATTLE_MS = 60_000
 /** Хоёр тал бэлдэх завсар — хос олдоод шууд эхэлбэл нэг тал хоцорно. */
 export const COUNTDOWN_MS = 5_000
 /** Нэг тулаанд хүлээн зөвшөөрөх дээд тоо — утгагүй өгөгдлөөс хамгаална. */

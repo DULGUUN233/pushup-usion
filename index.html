@@ -173,7 +173,7 @@
   </div>
 
   <button class="mode go" id="mPush">Push Up<small>Чөлөөтэй тоол — нийт дүнд нэмэгдэнэ</small></button>
-  <button class="mode duel" id="mBattle">Battle<small>30 секунд, 1v1, ELO</small></button>
+  <button class="mode duel" id="mBattle">Battle<small>1 минут, 1v1, ELO</small></button>
   <button id="mBoard">Тэргүүлэгчид</button>
 
   <div id="note"></div>
@@ -957,7 +957,8 @@ function startClock(){
       setMsg("Бэлдэж бай…", "var(--warn)");
     } else {
       const left = Math.max(0, Math.ceil((end - now) / 1000));
-      $("clock").textContent = "0:" + String(left).padStart(2, "0");
+      // clock() ашиглана — "0:60" биш "1:00" гэж гарах ёстой
+      $("clock").textContent = clock(left);
       if(left === 0) setMsg("Дууслаа", "var(--dim)");
     }
   }, 200);
