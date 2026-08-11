@@ -3,16 +3,20 @@ import { settleBattle } from './elo.js'
 
 /** Тулааны үргэлжлэх хугацаа. */
 export const BATTLE_MS = 60_000
-/** Хоёр тал бэлдэх завсар — хос олдоод шууд эхэлбэл нэг тал хоцорно. */
+/** Хоёулаа орсны дараах бэлдэх завсар. */
 export const COUNTDOWN_MS = 5_000
+/** Өрсөлдөгчийг ийм хугацаанд хүлээнэ, ирэхгүй бол тулаан цуцлагдана. */
+export const WAIT_MS = 45_000
 /** Нэг тулаанд хүлээн зөвшөөрөх дээд тоо — утгагүй өгөгдлөөс хамгаална. */
-const MAX_REPS = 200
+export const MAX_REPS = 200
 
 /**
  * Тулааныг үүсгэнэ. Хоёр тал зэрэг дуудна тул давхардлыг Mongo дээр таслана —
  * _id нь roomId учраас хоёр дахь оролдлого унана, тэгвэл байгааг нь буцаана.
  *
- * Цагийг СЕРВЕР тавина. Клиент тавьбал хэн ч өөртөө илүү хугацаа өгнө.
+ * Цаг ЭНД тавигдахгүй: камер, модель ачаалах хугацаа хүн бүрд өөр тул үүсгэх
+ * агшнаас тоолж эхэлбэл удаан ачаалсан хүн секунд алдана. Хоёулаа орсны
+ * дараа `start()` цагийг тавина.
  */
 export async function createBattle(roomId, playerIds) {
   const ids = [...new Set(playerIds)].sort()
@@ -29,15 +33,14 @@ export async function createBattle(roomId, playerIds) {
     docs.map((u) => [u._id, { name: u.name, avatar: u.avatar ?? null, rating: u.rating }]),
   )
 
-  const startsAt = new Date(Date.now() + COUNTDOWN_MS)
   const battle = {
     _id: roomId,
     players: ids,
     profiles,
     reps: { [ids[0]]: 0, [ids[1]]: 0 },
-    startsAt,
-    endsAt: new Date(startsAt.getTime() + BATTLE_MS),
-    status: 'playing',
+    startsAt: null,
+    endsAt: null,
+    status: 'waiting',
     winnerId: null,
     createdAt: new Date(),
   }
@@ -52,22 +55,30 @@ export async function createBattle(roomId, playerIds) {
 }
 
 /**
- * Нэг rep нэмнэ. Цонхны гадна ирсэн rep-ийг хаяна — тулаан дуусмагц
- * хожигдсон тал нэмж илгээгээд хожихоос сэргийлнэ.
+ * Хоёулаа орсны дараа цагийг тавина. Нөхцөлт шинэчлэлт тул хоёр тал зэрэг
+ * дуудсан ч цаг ЗӨВХӨН НЭГ УДАА тавигдана — эс тэгвээс хоёр тал өөр өөр
+ * эцсийн хугацаа хараад маргаан үүснэ.
  */
-export async function addRep(roomId, userId, count = 1) {
-  const now = new Date()
-  const n = Math.max(1, Math.min(Math.round(count) || 1, 5))
+export async function start(roomId) {
+  const startsAt = new Date(Date.now() + COUNTDOWN_MS)
   return battles().findOneAndUpdate(
+    { _id: roomId, status: 'waiting' },
     {
-      _id: roomId,
-      status: 'playing',
-      players: userId,
-      startsAt: { $lte: now },
-      endsAt: { $gt: now },
-      [`reps.${userId}`]: { $lt: MAX_REPS },
+      $set: {
+        status: 'playing',
+        startsAt,
+        endsAt: new Date(startsAt.getTime() + BATTLE_MS),
+      },
     },
-    { $inc: { [`reps.${userId}`]: n } },
+    { returnDocument: 'after' },
+  )
+}
+
+/** Өрсөлдөгч ирээгүй тулааныг цуцална. Рейтинг хөдлөхгүй. */
+export async function cancelIfStale(roomId) {
+  return battles().findOneAndUpdate(
+    { _id: roomId, status: 'waiting', createdAt: { $lte: new Date(Date.now() - WAIT_MS) } },
+    { $set: { status: 'cancelled', finishedAt: new Date() } },
     { returnDocument: 'after' },
   )
 }
@@ -116,12 +127,13 @@ export async function settleIfDue(roomId) {
     users().updateOne({ _id: aId }, bump(aId, aReps)),
     users().updateOne({ _id: bId }, bump(bId, bReps)),
   ])
-  await sessions().insertMany(
-    [
-      { userId: aId, reps: aReps, seconds: BATTLE_MS / 1000, mode: 'battle', roomId, finishedAt: new Date() },
-      { userId: bId, reps: bReps, seconds: BATTLE_MS / 1000, mode: 'battle', roomId, finishedAt: new Date() },
-    ].filter((s) => s.reps > 0),
-  )
+  const rows = [
+    { userId: aId, reps: aReps },
+    { userId: bId, reps: bReps },
+  ]
+    .filter((s) => s.reps > 0)
+    .map((s) => ({ ...s, seconds: BATTLE_MS / 1000, mode: 'battle', roomId, finishedAt: new Date() }))
+  if (rows.length) await sessions().insertMany(rows)
 
   return battles().findOneAndUpdate(
     { _id: roomId },
@@ -143,6 +155,9 @@ export function view(battle, userId) {
     status: battle.status === 'settling' ? 'playing' : battle.status,
     startsAt: battle.startsAt,
     endsAt: battle.endsAt,
+    // Серверийн цаг. Утаснуудын цаг хоорондоо зөрдөг тул клиент зөрүүг нь
+    // тооцоолж байж хоёр тал ижил секунд харна.
+    now: new Date(),
     you: side(userId),
     opponent: opponentId ? side(opponentId) : null,
     winnerId: battle.winnerId ?? null,

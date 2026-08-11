@@ -380,6 +380,10 @@ let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
 let loSeen = null, hiSeen = null, badFrames = 0, dipMin = 999;
 let shTop = null, hpTop = null, shBot = null, hpBot = null;   // rep доторх биеийн явалт
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
+// Утасны цаг серверийнхээс зөрдөг. Зөрүүг тооцоогүй бол хоёр тоглогч
+// өөр өөр секунд хараад, нэг нь илүү хугацаа хийж байна гэж бодно.
+let clockOffset = 0;
+const serverNow = () => Date.now() + clockOffset;
 
 const ARMS = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
 const LEGS = [[23,25,27],[24,26,28]];  // аарцаг → өвдөг → шагай
@@ -930,6 +934,7 @@ function stopVideo(){
 
 function applyDuel(state){
   duel = state;
+  if(state.now) clockOffset = new Date(state.now).getTime() - Date.now();
   const y = state.you, o = state.opponent ?? { reps: 0, name: "Хүлээж байна", rating: null };
   $("youName").textContent = y.name || "Чи";
   $("oppName").textContent = o.name || "Өрсөлдөгч";
@@ -941,7 +946,9 @@ function applyDuel(state){
   $("oppReps").textContent = o.reps;
   const total = y.reps + o.reps;
   $("tugYou").style.width = (total ? (y.reps / total) * 100 : 50) + "%";
+  if(state.status === "waiting") setMsg("Өрсөлдөгчийг хүлээж байна…", "var(--dim)");
   if(state.status === "playing" && state.opponent) startVideo(y.userId, state.opponent.userId);
+  if(state.status === "cancelled") cancelDuel();
   if(state.status === "finished") endDuel(state);
 }
 
@@ -949,7 +956,9 @@ function startClock(){
   clearInterval(tick);
   tick = setInterval(() => {
     if(!duel) return;
-    const now = Date.now();
+    // Хоёулаа ортол цаг тавигдаагүй байна
+    if(!duel.startsAt){ $("clock").textContent = "…"; return; }
+    const now = serverNow();
     const begin = new Date(duel.startsAt).getTime();
     const end = new Date(duel.endsAt).getTime();
     if(now < begin){
@@ -962,6 +971,19 @@ function startClock(){
       if(left === 0) setMsg("Дууслаа", "var(--dim)");
     }
   }, 200);
+}
+
+/** Өрсөлдөгч ирээгүй — рейтинг хөдлөхгүй. */
+function cancelDuel(){
+  clearInterval(tick); tick = null;
+  stopVideo();
+  stopCamera();
+  ws?.close(); ws = null;
+  $("oTitle").textContent = "Өрсөлдөгч ирсэнгүй";
+  $("oTitle").style.color = "var(--dim)";
+  $("oScore").textContent = "—";
+  $("oElo").textContent = "Рейтинг өөрчлөгдөөгүй";
+  $("over").classList.remove("hidden");
 }
 
 function endDuel(state){

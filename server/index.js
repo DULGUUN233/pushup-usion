@@ -3,7 +3,7 @@ import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { authMode } from './auth.js'
-import { settleIfDue } from './battle.js'
+import { WAIT_MS, cancelIfStale, settleIfDue } from './battle.js'
 import battleRoutes from './battleRoutes.js'
 import { attachBattleSocket } from './battleSocket.js'
 import { battles, connect } from './db.js'
@@ -36,6 +36,16 @@ function startSweeper() {
         .limit(20)
         .toArray()
       for (const b of due) await settleIfDue(b._id)
+
+      // Өрсөлдөгч огт ирээгүй тулаанууд
+      const stale = await battles()
+        .find(
+          { status: 'waiting', createdAt: { $lte: new Date(Date.now() - WAIT_MS) } },
+          { projection: { _id: 1 } },
+        )
+        .limit(20)
+        .toArray()
+      for (const b of stale) await cancelIfStale(b._id)
     } catch (err) {
       console.error('sweeper алдаа:', err.message)
     }
