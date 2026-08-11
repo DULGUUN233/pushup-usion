@@ -1031,6 +1031,23 @@ const oppNote = text => {
   el.classList.toggle("hidden", !text);
 };
 
+/**
+ * remoteDescription тавигдахаас өмнө ирсэн нэр дэвшигчийг хадгална.
+ * Offer явуулсан тал нэр дэвшигчээ шууд илгээж эхэлдэг тул нөгөө тал
+ * тайлбараа боловсруулж дуусаагүй байхад ирдэг — шууд нэмэх гэвэл алдаа
+ * өгч, чимээгүй алдагдана. Тэдний дунд TURN relay-гийнх байвал холболт
+ * удаашрах эсвэл огт бүтэхгүй.
+ */
+let pendingCandidates = [];
+
+async function flushCandidates(){
+  const queued = pendingCandidates;
+  pendingCandidates = [];
+  for(const c of queued){
+    try{ await pc.addIceCandidate(c); }catch{ /* хуучирсан нэр дэвшигч */ }
+  }
+}
+
 async function onSignal(data){
   // Видео зогссоныг мэдэгдэх нь холболтоос үл хамаарна — pc-гүй ч ирж болно
   if(data.vid){ oppNote(data.vid === "off" ? "Өрсөлдөгчийн видео түр зогслоо" : ""); return; }
@@ -1042,10 +1059,12 @@ async function onSignal(data){
         await pc.setLocalDescription(await pc.createAnswer());
         signal({ sdp: pc.localDescription });
       }
+      await flushCandidates();
     } else if(data.candidate){
-      await pc.addIceCandidate(data.candidate);
+      if(pc.remoteDescription) await pc.addIceCandidate(data.candidate);
+      else pendingCandidates.push(data.candidate);
     }
-  }catch{ /* хожуу ирсэн нэр дэвшигч — холболтыг зогсоохгүй */ }
+  }catch{ /* холболтыг зогсоохгүй */ }
 }
 
 /**
@@ -1106,7 +1125,7 @@ function watchConnection(){
 function stopVideo(){
   clearInterval(fpsGuard); fpsGuard = null;
   clearTimeout(iceTimer); iceTimer = null;
-  videoPaused = false; isOfferer = false;
+  videoPaused = false; isOfferer = false; pendingCandidates = [];
   pc?.close(); pc = null; vidSender = null;
   $("oppVid").srcObject = null;
   oppNote("");
