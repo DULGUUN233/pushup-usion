@@ -22,8 +22,15 @@ export async function createBattle(roomId, playerIds) {
   const ids = [...new Set(playerIds)].sort()
   if (ids.length !== 2) throw new Error('тулаанд яг хоёр тоглогч байх ёстой')
 
-  const existing = await battles().findOne({ _id: roomId })
-  if (existing) return existing
+  // Usion-ы өрөө найзуудын хооронд ХАДГАЛАГДДАГ тул өрөөний ID-г тулааны
+  // ID болгож болохгүй: дахин тоглоход дууссан тулаан олдож, хуучин үр дүн
+  // шууд гарч ирнэ. Өрөө бүрд дугаарласан тулаанууд үүснэ.
+  const latest = await battles().find({ roomKey: roomId }).sort({ seq: -1 }).limit(1).next()
+  if (latest && (latest.status === 'waiting' || latest.status === 'playing')) return latest
+  const seq = (latest?.seq ?? 0) + 1
+  // Тусгаарлагч нь URL-д аюулгүй байх ёстой: '#' нь хаягийн фрагмент эхлүүлж,
+  // /api/battle/<id> зам таслагдана. '~' нь тайлбаргүй тэмдэг.
+  const _id = `${roomId}~${seq}`
 
   await ensureUsers(ids)
   // Нэр, зураг, эхлэх рейтингийг тулаан дээр тогтооно — дэлгэц дээр харуулахад
@@ -34,7 +41,9 @@ export async function createBattle(roomId, playerIds) {
   )
 
   const battle = {
-    _id: roomId,
+    _id,
+    roomKey: roomId,
+    seq,
     players: ids,
     profiles,
     reps: { [ids[0]]: 0, [ids[1]]: 0 },
@@ -49,7 +58,8 @@ export async function createBattle(roomId, playerIds) {
     await battles().insertOne(battle)
     return battle
   } catch (err) {
-    if (err?.code === 11000) return battles().findOne({ _id: roomId })
+    // Хоёр тал зэрэг үүсгэвэл нэг нь давхардлаар унана — нөгөөгийнхийг авна
+    if (err?.code === 11000) return battles().findOne({ _id })
     throw err
   }
 }

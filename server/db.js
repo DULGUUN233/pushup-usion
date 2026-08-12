@@ -14,6 +14,8 @@ export async function connect() {
   await users().createIndex({ totalReps: -1 })
   await users().createIndex({ rating: -1 })
   await sessions().createIndex({ userId: 1, finishedAt: -1 })
+  // Өрөө бүрийн хамгийн сүүлийн тулааныг олоход
+  await battles().createIndex({ roomKey: 1, seq: -1 })
 
   return db
 }

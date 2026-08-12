@@ -1420,8 +1420,11 @@ async function startBattle(){
     const match = await findOpponent();
     $("seek").classList.add("hidden");
     $("duelBar").classList.remove("hidden");
-    applyDuel(await api("/battle", { method: "POST", body: JSON.stringify(match) }));
-    openSocket(match.roomId);
+    // Socket-д ӨРӨӨНИЙ биш, СЕРВЕРИЙН буцаасан тулааны ID хэрэгтэй — нэг
+    // өрөөнд олон тулаан дараалан үүсдэг тул хоёр нь өөр.
+    const state = await api("/battle", { method: "POST", body: JSON.stringify(match) });
+    applyDuel(state);
+    openSocket(state.roomId);
     startClock();
   }catch(e){
     leaveBattle();
