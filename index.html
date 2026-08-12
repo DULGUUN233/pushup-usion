@@ -1082,6 +1082,11 @@ async function findOpponent(){
     });
 
     s.game.connect()
+      // Платформын өрөө НААЛДАМХАЙ: өмнөх өрсөлдөгч дотор нь үлдсэн байдаг
+      // тул шинэ хүн сонгохоос ӨМНӨ өрөө «дүүрсэн» гэж танигдаж, тулаан
+      // хуучин хүнтэй шууд эхэлдэг. Урихаас өмнө гарч, шинэ өрөө үүсгэнэ.
+      .then(() => s.game.leave?.())
+      .catch(() => {})
       .then(() => s.game.invite())
       .then(r => { if(r && r.success === false) settle(reject, new Error("Урилга илгээгдсэнгүй")); })
       .catch(e => settle(reject, e));
@@ -1348,8 +1353,18 @@ function startClock(){
   }, 200);
 }
 
+/**
+ * Платформын өрөөнөөс гарна. Тулаан дуусмагц дуудна: өрөө наалдамхай тул
+ * үлдээвэл дараагийн Battle тэр өрөөг «дүүрсэн» гэж үзэж, шинэ хүн урихаас
+ * өмнө хуучин өрсөлдөгчтэй шууд эхэлдэг.
+ */
+function leaveRoom(){
+  try { sdk()?.game?.leave?.(); } catch { /* заавал биш */ }
+}
+
 /** Тулаан болоогүй — рейтинг хөдлөхгүй. */
 function cancelDuel(state){
+  leaveRoom();
   clearInterval(tick); tick = null;
   stopVideo();
   stopCamera();
@@ -1389,6 +1404,7 @@ function reportResult(state){
 
 function endDuel(state){
   reportResult(state);
+  leaveRoom();
   clearInterval(tick); tick = null;
   stopVideo();
   stopCamera();
@@ -1457,6 +1473,7 @@ function leaveBattle(){
   stopVideo();
   ws?.close(); ws = null;
   duel = null; mode = "solo";
+  leaveRoom();
   $("play").classList.remove("duel");
   stopCamera();
   sdk()?.matchmaking?.cancel?.();
