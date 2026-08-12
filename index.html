@@ -306,7 +306,7 @@
 
   <div id="seek" class="hidden">
     <h2 id="seekTitle">Өрсөлдөгч хайж байна…</h2>
-    <p>Энэ зуур байрлалаа тохируулаарай. Өрсөлдөгч олдмогц 5 секунд тоолоод эхэлнэ.</p>
+    <p>Энэ зуур байрлалаа тохируулаарай. Нөгөө тал ормогц 5 секунд тоолоод эхэлнэ.</p>
     <button id="seekCancel">Болих</button>
   </div>
 
@@ -328,7 +328,8 @@ const video = $("video"), canvas = $("canvas"), ctx = canvas.getContext("2d");
 // ======================= Usion + сервер =======================
 
 const sdk = () => (window.Usion && typeof window.Usion.init === "function") ? window.Usion : null;
-let profile = null;   // серверээс ирсэн бидний бүртгэл
+let profile = null;     // серверээс ирсэн бидний бүртгэл
+let launchCfg = null;   // Usion аппыг хэрхэн нээснийг хэлнэ (өрөө, тоглогчид)
 
 /**
  * Usion хостын гадна (жишээ нь шууд Railway линкээр орвол) `init` хэзээ ч
@@ -407,8 +408,26 @@ async function loadProfile(){
 
 // ======================= дэлгэц солих =======================
 
+/**
+ * Хостын толгой дэх буцах товчийг өөрсдөө барина.
+ * Claim нь НЭГ УДААГИЙНХ — нэг дарсны дараа шинэчлэхгүй бол товч аппыг
+ * чимээгүй хаана. Тиймээс дэлгэц солигдох бүрд дахин авна; `show` нь
+ * буцах үйлдлээс өөрөө дуудагддаг тул шинэчлэлт автоматаар болно.
+ */
+function setBack(id){
+  const u = sdk();
+  if(!u?.claimBackButton) return;
+  if(id === "menu") return void u.releaseBackButton?.();
+  u.claimBackButton(() => {
+    if(id === "play" && mode === "battle") leaveBattle();
+    else if(id === "play"){ stopCamera(); show("menu"); }
+    else show("menu");
+  });
+}
+
 function show(id){
   for(const s of document.querySelectorAll(".screen")) s.classList.toggle("hidden", s.id !== id);
+  setBack(id);
 }
 
 // ======================= тоолох хөдөлгүүр =======================
@@ -966,19 +985,53 @@ async function finish(){
 // Usion-ыг ЗӨВХӨН хос олоход ашиглана. Цаг, оноо, ялагч, рейтинг бүгд манай
 // сервер дээр — тоглогчийн өөрийнх нь хэлсэн үр дүнд итгэх боломжгүй.
 
-function findOpponent(){
+/**
+ * Тоглогч цөөхөн байхад дараалалд хэн ч байхгүй тул matchmaking утгагүй —
+ * найзаа урих нь л ажиллана. Хэрэглэгч олширвол энийг `true` болгоход
+ * дараалал руу шилжинэ, бусад код өөрчлөгдөхгүй.
+ */
+const USE_MATCHMAKING = false;
+
+async function findOpponent(){
   // Локал турших зам: ?room=r1&vs=нөгөө_ID — хоёр таб нээж шалгана
   const q = new URLSearchParams(location.search);
   const room = q.get("room"), vs = q.get("vs");
-  if(room && vs) return Promise.resolve({ roomId: room, players: [devId(), vs] });
+  if(room && vs) return { roomId: room, players: [devId(), vs] };
 
   const s = sdk();
-  if(!s) return Promise.reject(new Error("Usion олдсонгүй — өрсөлдөгч хайх боломжгүй"));
-  return s.matchmaking.find({ size: 2, timeout: 30_000 }).then(async m => {
-    // Платформын өрөөнд бас нэгдэнэ. Транспортыг нь ашиглахгүй ч хос энэ
-    // өрөөгөөр тодорхойлогддог тул платформын бүртгэлд орсон байх ёстой.
+  if(!s) throw new Error("Usion олдсонгүй — өрсөлдөгч урих боломжгүй");
+  const me = s.user.getId();
+
+  // Урилгаар нээгдсэн бол өрөө, тоглогчид аль хэдийн бэлэн
+  const ready = (launchCfg?.playerIds ?? []).filter(Boolean);
+  const roomId = s.getLaunchParams?.().roomId;
+  if(ready.length === 2 && roomId){
+    try { await s.game.connect(); await s.game.join(roomId); } catch { /* заавал биш */ }
+    return { roomId, players: ready };
+  }
+
+  if(USE_MATCHMAKING){
+    const m = await s.matchmaking.find({ size: 2, timeout: 30_000 });
     try { await s.game.connect(); await s.game.join(m.roomId); } catch { /* заавал биш */ }
     return { roomId: m.roomId, players: m.players };
+  }
+
+  // Эзэн: платформын найз сонгогчийг нээж, тэдний нэгийг хүлээнэ.
+  // Урилгын дэлгэцийг өөрсдөө зурахыг платформ хориглодог.
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const settle = (fn, v) => { if(!done){ done = true; fn(v); } };
+
+    s.game.onPlayerJoined?.(d => {
+      const other = (d.player_ids ?? []).find(id => id !== me);
+      const rid = s.getLaunchParams?.().roomId;
+      if(other && rid) settle(resolve, { roomId: rid, players: [me, other] });
+    });
+
+    s.game.connect()
+      .then(() => s.game.invite())
+      .then(r => { if(r && r.success === false) settle(reject, new Error("Урилга илгээгдсэнгүй")); })
+      .catch(e => settle(reject, e));
   });
 }
 
@@ -1300,7 +1353,9 @@ async function startBattle(){
     // Камерыг ХОС ОЛОХООС ӨМНӨ асаана — эс тэгвээс зөвшөөрлийн цонх
     // тэмцээн эхэлсэн хойно гарч ирж, эхний секундүүд алдагдана.
     await startEngine();
-    $("seekTitle").textContent = "Өрсөлдөгч хайж байна…";
+    $("seekTitle").textContent = USE_MATCHMAKING
+      ? "Өрсөлдөгч хайж байна…"
+      : "Найзаа урьж байна…";
     const match = await findOpponent();
     $("seek").classList.add("hidden");
     $("duelBar").classList.remove("hidden");
@@ -1372,9 +1427,16 @@ document.addEventListener("visibilitychange", () => {
   if(document.hidden) lastFrame = 0;
 });
 
-const cfg = await usionInit();
-if(cfg?.userAvatar) $("avatar").src = cfg.userAvatar;
+launchCfg = await usionInit();
+if(launchCfg?.userAvatar) $("avatar").src = launchCfg.userAvatar;
 await loadProfile();
+setBack("menu");
+
+// Найзын урилгаар нээгдсэн бол цэс дундуур гүйлгэхгүй — шууд тулаан руу.
+// Тэндээс хоёулаа socket-д холбогдмогц 5 секунд тоолоод эхэлнэ.
+if((launchCfg?.playerIds ?? []).filter(Boolean).length === 2 && sdk()?.getLaunchParams?.().roomId){
+  startBattle();
+}
 </script>
 </body>
 </html>
