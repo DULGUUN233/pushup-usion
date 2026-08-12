@@ -398,10 +398,31 @@ function renderProfile(){
   $("cElo").textContent = profile.rating;
 }
 
+/**
+ * Нийт тоог платформын leaderboard руу бичнэ.
+ *
+ * Платформ нь хэрэглэгч бүрийн ХАМГИЙН САЙН оноог хадгалдаг — нийт тоо
+ * зөвхөн өсдөг тул "хамгийн сайн" нь үргэлж хамгийн сүүлийн нийт тоо
+ * болж, нийлбэрийн жагсаалт яг зөв гарна.
+ *
+ * Үүний хариуд Game Center, «найз чинь рекордыг чинь дэвслээ» мэдэгдэл,
+ * дэлхийн топ-5-ын мэдэгдэл үнэгүй ирнэ. ELO болон аппын доторх жагсаалт
+ * манай сервер дээр эзэмшигдсэн хэвээр — энэ нь зөвхөн нийгмийн гогцоо.
+ */
+let submitted = -1;
+
+function submitScore(){
+  const total = profile?.totalReps ?? 0;
+  if(total <= 0 || total === submitted) return;
+  submitted = total;
+  try { sdk()?.leaderboard?.submit?.(total); } catch { /* заавал биш */ }
+}
+
 async function loadProfile(){
   try {
     profile = await api("/me");
     renderProfile();
+    submitScore();
     note("");
   } catch(e) {
     $("sub").textContent = "офлайн";
@@ -974,6 +995,7 @@ async function saveSet(reps, seconds){
     pendingSet = null;
     $("retrySave").classList.add("hidden");
     renderProfile();
+    submitScore();
     note(`+${reps} бүртгэгдлээ. Нийт ${profile.totalReps}, #${profile.rank}`, "ok");
   }catch(e){
     pendingSet = { reps, seconds };
@@ -1321,7 +1343,32 @@ function cancelDuel(state){
   $("over").classList.remove("hidden");
 }
 
+/**
+ * Тулааны үр дүнг платформ руу мэдэгдэнэ — хоёр талын чатад «Чи Батыг
+ * хожлоо — 22:17» гэсэн карт очиж, дарахад апп нээгдэнэ.
+ *
+ * ЗӨВХӨН НЭГ тал дуудна: ID-гаар эрэмбэлж бага нь сонгогдоно. Хоёулаа
+ * дуудвал хоёр карт үүснэ. Ялагчийг сервер шийддэг тул хожигдсон тал
+ * хуурамч үр дүн илгээх боломжгүй — бид зөвхөн дамжуулагч.
+ */
+let reported = false;
+
+function reportResult(state){
+  const s = sdk(), o = state.opponent;
+  if(reported || !o || !s?.game?.reportResult) return;
+  if(state.you.userId > o.userId) return;
+  reported = true;
+
+  const scores = { [state.you.userId]: state.you.reps, [o.userId]: o.reps };
+  try{
+    s.game.reportResult(state.winnerId
+      ? { winnerId: state.winnerId, scores, metric: "push-up" }
+      : { draw: true, scores, metric: "push-up" });
+  }catch{ /* карт очихгүй ч тулаан хүчинтэй хэвээр */ }
+}
+
 function endDuel(state){
+  reportResult(state);
   clearInterval(tick); tick = null;
   stopVideo();
   stopCamera();
@@ -1344,7 +1391,7 @@ function endDuel(state){
 }
 
 async function startBattle(){
-  mode = "battle"; duel = null;
+  mode = "battle"; duel = null; reported = false;
   show("play");
   $("play").classList.add("duel");
   $("start").classList.add("hidden");
