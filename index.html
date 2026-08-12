@@ -1041,6 +1041,9 @@ async function finish(){
  */
 const USE_MATCHMAKING = false;
 
+/** Найз орж ирснийг серверээс асуух давтамжит шалгалт. */
+let invitePoll = null;
+
 async function findOpponent(){
   // Локал турших зам: ?room=r1&vs=нөгөө_ID — хоёр таб нээж шалгана
   const q = new URLSearchParams(location.search);
@@ -1083,7 +1086,12 @@ async function findOpponent(){
   return new Promise((resolve, reject) => {
     let done = false;
     let invitedRoom = null;
-    const settle = (fn, v) => { if(!done){ done = true; fn(v); } };
+    const settle = (fn, v) => {
+      if(done) return;
+      done = true;
+      clearInterval(invitePoll); invitePoll = null;
+      fn(v);
+    };
 
     s.game.onPlayerJoined?.(d => {
       const ids = d.player_ids ?? [];
@@ -1109,9 +1117,27 @@ async function findOpponent(){
       .then(() => s.game.leave?.())
       .catch(() => {})
       .then(() => s.game.invite())
-      .then(r => {
+      .then(async r => {
         if(r && r.success === false) return settle(reject, new Error("Урилга илгээгдсэнгүй"));
-        if(r?.roomId) invitedRoom = r.roomId;
+        if(!r?.roomId) return;
+        invitedRoom = r.roomId;
+        // Өрөөндөө ЗААВАЛ орно: түүнээс өмнө гарсан тул гишүүн биш үлдвэл
+        // найз орсныг огт сонсохгүй
+        try { await s.game.join(r.roomId); } catch { /* заавал биш */ }
+
+        // Платформын үйл явдал ирэхгүй байх нь бий. Зочин орж ирээд тулааныг
+        // МАНАЙ сервер дээр үүсгэдэг тул тэндээс асууж мэдэж болно —
+        // платформоос үл хамаарах нөөц зам.
+        clearInterval(invitePoll);
+        invitePoll = setInterval(async () => {
+          try{
+            const st = await api(`/battle/room/${encodeURIComponent(r.roomId)}/latest`);
+            const other = st?.opponent?.userId;
+            if(other && (st.status === "waiting" || st.status === "playing")){
+              settle(resolve, { roomId: r.roomId, players: [me, other] });
+            }
+          }catch{ /* хараахан үүсээгүй */ }
+        }, 1500);
       })
       .catch(e => settle(reject, e));
   });
@@ -1494,6 +1520,7 @@ async function startBattle(){
 
 function leaveBattle(){
   clearInterval(tick); tick = null;
+  clearInterval(invitePoll); invitePoll = null;
   stopVideo();
   ws?.close(); ws = null;
   duel = null; mode = "solo";
