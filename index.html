@@ -1073,11 +1073,15 @@ async function findOpponent(){
   // Урилгын дэлгэцийг өөрсдөө зурахыг платформ хориглодог.
   return new Promise((resolve, reject) => {
     let done = false;
+    let invitedRoom = null;
     const settle = (fn, v) => { if(!done){ done = true; fn(v); } };
 
     s.game.onPlayerJoined?.(d => {
       const other = (d.player_ids ?? []).find(id => id !== me);
-      const rid = s.getLaunchParams?.().roomId;
+      // `invite()` буцаасан ӨРӨӨГ голлоно: түүнээс өмнө өрөөнөөс гарсан тул
+      // `getLaunchParams()` хуучин өрөөг заасан байж болно — тэгвэл эзэн,
+      // зочин хоёр өөр тулаанд орж, бие биеэ хэзээ ч харахгүй.
+      const rid = invitedRoom ?? s.getLaunchParams?.().roomId;
       if(other && rid) settle(resolve, { roomId: rid, players: [me, other] });
     });
 
@@ -1088,7 +1092,10 @@ async function findOpponent(){
       .then(() => s.game.leave?.())
       .catch(() => {})
       .then(() => s.game.invite())
-      .then(r => { if(r && r.success === false) settle(reject, new Error("Урилга илгээгдсэнгүй")); })
+      .then(r => {
+        if(r && r.success === false) return settle(reject, new Error("Урилга илгээгдсэнгүй"));
+        if(r?.roomId) invitedRoom = r.roomId;
+      })
       .catch(e => settle(reject, e));
   });
 }
