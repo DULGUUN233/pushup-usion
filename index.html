@@ -425,6 +425,11 @@ const MIN_SWING  = 35;    // тохой ийм хэмжээгээр хэлбэл
 // rep байсан тул хөлийн үзүүр дээр илүү өндөр гарч магадгүй.
 // Харьцангуй босготой хамт үйлчилнэ — аль хатуу нь голлоно.
 const DEEP_ENOUGH = 98;
+// Дээд гар шаланд параллель болсон эсэх. Тохойн өнцөг ганцаараа хангалтгүй:
+// тохойгоо биедээ наавал эсвэл хажуу тийш дэлгэвэл ижил гүнд өөр өнцөг
+// уншина. Мөр тохойн түвшинд хүрсэн эсэх нь чиглэлээс хамаардаггүй.
+// Мөрний өргөнөөр хуваасан тул зай, биеийн хэмжээнээс үл хамаарна.
+const ARM_LEVEL = -0.08;
 const BAD_FRAMES = 5;     // байрлал алдагдсан кадар ийм тоо дараалвал rep цуцлана
 const VIS_MIN    = 0.5;   // цэгийн итгэлцүүр
 // Бие хатуу нэгж болж буусан эсэх. Мөр ийм хэмжээгээр (кадрын өндрийн хувь)
@@ -441,6 +446,7 @@ let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
 let loSeen = null, hiSeen = null, badFrames = 0, dipMin = 999;
 let shTop = null, hpTop = null, shBot = null, hpBot = null;   // rep доторх биеийн явалт
 let lastKnee = { deg: null, vis: 0 };   // rep тоологдох агшинд бичих оношлогоо
+let armBest = -99;                      // rep дотор мөр тохойд хэр ойртсон
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
 // Утасны цаг серверийнхээс зөрдөг. Зөрүүг тооцоогүй бол хоёр тоглогч
 // өөр өөр секунд хараад, нэг нь илүү хугацаа хийж байна гэж бодно.
@@ -645,6 +651,18 @@ function envelope(deg){
  * тул аарцаг мөртэй хамт бууна. Өвдөг дээрээ сууж цээжээ сунгахад аарцаг
  * байрандаа үлддэг — тэрийг л барина. Цэг харагдахгүй бол шалгахгүй.
  */
+/**
+ * Мөр тохойн түвшинд хэр ойртсон бэ. Эерэг = тохой мөрнөөс ДЭЭШ гарсан,
+ * буюу дээд гар шаландаа параллель болж, стандарт гүнд хүрсэн.
+ * Мөрний өргөнөөр хуваана — камерын зай, биеийн хэмжээнээс хамаарахгүй.
+ */
+function armLevel(lm, aspect){
+  const shY = mean(lm, [11,12]), elY = mean(lm, [13,14]);
+  if(shY === null || elY === null) return null;
+  const w = Math.hypot((lm[11].x - lm[12].x) * aspect, lm[11].y - lm[12].y);
+  return w ? (shY - elY) / w : null;
+}
+
 /** Зурган дээр y доошоо өснө: илүү дээд байрлал нь илүү бага y. */
 const higher = (cur, v) => v === null ? cur : cur === null ? v : Math.min(cur, v);
 const lower  = (cur, v) => v === null ? cur : cur === null ? v : Math.max(cur, v);
@@ -663,7 +681,7 @@ function countRep(deg, now, th, body){
     if(deg < dipMin) dipMin = deg;
     if(deg < th.down){
       phase = "down"; repStart = now; repMinAngle = deg; dipMin = 999;
-      shBot = body.sh; hpBot = body.hp;
+      shBot = body.sh; hpBot = body.hp; armBest = body.arm ?? -99;
       if(navigator.vibrate) navigator.vibrate(12);
       setMsg("Доошоо ✓", "var(--warn)");
     }
@@ -678,6 +696,7 @@ function countRep(deg, now, th, body){
   if(phase === "down"){
     shBot = lower(shBot, body.sh);
     hpBot = lower(hpBot, body.hp);
+    if(body.arm !== null && body.arm > armBest) armBest = body.arm;
   }
 
   if(phase === "down" && deg > th.up){
@@ -686,6 +705,9 @@ function countRep(deg, now, th, body){
       setMsg("Хэт хурдан — бүтэн хий", "var(--bad)");
     } else if(!rigid()){
       setMsg("Биеэ бүхэлд нь буулга", "var(--bad)");
+    } else if(armBest > -90 && armBest < ARM_LEVEL){
+      // Хэмжиж чадсан үед л шаардана — цэг нь харагдаагүй бол алгасна
+      setMsg("Гүн дутуу — тохой мөрний түвшинд хүрээгүй", "var(--bad)");
     } else {
       count++;
       $("count").textContent = count;
@@ -702,19 +724,21 @@ function countRep(deg, now, th, body){
       const dSh = shBot - shTop, dHp = hpBot - hpTop;
       $("repDiag").textContent = `#${count} kn`
         + `${lastKnee.deg === null ? "–" : Math.round(lastKnee.deg)}/${lastKnee.vis.toFixed(2)}`
-        + ` sh${dSh.toFixed(3)} hp${dHp.toFixed(3)} r${(dHp/dSh).toFixed(2)}`;
+        + ` sh${dSh.toFixed(3)} hp${dHp.toFixed(3)} r${(dHp/dSh).toFixed(2)}`
+        + ` arm${armBest > -90 ? armBest.toFixed(2) : "–"}`;
       if(mode === "battle") sendRep(); else setMsg(`${count} — сайн байна!`, "var(--accent)");
     }
     repMinAngle = 180;
     // Дараагийн rep өөрийн дээд цэгээ шинээр олно
     shTop = hpTop = shBot = hpBot = null;
+    armBest = -99;
   }
 }
 
 // Байрлал алдагдсан үед хагас rep-ийг цуцалж, дараа нь дуусгахаас сэргийлнэ
 function idle(){
   phase = "up"; repMinAngle = 180; smooth = null;
-  shTop = hpTop = shBot = hpBot = null;
+  shTop = hpTop = shBot = hpBot = null; armBest = -99;
   $("angle").textContent = "–";
   $("meter").style.height = "0%";
 }
@@ -795,7 +819,7 @@ function loop(){
   // Хөдөлгөөний ХАМГИЙН ДЭЭД цэгийг хадгална (зурган дээр y хамгийн бага).
   // "up" фаз нь буултын эхний 75%-д үнэн хэвээр байдаг тул сүүлийн утгыг
   // авбал лавлагаа доошоо мөлхөж, явалт дутуу хэмжигдэнэ.
-  const body = { sh: mean(lm, [11,12]), hp: mean(lm, [23,24]) };
+  const body = { sh: mean(lm, [11,12]), hp: mean(lm, [23,24]), arm: armLevel(lm, asp) };
   if(phase === "up"){
     shTop = higher(shTop, body.sh);
     hpTop = higher(hpTop, body.hp);
@@ -829,7 +853,7 @@ const clock = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
 function reset(){
   count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
   loSeen = null; hiSeen = null; badFrames = 0; dipMin = 999;
-  shTop = hpTop = shBot = hpBot = null;
+  shTop = hpTop = shBot = hpBot = null; armBest = -99;
   t0 = performance.now();
   $("count").textContent = 0;
   $("counter").classList.remove("pop");
