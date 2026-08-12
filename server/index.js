@@ -3,7 +3,7 @@ import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { authMode } from './auth.js'
-import { WAIT_MS, cancelIfStale, settleIfDue } from './battle.js'
+import { WAIT_MS, cancelIfStale, settleIfDue, stuckSettling } from './battle.js'
 import battleRoutes from './battleRoutes.js'
 import { attachBattleSocket } from './battleSocket.js'
 import { battles, connect } from './db.js'
@@ -31,8 +31,16 @@ app.use((_req, res) => {
 function startSweeper() {
   setInterval(async () => {
     try {
+      // `settling`-д гацсаныг ч хамруулна — дүгнэлт дунд нь унавал тулаан
+      // тэр төлөвт үлдэж, ELO хэзээ ч бичигдэхгүй болдог
       const due = await battles()
-        .find({ status: 'playing', endsAt: { $lte: new Date() } }, { projection: { _id: 1 } })
+        .find(
+          {
+            endsAt: { $lte: new Date() },
+            $or: [{ status: 'playing' }, { status: 'settling', ...stuckSettling() }],
+          },
+          { projection: { _id: 1 } },
+        )
         .limit(20)
         .toArray()
       for (const b of due) await settleIfDue(b._id)

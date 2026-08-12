@@ -118,10 +118,29 @@ export async function cancelIfStale(roomId) {
  * status-ыг нөхцөлт байдлаар сольж эзэмшлээ авна: хоёр процесс зэрэг
  * дуудсан ч зөвхөн нэг нь ELO бичнэ.
  */
+/** `settling`-д гацсан тулааныг дахин эзэмших хүртэл хүлээх хугацаа. */
+export const SETTLE_STUCK_MS = 30_000
+
+/**
+ * `settling`-д хатсаныг таних шүүлт. `$lte` нь талбар БАЙХГҮЙ бичлэгийг
+ * алгасдаг тул `$not: {$gt}` хэрэглэнэ — хуучин, `settlingAt`-гүй бичлэгүүд
+ * үүнгүйгээр мөнхөд гацна.
+ */
+export const stuckSettling = () => ({
+  settlingAt: { $not: { $gt: new Date(Date.now() - SETTLE_STUCK_MS) } },
+})
+
 export async function settleIfDue(roomId) {
+  // Эзэмшлийг `settling` төлөвөөр авна. Дунд нь алдаа гарвал тулаан тэр
+  // төлөвт үлдэнэ — тиймээс хугацаа өнгөрсөн бол ДАХИН эзэмшихийг зөвшөөрнө,
+  // эс тэгвээс мөнхөд хатаж, ELO бичигдэхгүй үлдэнэ.
   const claimed = await battles().findOneAndUpdate(
-    { _id: roomId, status: 'playing', endsAt: { $lte: new Date() } },
-    { $set: { status: 'settling' } },
+    {
+      _id: roomId,
+      endsAt: { $lte: new Date() },
+      $or: [{ status: 'playing' }, { status: 'settling', ...stuckSettling() }],
+    },
+    { $set: { status: 'settling', settlingAt: new Date() } },
     { returnDocument: 'after' },
   )
   if (!claimed) return null
@@ -143,6 +162,8 @@ export async function settleIfDue(roomId) {
 
   const winnerId = aReps === bReps ? null : aReps > bReps ? aId : bId
 
+  // Бүртгэл байхгүй бол доорх уншилт алдаа өгч, тулаан `settling`-д хатна
+  await ensureUsers([aId, bId])
   const [a, b] = await Promise.all([users().findOne({ _id: aId }), users().findOne({ _id: bId })])
   const ratings = settleBattle({
     a: { userId: aId, rating: a.rating, battles: a.battles },
