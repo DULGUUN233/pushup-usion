@@ -78,7 +78,7 @@ export async function start(roomId) {
 export async function cancelIfStale(roomId) {
   return battles().findOneAndUpdate(
     { _id: roomId, status: 'waiting', createdAt: { $lte: new Date(Date.now() - WAIT_MS) } },
-    { $set: { status: 'cancelled', finishedAt: new Date() } },
+    { $set: { status: 'cancelled', cancelReason: 'no-opponent', finishedAt: new Date() } },
     { returnDocument: 'after' },
   )
 }
@@ -101,6 +101,18 @@ export async function settleIfDue(roomId) {
   const [aId, bId] = claimed.players
   const aReps = claimed.reps[aId] ?? 0
   const bReps = claimed.reps[bId] ?? 0
+
+  // Хоёулаа нэг ч хийгээгүй бол тулаан болоогүй гэсэн үг — камер асаагүй,
+  // холболт тасарсан, эсвэл зүгээр орхисон. Үүнийг тэнцсэн гэж бүртгэвэл
+  // өндөр рейтингтэй нь юу ч хийлгүй оноо алдана.
+  if (aReps === 0 && bReps === 0) {
+    return battles().findOneAndUpdate(
+      { _id: roomId },
+      { $set: { status: 'cancelled', cancelReason: 'no-reps', finishedAt: new Date() } },
+      { returnDocument: 'after' },
+    )
+  }
+
   const winnerId = aReps === bReps ? null : aReps > bReps ? aId : bId
 
   const [a, b] = await Promise.all([users().findOne({ _id: aId }), users().findOne({ _id: bId })])
@@ -162,5 +174,6 @@ export function view(battle, userId) {
     opponent: opponentId ? side(opponentId) : null,
     winnerId: battle.winnerId ?? null,
     ratings: battle.ratings ?? null,
+    cancelReason: battle.cancelReason ?? null,
   }
 }

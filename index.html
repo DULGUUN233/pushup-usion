@@ -1281,7 +1281,7 @@ function applyDuel(state){
   $("tugYou").style.width = (total ? (y.reps / total) * 100 : 50) + "%";
   if(state.status === "waiting") setMsg("Өрсөлдөгчийг хүлээж байна…", "var(--dim)");
   if(state.status === "playing" && state.opponent) startVideo(y.userId, state.opponent.userId);
-  if(state.status === "cancelled") cancelDuel();
+  if(state.status === "cancelled") cancelDuel(state);
   if(state.status === "finished") endDuel(state);
 }
 
@@ -1306,13 +1306,15 @@ function startClock(){
   }, 200);
 }
 
-/** Өрсөлдөгч ирээгүй — рейтинг хөдлөхгүй. */
-function cancelDuel(){
+/** Тулаан болоогүй — рейтинг хөдлөхгүй. */
+function cancelDuel(state){
   clearInterval(tick); tick = null;
   stopVideo();
   stopCamera();
   ws?.close(); ws = null;
-  $("oTitle").textContent = "Өрсөлдөгч ирсэнгүй";
+  $("oTitle").textContent = state?.cancelReason === "no-reps"
+    ? "Нэг ч тоологдсонгүй"
+    : "Өрсөлдөгч ирсэнгүй";
   $("oTitle").style.color = "var(--dim)";
   $("oScore").textContent = "—";
   $("oElo").textContent = "Рейтинг өөрчлөгдөөгүй";
