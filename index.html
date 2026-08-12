@@ -274,6 +274,9 @@
       <div id="btns">
         <button id="reset">Тэглэх</button>
         <button id="done">Дуусгах</button>
+        <!-- Хостын ✕ товч аппыг бүхэлд нь хаадаг тул тулаанаас гарах
+             өөрийн зам хэрэгтэй -->
+        <button id="quit" class="hidden">Гарах</button>
       </div>
     </div>
   </div>
@@ -417,11 +420,19 @@ async function loadProfile(){
 function setBack(id){
   const u = sdk();
   if(!u?.claimBackButton) return;
-  if(id === "menu") return void u.releaseBackButton?.();
+
+  // Цэс бол үндэс — хаах нь зөв. Тулаанд ч ЗОРИУДААР авахгүй: rated
+  // тулааныг санамсаргүй даралтаар орхих ёсгүй, гарах нь «Гарах» товчоор
+  // л байна. chess-puzzle яг ижил шийдэлтэй.
+  if(id === "menu" || (id === "play" && mode === "battle")){
+    return void u.releaseBackButton?.();
+  }
+
+  // Дахин авахгүй: `show` нь очих дэлгэцийн төлөвийг өөрөө тавина. Энд
+  // дахин авбал цэсэн дээрх суллалтыг дарж, аппыг хаах боломжгүй болно.
   u.claimBackButton(() => {
-    if(id === "play" && mode === "battle") leaveBattle();
-    else if(id === "play"){ stopCamera(); show("menu"); }
-    else show("menu");
+    if(id === "play") stopCamera();
+    show("menu");
   });
 }
 
@@ -1347,6 +1358,7 @@ async function startBattle(){
   // Тэглэх, Дуусгах хоёрыг л нуулаа: rated тулааныг дундуур нь эвдэнэ.
   $("reset").classList.add("hidden");
   $("done").classList.add("hidden");
+  $("quit").classList.remove("hidden");
   $("clock").textContent = "…";
 
   try{
@@ -1381,6 +1393,7 @@ function leaveBattle(){
   $("stats").classList.remove("hidden");
   $("reset").classList.remove("hidden");
   $("done").classList.remove("hidden");
+  $("quit").classList.add("hidden");
   $("over").classList.add("hidden");
   show("menu");
   loadProfile();
@@ -1418,6 +1431,7 @@ $("retrySave").onclick = () => pendingSet && saveSet(pendingSet.reps, pendingSet
 $("bBack").onclick   = () => show("menu");
 $("oBack").onclick   = leaveBattle;
 $("seekCancel").onclick = leaveBattle;
+$("quit").onclick    = leaveBattle;
 $("pBack").onclick   = () => { if(mode === "battle") leaveBattle(); else { stopCamera(); show("menu"); } };
 $("go").onclick      = startSolo;
 $("reset").onclick  = reset;
