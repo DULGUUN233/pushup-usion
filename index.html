@@ -1035,10 +1035,14 @@ async function findOpponent(){
   if(!s) throw new Error("Usion олдсонгүй — өрсөлдөгч урих боломжгүй");
   const me = s.user.getId();
 
-  // Урилгаар нээгдсэн бол өрөө, тоглогчид аль хэдийн бэлэн
+  // Урилгаар нээгдсэн бол өрөө, тоглогчид аль хэдийн бэлэн — гэхдээ ЗӨВХӨН
+  // НЭГ УДАА. `launchCfg` нь сешний туршид хадгалагддаг тул хэрэглэсний
+  // дараа хаяхгүй бол Battle дарах болгонд тэр хуучин өрөө рүү явж,
+  // найз урих хэсэг рүү хэзээ ч орохгүй.
   const ready = (launchCfg?.playerIds ?? []).filter(Boolean);
   const roomId = s.getLaunchParams?.().roomId;
   if(ready.length === 2 && roomId){
+    launchCfg = null;
     try { await s.game.connect(); await s.game.join(roomId); } catch { /* заавал биш */ }
     return { roomId, players: ready };
   }
