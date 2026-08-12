@@ -767,7 +767,9 @@ function loop(){
     + ` lo${r0(loSeen)} hi${r0(hiSeen)} sh${f2(dSh)} hp${f2(dHp)}`
     + ` kn${kn.deg === null ? "–" : Math.round(kn.deg)}/${f2(kn.vis)} ${phase}`
     // Видео яагаад зогссоныг ялгах: миний тал зогсоов уу, холболт унав уу
-    + (mode === "battle" ? ` vid:${videoPaused ? "off" : "on"} ${pc ? pc.connectionState : "–"}` : "");
+    + (mode === "battle"
+        ? ` vid:${videoPaused ? "off" : "on"} ${pc ? pc.connectionState : "–"} ${vidStats}`
+        : "");
 
   const bad = positionCheck(lm, world, asp);
   if(bad){
@@ -1001,6 +1003,10 @@ async function startVideo(myId, otherId){
 
   const track = stream.getVideoTracks()[0];
   if(track){
+    // Кодлогчид "энэ бол хөдөлгөөнт агуулга" гэж хэлнэ — нарийвчлалаас илүү
+    // тасралтгүй урсгалыг эрхэмлэнэ. degradationPreference-ийг дэмждэггүй
+    // хөтөч дээр ч энэ нь ажилладаг.
+    track.contentHint = "motion";
     vidSender = pc.addTrack(track, stream);
     // Дэлгэцийн хагасыг эзэлдэг тул 320x180 бүрхэг харагдана. 640x360 руу
     // өргөсгөв — зурвасын өргөн асуудал биш (сард 1000 GB үнэгүй), харин
@@ -1023,6 +1029,7 @@ async function startVideo(myId, otherId){
     signal({ sdp: pc.localDescription });
   }
   startFpsGuard();
+  startStats();
 }
 
 const oppNote = text => {
@@ -1122,8 +1129,35 @@ function watchConnection(){
   };
 }
 
+/**
+ * Гацалтыг хэмжинэ. WebRTC өөрөө шалтгааныг хэлдэг: `qualityLimitationReason`
+ * нь "cpu" бол утас кодлож амжихгүй байна, "bandwidth" бол сүлжээ багтаахгүй
+ * байна. Эдгээргүйгээр засвар нь таамаг болно.
+ */
+let statsTimer = null, vidStats = "";
+
+function startStats(){
+  clearInterval(statsTimer);
+  statsTimer = setInterval(async () => {
+    if(!pc) return;
+    let out = "", inb = "";
+    try{
+      for(const s of (await pc.getStats()).values()){
+        if(s.type === "outbound-rtp" && s.kind === "video"){
+          out = `${s.frameWidth || "?"}x${s.frameHeight || "?"} ${s.qualityLimitationReason || "?"}`;
+        }
+        if(s.type === "inbound-rtp" && s.kind === "video"){
+          inb = `гацалт${s.freezeCount ?? 0} алдсан${s.packetsLost ?? 0}`;
+        }
+      }
+      vidStats = `${out} | ${inb}`;
+    }catch{ /* статистик авахгүй бол алгасна */ }
+  }, 2000);
+}
+
 function stopVideo(){
   clearInterval(fpsGuard); fpsGuard = null;
+  clearInterval(statsTimer); statsTimer = null; vidStats = "";
   clearTimeout(iceTimer); iceTimer = null;
   videoPaused = false; isOfferer = false; pendingCandidates = [];
   pc?.close(); pc = null; vidSender = null;
