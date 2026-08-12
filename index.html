@@ -1083,15 +1083,19 @@ async function findOpponent(){
   return new Promise((resolve, reject) => {
     let done = false;
     let invitedRoom = null;
+    let invitedIds = null;
     const settle = (fn, v) => { if(!done){ done = true; fn(v); } };
 
     s.game.onPlayerJoined?.(d => {
       const ids = d.player_ids ?? [];
       // Үйл явдал өрөөний ID авчирдаггүй тул бидний БАЙХГҮЙ өрөөнийх ч ирж
-      // болно — тэр үед танихгүй хүнтэй хос болно. Жагсаалтад өөрсдийгөө
-      // олохгүй бол энэ өрөө бидний биш.
+      // болно — жагсаалтад өөрсдийгөө олохгүй бол энэ өрөө бидний биш.
       if(!ids.includes(me)) return;
-      const other = ids.find(id => id !== me);
+      // Хуучин өрсөлдөгч өрөөнд үлдсэн байвал жагсаалтад тэр гарч ирнэ.
+      // Тиймээс ЯГ УРЬСАН хүнээ хайна — `invite()` хэнийг урьсныг буцаадаг.
+      const other = invitedIds?.length
+        ? ids.find(id => id !== me && invitedIds.includes(id))
+        : ids.find(id => id !== me);
       // `invite()` буцаасан ӨРӨӨГ голлоно: түүнээс өмнө өрөөнөөс гарсан тул
       // `getLaunchParams()` хуучин өрөөг заасан байж болно — тэгвэл эзэн,
       // зочин хоёр өөр тулаанд орж, бие биеэ хэзээ ч харахгүй.
@@ -1099,15 +1103,17 @@ async function findOpponent(){
       if(other && rid) settle(resolve, { roomId: rid, players: [me, other] });
     });
 
-    // Урихаас өмнө өрөөнөөс ГАРАХГҮЙ: тэгвэл өрөөний төлөв тодорхойгүй
-    // болж, огт хамаарахгүй өрөөний `player_joined` ирэх боломж үүсдэг —
-    // тэр үед танихгүй хүнтэй хос болно. Наалдамхай өрөөг тулаан дуусахад
-    // сулладаг тул энд давтах шаардлагагүй.
+    // `invite()` нь ӨРӨӨГӨӨ ДҮҮРГЭДЭГ, шинийг үүсгэдэггүй. Хуучин өрсөлдөгч
+    // дотор нь үлдсэн бол өрөө 2/2 дүүрэн тул сонгосон найз ОРЖ ЧАДАХГҮЙ.
+    // Тиймээс урихаас өмнө заавал гарна.
     s.game.connect()
+      .then(() => s.game.leave?.())
+      .catch(() => {})
       .then(() => s.game.invite())
       .then(r => {
         if(r && r.success === false) return settle(reject, new Error("Урилга илгээгдсэнгүй"));
         if(r?.roomId) invitedRoom = r.roomId;
+        if(Array.isArray(r?.invited)) invitedIds = r.invited;
       })
       .catch(e => settle(reject, e));
   });
