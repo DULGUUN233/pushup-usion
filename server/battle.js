@@ -26,7 +26,13 @@ export async function createBattle(roomId, playerIds) {
   // ID болгож болохгүй: дахин тоглоход дууссан тулаан олдож, хуучин үр дүн
   // шууд гарч ирнэ. Өрөө бүрд дугаарласан тулаанууд үүснэ.
   const latest = await battles().find({ roomKey: roomId }).sort({ seq: -1 }).limit(1).next()
-  if (latest && (latest.status === 'waiting' || latest.status === 'playing')) return latest
+  // Үргэлжилж БАЙГАА тулаанд л эргэж орно. Хугацаа нь дууссан мөртлөө
+  // дүгнэгдээгүй байгаа тулаан руу буцаавал дууссан тоглолт руу оруулна —
+  // дүгнэлт нь шүүрдэлтээр хийгдэж, энд шинийг эхлүүлнэ.
+  const live =
+    latest?.status === 'waiting' ||
+    (latest?.status === 'playing' && latest.endsAt && latest.endsAt > new Date())
+  if (live) return latest
   const seq = (latest?.seq ?? 0) + 1
   // Тусгаарлагч нь URL-д аюулгүй байх ёстой: '#' нь хаягийн фрагмент эхлүүлж,
   // /api/battle/<id> зам таслагдана. '~' нь тайлбаргүй тэмдэг.
@@ -80,6 +86,18 @@ export async function start(roomId) {
         endsAt: new Date(startsAt.getTime() + BATTLE_MS),
       },
     },
+    { returnDocument: 'after' },
+  )
+}
+
+/**
+ * Хугацааг ЯГ ОДОО дуусгана — хоёулаа гарсан үед л дуудагдана. Нэг нь
+ * гарвал энэ дуудагдахгүй: үлдсэн тоглогч бүтэн хугацаагаа ашиглах ёстой.
+ */
+export async function endNow(roomId) {
+  return battles().findOneAndUpdate(
+    { _id: roomId, status: 'playing' },
+    { $set: { endsAt: new Date() } },
     { returnDocument: 'after' },
   )
 }

@@ -1,5 +1,5 @@
 import { WebSocket, WebSocketServer } from 'ws'
-import { MAX_REPS, cancelIfStale, settleIfDue, start, view } from './battle.js'
+import { MAX_REPS, cancelIfStale, endNow, settleIfDue, start, view } from './battle.js'
 import { verifyToken } from './auth.js'
 import { battles } from './db.js'
 
@@ -24,13 +24,30 @@ function broadcast(roomId, battle) {
   }
 }
 
+/** Түр тасалдалд тулааныг дуусгахгүйн тулд хоосон болсны дараа хүлээх хугацаа. */
+const EMPTY_GRACE_MS = 6_000
+
 function leave(socket) {
-  const set = rooms.get(socket.roomId)
+  const roomId = socket.roomId
+  const set = rooms.get(roomId)
   set?.delete(socket)
-  if (set?.size === 0) {
-    rooms.delete(socket.roomId)
-    flush(socket.roomId).catch(() => {})
-  }
+  if (!set || set.size > 0) return
+
+  rooms.delete(roomId)
+  flush(roomId).catch(() => {})
+
+  // ХОЁУЛАА гарсан үед л тулаан дуусна. Нэг нь үлдсэн бол өрөө хоосорохгүй
+  // тул энд орохгүй — үлдсэн тоглогч цагаа бүтэн ашиглана.
+  setTimeout(async () => {
+    if (rooms.has(roomId)) return   // хэн нэг нь буцаж ирсэн
+    try {
+      if (!(await endNow(roomId))) return
+      await flush(roomId)
+      if (await settleIfDue(roomId)) live.delete(roomId)
+    } catch (err) {
+      console.error('хоосон өрөө хаахад алдаа:', err.message)
+    }
+  }, EMPTY_GRACE_MS)
 }
 
 async function load(roomId) {
