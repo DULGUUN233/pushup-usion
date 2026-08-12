@@ -1049,7 +1049,13 @@ async function findOpponent(){
 
   const s = sdk();
   if(!s) throw new Error("Usion олдсонгүй — өрсөлдөгч урих боломжгүй");
-  const me = s.user.getId();
+
+  // `Usion.user.getId()` нь null буцааж ЧАДНА (SDK дотроо
+  // `_id || config.userId || null`). Тэр үед жагсаалт [null, найз] болж,
+  // сервер татгалздаг. `/api/me` бол баталгаажсан токеноос гарсан ID —
+  // сервер яг түүнтэй харьцуулдаг тул хамгийн найдвартай эх сурвалж.
+  const me = profile?.userId ?? launchCfg?.userId ?? s.user?.getId?.();
+  if(!me) throw new Error("Хэрэглэгч тодорхойгүй — аппаа дахин нээнэ үү");
 
   // Урилгаар нээгдсэн бол өрөө, тоглогчид аль хэдийн бэлэн — гэхдээ ЗӨВХӨН
   // НЭГ УДАА. `launchCfg` нь сешний туршид хадгалагддаг тул хэрэглэсний
@@ -1060,7 +1066,10 @@ async function findOpponent(){
   if(invitedLaunch() && ready.length === 2 && roomId){
     launchCfg = null;
     try { await s.game.connect(); await s.game.join(roomId); } catch { /* заавал биш */ }
-    return { roomId, players: ready };
+    // Платформын жагсаалт манай баталгаажсан ID-г агуулаагүй байвал өөрсдөө
+    // угсарна — эс тэгвээс сервер «players нь өөрийг чинь агуулаагүй» гэнэ
+    const other = ready.find(id => id !== me);
+    return { roomId, players: ready.includes(me) ? ready : [me, other] };
   }
 
   if(USE_MATCHMAKING){
