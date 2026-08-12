@@ -350,6 +350,22 @@ function usionInit(){
   });
 }
 
+/**
+ * Урилгын картаас нээгдсэн үү?
+ *
+ * `roomId`-гаар шүүж БОЛОХГҮЙ: платформ ганцаараа нээсэн үед ч автомат өрөө
+ * өгдөг ба өмнөх тулааны өрөө хадгалагдсаар байдаг. Тиймээс апп нээх болгонд
+ * тулаан руу шидэгдэнэ. Эрх мэдэлтэй дохио нь `mode`.
+ */
+function invitedLaunch(){
+  const s = sdk();
+  if(!s) return false;
+  const lp = s.getLaunchParams?.() ?? {};
+  if(lp.mode === "multiplayer") return true;
+  if(lp.mode === "single") return false;
+  return typeof s.game?.isMultiplayer === "function" ? s.game.isMultiplayer() : false;
+}
+
 function devId(){
   let id = localStorage.getItem("pushup:devId");
   if(!id){
@@ -1041,7 +1057,7 @@ async function findOpponent(){
   // найз урих хэсэг рүү хэзээ ч орохгүй.
   const ready = (launchCfg?.playerIds ?? []).filter(Boolean);
   const roomId = s.getLaunchParams?.().roomId;
-  if(ready.length === 2 && roomId){
+  if(invitedLaunch() && ready.length === 2 && roomId){
     launchCfg = null;
     try { await s.game.connect(); await s.game.join(roomId); } catch { /* заавал биш */ }
     return { roomId, players: ready };
@@ -1503,8 +1519,9 @@ await loadProfile();
 setBack("menu");
 
 // Найзын урилгаар нээгдсэн бол цэс дундуур гүйлгэхгүй — шууд тулаан руу.
-// Тэндээс хоёулаа socket-д холбогдмогц 5 секунд тоолоод эхэлнэ.
-if((launchCfg?.playerIds ?? []).filter(Boolean).length === 2 && sdk()?.getLaunchParams?.().roomId){
+// Ердийн нээлтэд ЭНД ОРОХГҮЙ: өмнөх өрөө хадгалагдсаар байдаг тул зөвхөн
+// `mode` дээр тулгуурлана.
+if(invitedLaunch() && (launchCfg?.playerIds ?? []).filter(Boolean).length === 2){
   startBattle();
 }
 </script>
