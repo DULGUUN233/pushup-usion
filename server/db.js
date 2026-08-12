@@ -16,6 +16,8 @@ export async function connect() {
   await sessions().createIndex({ userId: 1, finishedAt: -1 })
   // Өрөө бүрийн хамгийн сүүлийн тулааныг олоход
   await battles().createIndex({ roomKey: 1, seq: -1 })
+  // Хүчингүй болсон урилгыг Mongo өөрөө устгана — цэвэрлэх код бичих шаардлагагүй
+  await invites().createIndex({ createdAt: 1 }, { expireAfterSeconds: 600 })
 
   return db
 }
@@ -31,6 +33,18 @@ export function sessions() {
 
 export function battles() {
   return db.collection('battles')
+}
+
+/**
+ * «Эзэн ЯГ ОДОО энэ өрөөнд найзаа хүлээж байна» гэсэн богино настай тэмдэглэл.
+ *
+ * Чат дахь урилгын карт МӨНХ үлддэг — тулаан дуусаад ч «Дахин нэгдэх» товч
+ * ажилласаар байна. Картан дээрх тоглогчдын жагсаалт нь тэр агшны байдал тул
+ * түүнд итгэвэл аппаа огт нээгээгүй хүнтэй хосолно. Хүчинтэй урилгыг
+ * ялгах цорын ганц найдвартай арга нь эзэн өөрөө мэдэгдэх явдал.
+ */
+export function invites() {
+  return db.collection('invites')
 }
 
 /**

@@ -1,9 +1,44 @@
 import { Router } from 'express'
 import { requireUser } from './auth.js'
-import { createBattle, settleIfDue, view } from './battle.js'
+import { announceInvite, createBattle, dropInvite, liveInvite, settleIfDue, view } from './battle.js'
 import { battles } from './db.js'
 
 const router = Router()
+
+/**
+ * Эзэн: «би энэ өрөөнд найзаа хүлээж байна».
+ *
+ * Урилгын карт чатад мөнхөд үлдэж, дуусчихсан тулааны өрөө рүү «Дахин нэгдэх»
+ * товчоор оруулдаг. Платформ өрөөний төлөвийг асуух зам өгдөггүй тул амьд
+ * урилгыг ялгах цорын ганц арга нь эзний энэ мэдэгдэл.
+ */
+router.post('/invite', requireUser, async (req, res) => {
+  const { roomId } = req.body ?? {}
+  if (typeof roomId !== 'string' || !roomId) {
+    return res.status(400).json({ error: 'roomId шаардлагатай' })
+  }
+  await announceInvite(roomId, req.user.userId)
+  res.json({ ok: true })
+})
+
+/** Зочин: энэ картны эзэн ОДОО ч хүлээж байна уу? */
+router.get('/invite/:roomKey', requireUser, async (req, res) => {
+  const inv = await liveInvite(req.params.roomKey)
+  if (!inv) return res.status(404).json({ error: 'урилга хүчингүй' })
+  // Өөрийнхөө урилгын карт руу буцаж орж болохгүй — ганцаараа тулалдана
+  if (inv.hostId === req.user.userId) return res.status(404).json({ error: 'урилга хүчингүй' })
+  res.json({ hostId: inv.hostId })
+})
+
+/** Эзэн урилгаасаа буцлаа — картыг нь тэр дороо үхүүлнэ. */
+router.delete('/invite/:roomKey', requireUser, async (req, res) => {
+  const inv = await liveInvite(req.params.roomKey)
+  if (inv && inv.hostId !== req.user.userId) {
+    return res.status(403).json({ error: 'энэ урилга чинийх биш' })
+  }
+  await dropInvite(req.params.roomKey)
+  res.json({ ok: true })
+})
 
 /**
  * Хос олдсоны дараа тулааныг үүсгэнэ. Хоёр тал зэрэг дуудна — үүсгэх нь

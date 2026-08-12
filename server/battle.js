@@ -1,4 +1,4 @@
-import { battles, ensureUsers, sessions, users } from './db.js'
+import { battles, ensureUsers, invites, sessions, users } from './db.js'
 import { settleBattle } from './elo.js'
 
 /** Тулааны үргэлжлэх хугацаа. */
@@ -9,6 +9,30 @@ export const COUNTDOWN_MS = 5_000
 export const WAIT_MS = 45_000
 /** Нэг тулаанд хүлээн зөвшөөрөх дээд тоо — утгагүй өгөгдлөөс хамгаална. */
 export const MAX_REPS = 200
+/** Урилга хүчинтэй байх хугацаа. Найз мэдэгдлээ хараад аппаа нээх зай. */
+export const INVITE_TTL_MS = 3 * 60_000
+
+/** Эзэн найзаа хүлээж эхэлснээ мэдэгдэнэ. Нэг өрөөнд сүүлийнх нь хүчинтэй. */
+export async function announceInvite(roomKey, hostId) {
+  await invites().replaceOne(
+    { _id: roomKey },
+    { _id: roomKey, hostId, createdAt: new Date() },
+    { upsert: true },
+  )
+}
+
+/** Хүчинтэй урилга байвал буцаана. Хугацаа хэтэрсэн бол байхгүйтэй адил. */
+export async function liveInvite(roomKey) {
+  const inv = await invites().findOne({ _id: roomKey })
+  if (!inv) return null
+  if (inv.createdAt <= new Date(Date.now() - INVITE_TTL_MS)) return null
+  return inv
+}
+
+/** Урилгыг хүчингүй болгоно — хэрэглэгдсэн, эсвэл эзэн нь буцсан. */
+export async function dropInvite(roomKey) {
+  await invites().deleteOne({ _id: roomKey })
+}
 
 /**
  * Тулааныг үүсгэнэ. Хоёр тал зэрэг дуудна тул давхардлыг Mongo дээр таслана —
@@ -62,6 +86,9 @@ export async function createBattle(roomId, playerIds) {
 
   try {
     await battles().insertOne(battle)
+    // Урилга хэрэглэгдлээ. Устгахгүй бол чат дахь хуучин карт дахин ажиллаж,
+    // өөр хүн дуусчихсан тулааны өрөө рүү орж ирнэ.
+    await dropInvite(roomId)
     return battle
   } catch (err) {
     // Хоёр тал зэрэг үүсгэвэл нэг нь давхардлаар унана — нөгөөгийнхийг авна

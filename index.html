@@ -932,12 +932,26 @@ function reset(){
 
 // Зөвхөн урд камер: хэрэглэгч дэлгэцээ хараад тоолуур, цагаа харах ёстой тул
 // арын камер хэрэглэгдэхгүй. Толин тусгалтай — өөрийгөө толинд харж байгаа мэт.
+/**
+ * Камер асаах хүсэлтийн дугаар. Зөвшөөрлийн цонх нээлттэй байх зуур
+ * хэрэглэгч гарч чадна (урилга цуцлагдах, буцах товч) — тэгвэл `stopCamera()`
+ * ажиллаад ДАРАА нь `getUserMedia` амжилттай буцаж, камер асаалттай үлдэнэ.
+ * Дугаар зөрсөн бол ирсэн урсгалыг шууд хаана.
+ */
+let camGen = 0;
+
 async function openCamera(){
+  const gen = ++camGen;
   if(stream) stream.getTracks().forEach(t => t.stop());
-  stream = await navigator.mediaDevices.getUserMedia({
+  const got = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "user", width:{ideal:1280}, height:{ideal:720} },
     audio: false
   });
+  if(gen !== camGen){
+    got.getTracks().forEach(t => t.stop());
+    throw new Error("Камер цуцлагдсан");
+  }
+  stream = got;
   video.srcObject = stream;
   await video.play();
   video.classList.add("mirror");
@@ -945,6 +959,7 @@ async function openCamera(){
 }
 
 function stopCamera(){
+  camGen++;
   running = false;
   stream?.getTracks().forEach(t => t.stop());
   stream = null;
@@ -1043,12 +1058,52 @@ const USE_MATCHMAKING = false;
 
 /** Найз орж ирснийг серверээс асуух давтамжит шалгалт. */
 let invitePoll = null;
+/** Эзэн болж урьсан өрөө — буцахдаа урилгаа үхүүлэхэд хэрэгтэй. */
+let hostedRoom = null;
 
-async function findOpponent(){
+/**
+ * Урилгын картаас нээгдсэн үү — өрөө, хоёр тоглогч хоёулаа бэлэн байх ёстой.
+ * `launchCfg` хэрэглэгдсэний дараа хоосрох тул дахин үнэн болохгүй.
+ */
+function guestLaunch(){
+  return !!(invitedLaunch()
+    && (launchCfg?.playerIds ?? []).filter(Boolean).length === 2
+    && sdk()?.getLaunchParams?.().roomId);
+}
+
+/**
+ * Картны эзэн ОДОО ч хүлээж байгаа эсэхийг серверээс асууна.
+ *
+ * Эзэн урилга илгээмэгц бүртгүүлдэг ч зочин түүнээс сая хормын өмнө орж
+ * ирж болзошгүй тул шууд «хүчингүй» гэхгүй, багахан хүлээнэ.
+ */
+async function waitForHost(roomKey, ms = 9000){
+  const until = Date.now() + ms;
+  for(;;){
+    try{
+      const r = await api(`/battle/invite/${encodeURIComponent(roomKey)}`);
+      if(r?.hostId) return r.hostId;
+    }catch{ /* хараахан бүртгэгдээгүй, эсвэл үнэхээр хуучирсан */ }
+    if(Date.now() >= until) return null;
+    await new Promise(r => setTimeout(r, 1200));
+  }
+}
+
+/**
+ * Өрсөлдөгч олно.
+ *
+ * `onInvited` нь урилгын дэлгэц ХААГДСАН агшинд дуудагдана. Камерыг яг тэр
+ * үед асаана: платформын найз сонгогч нээлттэй байхад зөвшөөрлийн цонх дээр
+ * нь давхацвал хоёулаа ойлгомжгүй болно. Урилгагүй замууд (зочин, дараалал,
+ * локал тест) дээр шууд дуудагдана — хүлээх зүйл байхгүй.
+ */
+async function findOpponent(onInvited){
+  const invited = () => { try{ onInvited?.(); }catch{ /* дуудагчийн асуудал */ } };
+
   // Локал турших зам: ?room=r1&vs=нөгөө_ID — хоёр таб нээж шалгана
   const q = new URLSearchParams(location.search);
   const room = q.get("room"), vs = q.get("vs");
-  if(room && vs) return { roomId: room, players: [devId(), vs] };
+  if(room && vs){ invited(); return { roomId: room, players: [devId(), vs] }; }
 
   const s = sdk();
   if(!s) throw new Error("Usion олдсонгүй — өрсөлдөгч урих боломжгүй");
@@ -1064,18 +1119,22 @@ async function findOpponent(){
   // НЭГ УДАА. `launchCfg` нь сешний туршид хадгалагддаг тул хэрэглэсний
   // дараа хаяхгүй бол Battle дарах болгонд тэр хуучин өрөө рүү явж,
   // найз урих хэсэг рүү хэзээ ч орохгүй.
-  const ready = (launchCfg?.playerIds ?? []).filter(Boolean);
   const roomId = s.getLaunchParams?.().roomId;
-  if(invitedLaunch() && ready.length === 2 && roomId){
+  if(guestLaunch()){
     launchCfg = null;
+    // Картан дээрх тоглогчдын жагсаалтад ИТГЭХГҮЙ: карт чатад мөнхөд үлдэж,
+    // тулаан дууссаны дараа ч «Дахин нэгдэх» товч ажилладаг. Тэр жагсаалт
+    // нь урьсан агшны байдал тул аппаа огт нээгээгүй хүнтэй хосолно.
+    // Эзэн нь ЯГ ОДОО хүлээж байгаа эсэхийг манай серверээс асууна.
+    const host = await waitForHost(roomId);
+    if(!host) throw new Error("Энэ урилга хүчингүй болжээ — найзаасаа шинээр урь");
     try { await s.game.connect(); await s.game.join(roomId); } catch { /* заавал биш */ }
-    // Платформын жагсаалт манай баталгаажсан ID-г агуулаагүй байвал өөрсдөө
-    // угсарна — эс тэгвээс сервер «players нь өөрийг чинь агуулаагүй» гэнэ
-    const other = ready.find(id => id !== me);
-    return { roomId, players: ready.includes(me) ? ready : [me, other] };
+    invited();
+    return { roomId, players: [me, host] };
   }
 
   if(USE_MATCHMAKING){
+    invited();
     const m = await s.matchmaking.find({ size: 2, timeout: 30_000 });
     try { await s.game.connect(); await s.game.join(m.roomId); } catch { /* заавал биш */ }
     return { roomId: m.roomId, players: m.players };
@@ -1121,6 +1180,14 @@ async function findOpponent(){
         if(r && r.success === false) return settle(reject, new Error("Урилга илгээгдсэнгүй"));
         if(!r?.roomId) return;
         invitedRoom = r.roomId;
+        // Зочин энэ картыг хүчинтэй гэдгийг ЗӨВХӨН эндээс мэднэ — платформ
+        // өрөөний төлөвийг асуух зам өгдөггүй.
+        hostedRoom = r.roomId;
+        api("/battle/invite", { method: "POST", body: JSON.stringify({ roomId: r.roomId }) })
+          .catch(() => { /* нөгөө замууд ажилласаар байна */ });
+        // Урилга гарсан — одоо камер асаах цаг. Найз ирэхийг хүлээх зуур
+        // зөвшөөрөл авч, модель татна.
+        invited();
         // Өрөөндөө ЗААВАЛ орно: түүнээс өмнө гарсан тул гишүүн биш үлдвэл
         // найз орсныг огт сонсохгүй
         try { await s.game.join(r.roomId); } catch { /* заавал биш */ }
@@ -1133,7 +1200,9 @@ async function findOpponent(){
           try{
             const st = await api(`/battle/room/${encodeURIComponent(r.roomId)}/latest`);
             const other = st?.opponent?.userId;
-            if(other && (st.status === "waiting" || st.status === "playing")){
+            // `other === me` бол таних тэмдэг хутгалдсан гэсэн үг. Тэгснийг
+            // хосолговол сервер «яг хоёр тоглогч» гэж унана — үл хайхарна.
+            if(other && other !== me && (st.status === "waiting" || st.status === "playing")){
               settle(resolve, { roomId: r.roomId, players: [me, other] });
             }
           }catch{ /* хараахан үүсээгүй */ }
@@ -1477,6 +1546,9 @@ function endDuel(state){
 }
 
 async function startBattle(){
+  // Дуу нээх боломж бол ЗӨВХӨН хэрэглэгчийн дарлага. Камерыг урилгын дараа
+  // асаадаг болсон тул `startEngine()` дотор нээвэл оройтож, дуу гарахгүй.
+  try{ ac(); }catch{ /* дуугүй ажиллана */ }
   mode = "battle"; duel = null; reported = false;
   show("play");
   $("play").classList.add("duel");
@@ -1495,15 +1567,26 @@ async function startBattle(){
   $("done").classList.add("hidden");
   $("quit").classList.remove("hidden");
   $("clock").textContent = "…";
+  // Урилга ХАМГИЙН ТҮРҮҮНД гарна: найз нь мэдэгдлээ хараад аппаа нээх хүртэл
+  // хамгийн удаан хүлээлт болдог тул түүнийг эхлүүлчихээд камераа бэлдэнэ.
+  $("seekTitle").textContent = guestLaunch()
+    ? "Тулаанд холбогдож байна…"
+    : USE_MATCHMAKING ? "Өрсөлдөгч хайж байна…" : "Найзаа урьж байна…";
 
   try{
-    // Камерыг ХОС ОЛОХООС ӨМНӨ асаана — эс тэгвээс зөвшөөрлийн цонх
-    // тэмцээн эхэлсэн хойно гарч ирж, эхний секундүүд алдагдана.
-    await startEngine();
-    $("seekTitle").textContent = USE_MATCHMAKING
-      ? "Өрсөлдөгч хайж байна…"
-      : "Найзаа урьж байна…";
-    const match = await findOpponent();
+    // Камер урилгын дэлгэц хаагдсаны дараа асна — найз ирэхийг хүлээх зуур
+    // зэрэгцэн бэлдэнэ. Тулаан эхлэхээс ӨМНӨ бэлэн болсон байх ёстой тул
+    // доор заавал хүлээнэ: серверийн цаг хоёр socket холбогдсоны дараа явна.
+    let engine = null;
+    const match = await findOpponent(() => {
+      $("seekTitle").textContent = USE_MATCHMAKING
+        ? "Өрсөлдөгч хайж байна…"
+        : mode === "battle" && !hostedRoom ? "Тулаан эхлэхэд бэлдэж байна…" : "Найзаа хүлээж байна…";
+      engine = startEngine();
+      // Доорх `await` хүртэл алдаа нь эзэнгүй үлдэхээс сэргийлнэ
+      engine.catch(() => {});
+    });
+    await (engine ?? startEngine());
     $("seek").classList.add("hidden");
     $("duelBar").classList.remove("hidden");
     // Socket-д ӨРӨӨНИЙ биш, СЕРВЕРИЙН буцаасан тулааны ID хэрэгтэй — нэг
@@ -1524,6 +1607,12 @@ function leaveBattle(){
   stopVideo();
   ws?.close(); ws = null;
   duel = null; mode = "solo";
+  // Урьчихаад буцлаа — картаа тэр дороо үхүүлнэ, эс тэгвээс найз хойно нь
+  // дараад хэн ч байхгүй өрөөнд ганцаараа үлдэнэ
+  if(hostedRoom){
+    api(`/battle/invite/${encodeURIComponent(hostedRoom)}`, { method: "DELETE" }).catch(() => {});
+    hostedRoom = null;
+  }
   leaveRoom();
   $("play").classList.remove("duel");
   stopCamera();
@@ -1589,7 +1678,7 @@ setBack("menu");
 // Найзын урилгаар нээгдсэн бол цэс дундуур гүйлгэхгүй — шууд тулаан руу.
 // Ердийн нээлтэд ЭНД ОРОХГҮЙ: өмнөх өрөө хадгалагдсаар байдаг тул зөвхөн
 // `mode` дээр тулгуурлана.
-if(invitedLaunch() && (launchCfg?.playerIds ?? []).filter(Boolean).length === 2){
+if(guestLaunch()){
   startBattle();
 }
 </script>
