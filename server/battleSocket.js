@@ -1,5 +1,16 @@
 import { WebSocket, WebSocketServer } from 'ws'
-import { MAX_REPS, cancelIfStale, endNow, settleIfDue, start, view } from './battle.js'
+import {
+  ARM_MS,
+  MAX_REPS,
+  WAIT_MS,
+  beginArming,
+  cancelIfStale,
+  endNow,
+  setArmed,
+  setReady,
+  settleIfDue,
+  view,
+} from './battle.js'
 import { verifyToken } from './auth.js'
 import { battles } from './db.js'
 
@@ -18,9 +29,15 @@ function send(socket, message) {
   if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message))
 }
 
+/** Тухайн өрөөнд ЯГ ОДОО холбогдсон хүмүүс. Хүлээлгийн өрөө үүгээр ажиллана. */
+function presentIn(roomId) {
+  return [...(rooms.get(roomId) ?? [])].map((s) => s.user.userId)
+}
+
 function broadcast(roomId, battle) {
+  const present = presentIn(roomId)
   for (const socket of rooms.get(roomId) ?? []) {
-    send(socket, { type: 'state', state: view(battle, socket.user.userId) })
+    send(socket, { type: 'state', state: view(battle, socket.user.userId, present) })
   }
 }
 
@@ -31,7 +48,20 @@ function leave(socket) {
   const roomId = socket.roomId
   const set = rooms.get(roomId)
   set?.delete(socket)
-  if (!set || set.size > 0) return
+  if (!set || set.size > 0) {
+    // Хүлээлгийн өрөөнд үлдсэн хүн нөгөө нь гарсныг ХАРАХ ёстой — эс тэгвээс
+    // байхгүй хүнийг бэлэн гэж бодоод Start дарахыг оролдоно.
+    const doc = live.get(roomId)
+    if (doc && (doc.status === 'waiting' || doc.status === 'arming')) {
+      setReady(roomId, socket.user?.userId, false)
+        .then((fresh) => {
+          if (fresh) live.set(roomId, fresh)
+          if (rooms.get(roomId)?.size) broadcast(roomId, live.get(roomId) ?? doc)
+        })
+        .catch(() => {})
+    }
+    return
+  }
 
   rooms.delete(roomId)
   flush(roomId).catch(() => {})
@@ -163,26 +193,53 @@ export function attachBattleSocket(server) {
         set.add(socket)
         rooms.set(socket.roomId, set)
 
-        // Цагийг ХОЁУЛАА ОРСНЫ ДАРАА тавина. Үүсгэх агшнаас тоолж эхэлбэл
-        // камераа удаан ачаалсан хүн секунд алдана.
-        const here = new Set([...set].map((s) => s.user.userId))
-        if (doc.status === 'waiting' && doc.players.every((id) => here.has(id))) {
-          const started = await start(socket.roomId)
-          if (started) {
-            live.set(socket.roomId, started)
-            broadcast(socket.roomId, started)
-            scheduleSettle(socket.roomId, started.endsAt)
-            return
-          }
-        }
-
-        send(socket, { type: 'state', state: view(doc, user.userId) })
+        // Тулаан ЭНД эхлэхээ больсон: хоёулаа хүлээлгийн өрөөнд орж, эзэн нь
+        // Start дарж байж эхэлнэ. Орж ирснийг нөгөө талд нь мэдэгдэнэ —
+        // хүлээлгийн өрөө «найз ирлээ» гэдгийг үүгээр л мэднэ.
+        broadcast(socket.roomId, doc)
         if (doc.status === 'playing') scheduleSettle(socket.roomId, doc.endsAt)
-        if (doc.status === 'waiting') scheduleWaitTimeout(socket.roomId, doc.createdAt, 45_000)
+        if (doc.status === 'waiting') scheduleWaitTimeout(socket.roomId, doc.createdAt, WAIT_MS)
+        if (doc.status === 'arming') scheduleWaitTimeout(socket.roomId, doc.armingAt, ARM_MS)
         return
       }
 
       if (!socket.user) return
+
+      // ---- хүлээлгийн өрөө ----
+
+      if (message.type === 'ready') {
+        const doc = await setReady(socket.roomId, socket.user.userId, message.value !== false)
+        if (doc) {
+          live.set(socket.roomId, doc)
+          broadcast(socket.roomId, doc)
+        }
+        return
+      }
+
+      if (message.type === 'start') {
+        // Хоёулаа ЭНД байгаа эсэхийг socket-оор шалгана: «бэлэн» тэмдэг
+        // үлдчихээд өөрөө гарсан байж болно
+        const here = presentIn(socket.roomId)
+        const cached = await load(socket.roomId)
+        if (!cached?.players.every((id) => here.includes(id))) {
+          return send(socket, { type: 'error', error: 'Хоёулаа өрөөнд байх ёстой' })
+        }
+        const doc = await beginArming(socket.roomId, socket.user.userId)
+        if (!doc) return send(socket, { type: 'error', error: 'Эхлүүлэх боломжгүй' })
+        live.set(socket.roomId, doc)
+        broadcast(socket.roomId, doc)
+        scheduleWaitTimeout(socket.roomId, doc.armingAt, ARM_MS)
+        return
+      }
+
+      if (message.type === 'armed') {
+        const doc = await setArmed(socket.roomId, socket.user.userId)
+        if (!doc) return
+        live.set(socket.roomId, doc)
+        broadcast(socket.roomId, doc)
+        if (doc.status === 'playing') scheduleSettle(socket.roomId, doc.endsAt)
+        return
+      }
 
       if (message.type === 'rep') {
         const doc = live.get(socket.roomId)

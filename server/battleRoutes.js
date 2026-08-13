@@ -54,7 +54,10 @@ router.post('/', requireUser, async (req, res) => {
   }
 
   try {
-    const battle = await createBattle(roomId, players)
+    // Өрөөг үүсгэсэн хүн эзэн болно. Урилга нь эзний мэдэгдэл тул хамгийн
+    // найдвартай эх сурвалж — клиентийн хэлснийг хүлээж авахгүй.
+    const inv = await liveInvite(roomId)
+    const battle = await createBattle(roomId, players, inv?.hostId ?? null)
     if (!battle.players.includes(req.user.userId)) {
       return res.status(403).json({ error: 'энэ тулаанд оролцохгүй' })
     }

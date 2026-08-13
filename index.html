@@ -58,6 +58,28 @@
   .row .tot{font-weight:800;font-variant-numeric:tabular-nums}
   .row .tot small{font-size:11px;font-weight:600;color:var(--dim);margin-left:4px}
 
+  /* ---------- хүлээлгийн өрөө ---------- */
+  #hall{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto}
+  #hall h2{margin:0;font-size:20px}
+  #hallSeats{display:flex;flex-direction:column;gap:8px}
+  .seat{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;
+    background:var(--card);border:1px solid transparent}
+  .seat.on{border-color:rgba(57,217,138,.4)}
+  .seat.away{border:1px dashed rgba(255,255,255,.16);background:transparent}
+  .spfp{width:44px;height:44px;border-radius:50%;flex:none;background:#1b2440;
+    background-size:cover;background-position:center;display:flex;align-items:center;
+    justify-content:center;font-size:17px;font-weight:800;color:rgba(255,255,255,.8)}
+  .seat .info{flex:1;min-width:0}
+  .seat .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat .elo{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .chip{font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;white-space:nowrap;
+    background:rgba(255,255,255,.09);color:var(--dim)}
+  .chip.ok{background:rgba(57,217,138,.16);color:var(--accent)}
+  .chip.wait{background:rgba(255,176,32,.14);color:var(--warn)}
+  #hallVs{text-align:center;font-size:11px;font-weight:800;letter-spacing:.3em;color:var(--dim)}
+  #hallHint{font-size:12.5px;line-height:1.6;color:var(--dim);min-height:40px}
+  #hallBtns{display:flex;flex-direction:column;gap:8px}
+
   /* ---------- тоолох дэлгэц ---------- */
   #play{padding:0;overflow:hidden;background:#000}
   video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -220,6 +242,22 @@
   <h2>Тэргүүлэгчид</h2>
   <div id="rows"></div>
   <div style="max-width:460px;margin:16px auto 0"><button id="bBack">← Буцах</button></div>
+</section>
+
+<!-- ================= ХҮЛЭЭЛГИЙН ӨРӨӨ ================= -->
+<section id="hall" class="screen hidden">
+  <h2 id="hallTitle">Хүлээлгийн өрөө</h2>
+  <div id="hallSeats">
+    <div class="seat" id="seatYou"></div>
+    <div id="hallVs">VS</div>
+    <div class="seat away" id="seatOpp"></div>
+  </div>
+  <div id="hallHint"></div>
+  <div id="hallBtns">
+    <button class="primary hidden" id="hallReady">Бэлэн</button>
+    <button class="primary hidden" id="hallStart">Эхлүүлэх</button>
+    <button id="hallBack">← Гарах</button>
+  </div>
 </section>
 
 <!-- ================= ТООЛОХ ================= -->
@@ -464,6 +502,11 @@ function setBack(id){
   if(id === "menu" || (id === "play" && mode === "battle")){
     return void u.releaseBackButton?.();
   }
+
+  // Хүлээлгийн өрөөнөөс буцах нь аюулгүй — тулаан хараахан эхлээгүй.
+  // Өрөөгөө үлдээхгүйн тулд `leaveBattle` дуудна: урилга үхэж, найз хоосон
+  // өрөө рүү орохгүй.
+  if(id === "hall") return void u.claimBackButton(() => leaveBattle());
 
   // Дахин авахгүй: `show` нь очих дэлгэцийн төлөвийг өөрөө тавина. Энд
   // дахин авбал цэсэн дээрх суллалтыг дарж, аппыг хаах боломжгүй болно.
@@ -1077,6 +1120,29 @@ function guestLaunch(){
  * Эзэн урилга илгээмэгц бүртгүүлдэг ч зочин түүнээс сая хормын өмнө орж
  * ирж болзошгүй тул шууд «хүчингүй» гэхгүй, багахан хүлээнэ.
  */
+/**
+ * Урилга бүрд ШИНЭ өрөө үүсгэнэ.
+ *
+ * `game.invite()` нь шинэ өрөө үүсгэдэггүй — `game.roomId || config.roomId`-г
+ * л илгээдэг. `leave()` нь `game.roomId`-г null болгодог тул урих болгонд
+ * анхны нээлтийн өрөө рүү буцаж унаж, хуучин өрсөлдөгч дотор нь үлдсэн
+ * хэвээр байдаг. `lobby.queue` нь REST-ээр өрөө үүсгэдэг цорын ганц зам —
+ * давтагдашгүй түлхүүр өгвөл өрөө нь ч шинэ гарна.
+ *
+ * Бүтэхгүй бол null: тэр үед хуучин зам ажиллана, манай урилгын бүртгэл
+ * хэн хэнтэй хослохыг хамгаалсаар байна.
+ */
+async function freshRoom(){
+  const s = sdk();
+  const serviceId = launchCfg?.serviceId ?? s?.getLaunchParams?.().serviceId;
+  if(!s?.lobby?.queue || !serviceId) return null;
+  try{
+    const key = `pu_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const r = await s.lobby.queue(serviceId, { conversationId: key });
+    return r?.room_id ?? r?.roomId ?? null;
+  }catch{ return null; }
+}
+
 async function waitForHost(roomKey, ms = 9000){
   const until = Date.now() + ms;
   for(;;){
@@ -1175,6 +1241,10 @@ async function findOpponent(onInvited){
     s.game.connect()
       .then(() => s.game.leave?.())
       .catch(() => {})
+      // Урихаас ӨМНӨ шинэ өрөө үүсгэж, түүнд орно. `invite()` нь тэр үед
+      // л шинэ өрөөг картанд бичнэ — эс тэгвээс хуучин өрөө рүү урина.
+      .then(() => freshRoom())
+      .then(rid => rid ? s.game.join(rid).catch(() => {}) : null)
       .then(() => s.game.invite())
       .then(async r => {
         if(r && r.success === false) return settle(reject, new Error("Урилга илгээгдсэнгүй"));
@@ -1225,6 +1295,7 @@ function openSocket(roomId){
     const m = JSON.parse(ev.data);
     if(m.type === "state") applyDuel(m.state);
     else if(m.type === "signal") onSignal(m.data);
+    else if(m.type === "error") $("hallHint").textContent = m.error;
   };
 }
 
@@ -1431,6 +1502,99 @@ function setPfp(el, side){
   }
 }
 
+// ======================= хүлээлгийн өрөө =======================
+
+/**
+ * Нэг суудал: зураг, нэр, ELO, төлөв. `side` нь null бол хоосон суудал.
+ * `chipText` өгвөл төлвийн тэмдгийг дарж бичнэ; хоосон мөр бол огт харуулахгүй.
+ */
+function renderSeat(el, side, emptyText, chipText){
+  const here = !!side && side.here !== false;
+  el.className = "seat" + (!here ? " away" : side.ready ? " on" : "");
+  el.innerHTML = '<div class="spfp"></div><div class="info">'
+    + '<div class="nm"></div><div class="elo"></div></div><div class="chip"></div>';
+  setPfp(el.querySelector(".spfp"), side);
+  el.querySelector(".nm").textContent = side?.name ?? emptyText ?? "Хоосон";
+  el.querySelector(".elo").textContent = side?.rating != null ? "ELO " + side.rating : "";
+  const chip = el.querySelector(".chip");
+  const auto = !side ? "" : !here ? "алга" : side.ready ? "бэлэн" : "бэлдэж байна";
+  chip.textContent = chipText ?? auto;
+  chip.className = "chip" + (side && here && side.ready ? " ok" : side && here ? " wait" : "");
+  chip.classList.toggle("hidden", !chip.textContent);
+}
+
+/**
+ * Хүлээлгийн өрөөг зурна. `state` нь null байж БОЛНО — найз хараахан
+ * ороогүй, тулаан ч үүсээгүй үе.
+ */
+function renderHall(state){
+  const you = state?.you ?? {
+    name: profile?.name ?? launchCfg?.userName ?? "Чи",
+    rating: profile?.rating ?? null,
+    avatar: launchCfg?.userAvatar ?? null,
+    here: true, ready: false,
+  };
+  const host = state ? state.youAreHost : true;
+  // Эзний хувьд «бэлэн» гэсэн ойлголт байхгүй — Start дарах нь өөрөө бэлэн
+  // гэсэн үг тул түүнийг «бэлдэж байна» гэж харуулбал төөрөгдүүлнэ
+  renderSeat($("seatYou"), you, null, host ? "эзэн" : null);
+  renderSeat($("seatOpp"), state?.opponent ?? null, "Найзаа хүлээж байна");
+
+  const waiting = !state || state.status === "waiting";
+  const opp = state?.opponent;
+  const oppHere = !!opp && opp.here !== false;
+  const canStart = host && oppHere && !!opp.ready;
+
+  $("hallReady").classList.toggle("hidden", !state || host || !waiting);
+  $("hallStart").classList.toggle("hidden", !host || !waiting);
+  $("hallReady").textContent = state?.you?.ready ? "Бэлэн ✓" : "Бэлэн";
+  $("hallStart").disabled = !canStart;
+
+  $("hallHint").textContent =
+    !waiting                 ? "Камер асааж байна…"
+    : !state                 ? "Найз чинь урилгыг хүлээж авбал энд харагдана."
+    : !oppHere               ? "Найз чинь орж ирэхийг хүлээж байна…"
+    : host && !opp.ready     ? "Найз чинь «Бэлэн» дархыг хүлээж байна."
+    : host                   ? "Эхлүүлэхэд хоёуланд нь камер асч, 5 секунд тоолоод эхэлнэ."
+    : state.you.ready        ? "Эзэн эхлүүлэхийг хүлээж байна…"
+    :                          "«Бэлэн» дарж эзэнд мэдэгд.";
+}
+
+const hallSend = msg => {
+  if(ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+};
+
+/**
+ * Start дарагдлаа: камераа асаагаад серверт мэдэгдэнэ. Цаг нь ХОЁУЛАА
+ * мэдэгдсэний дараа тавигдана — удаан асаасан хүн секунд алдахгүй.
+ */
+let arming = false;
+
+async function armForBattle(){
+  if(arming) return;
+  arming = true;
+  show("play");
+  $("play").classList.add("duel");
+  $("start").classList.add("hidden");
+  $("over").classList.add("hidden");
+  $("duelBar").classList.add("hidden");
+  $("stats").classList.add("hidden");
+  $("reset").classList.add("hidden");
+  $("done").classList.add("hidden");
+  $("quit").classList.remove("hidden");
+  $("clock").textContent = "…";
+  $("seek").classList.remove("hidden");
+  $("seekTitle").textContent = "Камер бэлдэж байна…";
+  try{
+    await startEngine();
+    hallSend({ type: "armed" });
+    $("seekTitle").textContent = "Өрсөлдөгчөө хүлээж байна…";
+  }catch(e){
+    leaveBattle();
+    note("Камер асаагүй: " + e.message, "bad");
+  }
+}
+
 function applyDuel(state){
   duel = state;
   if(state.now) clockOffset = new Date(state.now).getTime() - Date.now();
@@ -1445,8 +1609,19 @@ function applyDuel(state){
   $("oppReps").textContent = o.reps;
   const total = y.reps + o.reps;
   $("tugYou").style.width = (total ? (y.reps / total) * 100 : 50) + "%";
-  if(state.status === "waiting") setMsg("Өрсөлдөгчийг хүлээж байна…", "var(--dim)");
-  if(state.status === "playing" && state.opponent) startVideo(y.userId, state.opponent.userId);
+  if(state.status === "waiting"){
+    show("hall");
+    renderHall(state);
+  }
+  // Эзэн Start дарав — хоёулаа камераа асаана
+  if(state.status === "arming") armForBattle();
+  if(state.status === "playing"){
+    if($("play").classList.contains("hidden")) show("play");
+    $("seek").classList.add("hidden");
+    $("duelBar").classList.remove("hidden");
+    if(!tick) startClock();
+    if(state.opponent) startVideo(y.userId, state.opponent.userId);
+  }
   if(state.status === "cancelled") cancelDuel(state);
   if(state.status === "finished") endDuel(state);
 }
@@ -1484,6 +1659,10 @@ function leaveRoom(){
 /** Тулаан болоогүй — рейтинг хөдлөхгүй. */
 function cancelDuel(state){
   leaveRoom();
+  // Мэдээллийн цонх нь `#play` дотор байдаг тул хүлээлгийн өрөөнөөс
+  // цуцлагдвал тийш шилжинэ — эс тэгвээс юу ч харагдахгүй
+  show("play");
+  arming = false;
   clearInterval(tick); tick = null;
   stopVideo();
   stopCamera();
@@ -1524,6 +1703,8 @@ function reportResult(state){
 function endDuel(state){
   reportResult(state);
   leaveRoom();
+  show("play");
+  arming = false;
   clearInterval(tick); tick = null;
   stopVideo();
   stopCamera();
@@ -1545,56 +1726,31 @@ function endDuel(state){
   $("over").classList.remove("hidden");
 }
 
+/**
+ * Battle: урина → хүлээлгийн өрөө → Ready/Start → камер → тулаан.
+ *
+ * Камер ЭНД асахгүй. Start дарагдаж, сервер `arming` төлөвт орсны дараа
+ * `armForBattle()` асаана — хүлээлгийн өрөөнд суух зуур камер асаалттай
+ * байх шаардлагагүй, зөвшөөрлийн цонх ч цагтаа гарна.
+ */
 async function startBattle(){
-  // Дуу нээх боломж бол ЗӨВХӨН хэрэглэгчийн дарлага. Камерыг урилгын дараа
-  // асаадаг болсон тул `startEngine()` дотор нээвэл оройтож, дуу гарахгүй.
+  // Дуу нээх боломж бол ЗӨВХӨН хэрэглэгчийн дарлага
   try{ ac(); }catch{ /* дуугүй ажиллана */ }
-  mode = "battle"; duel = null; reported = false;
-  show("play");
-  $("play").classList.add("duel");
-  $("start").classList.add("hidden");
-  $("over").classList.add("hidden");
-  // Хос олдтол тулааны мөр хоосон нэр, 0:0 оноогоор гарч ирвэл эвдэрсэн
-  // мэт харагдана — олдсоны дараа л үзүүлнэ.
-  $("duelBar").classList.add("hidden");
-  $("seek").classList.remove("hidden");
-  $("seekTitle").textContent = "Камер бэлдэж байна…";
-  // Тулааны мөр статистикийн байрыг эзэлнэ — дарагдахаас нь хойш нуух нь дээр
-  $("stats").classList.add("hidden");
-  // Камер солих товч ҮЛДЭНЭ — тоолуулах өнцгөө тохируулах цорын ганц арга.
-  // Тэглэх, Дуусгах хоёрыг л нуулаа: rated тулааныг дундуур нь эвдэнэ.
-  $("reset").classList.add("hidden");
-  $("done").classList.add("hidden");
-  $("quit").classList.remove("hidden");
-  $("clock").textContent = "…";
-  // Урилга ХАМГИЙН ТҮРҮҮНД гарна: найз нь мэдэгдлээ хараад аппаа нээх хүртэл
-  // хамгийн удаан хүлээлт болдог тул түүнийг эхлүүлчихээд камераа бэлдэнэ.
-  $("seekTitle").textContent = guestLaunch()
-    ? "Тулаанд холбогдож байна…"
-    : USE_MATCHMAKING ? "Өрсөлдөгч хайж байна…" : "Найзаа урьж байна…";
+  mode = "battle"; duel = null; reported = false; arming = false;
+  show("hall");
+  $("hallTitle").textContent = guestLaunch() ? "Тулаанд холбогдож байна…" : "Хүлээлгийн өрөө";
+  renderHall(null);
 
   try{
-    // Камер урилгын дэлгэц хаагдсаны дараа асна — найз ирэхийг хүлээх зуур
-    // зэрэгцэн бэлдэнэ. Тулаан эхлэхээс ӨМНӨ бэлэн болсон байх ёстой тул
-    // доор заавал хүлээнэ: серверийн цаг хоёр socket холбогдсоны дараа явна.
-    let engine = null;
     const match = await findOpponent(() => {
-      $("seekTitle").textContent = USE_MATCHMAKING
-        ? "Өрсөлдөгч хайж байна…"
-        : mode === "battle" && !hostedRoom ? "Тулаан эхлэхэд бэлдэж байна…" : "Найзаа хүлээж байна…";
-      engine = startEngine();
-      // Доорх `await` хүртэл алдаа нь эзэнгүй үлдэхээс сэргийлнэ
-      engine.catch(() => {});
+      $("hallTitle").textContent = "Хүлээлгийн өрөө";
+      renderHall(null);
     });
-    await (engine ?? startEngine());
-    $("seek").classList.add("hidden");
-    $("duelBar").classList.remove("hidden");
     // Socket-д ӨРӨӨНИЙ биш, СЕРВЕРИЙН буцаасан тулааны ID хэрэгтэй — нэг
     // өрөөнд олон тулаан дараалан үүсдэг тул хоёр нь өөр.
     const state = await api("/battle", { method: "POST", body: JSON.stringify(match) });
-    applyDuel(state);
     openSocket(state.roomId);
-    startClock();
+    applyDuel(state);
   }catch(e){
     leaveBattle();
     note("Тулаан эхэлсэнгүй: " + e.message, "bad");
@@ -1606,7 +1762,7 @@ function leaveBattle(){
   clearInterval(invitePoll); invitePoll = null;
   stopVideo();
   ws?.close(); ws = null;
-  duel = null; mode = "solo";
+  duel = null; mode = "solo"; arming = false;
   // Урьчихаад буцлаа — картаа тэр дороо үхүүлнэ, эс тэгвээс найз хойно нь
   // дараад хэн ч байхгүй өрөөнд ганцаараа үлдэнэ
   if(hostedRoom){
@@ -1661,6 +1817,11 @@ $("bBack").onclick   = () => show("menu");
 $("oBack").onclick   = leaveBattle;
 $("seekCancel").onclick = leaveBattle;
 $("quit").onclick    = leaveBattle;
+$("hallBack").onclick  = leaveBattle;
+$("hallReady").onclick = () => hallSend({ type: "ready", value: !duel?.you?.ready });
+// Давхар даралт нь серверээс «эхлүүлэх боломжгүй» гэсэн хариу авчирч,
+// камер асаж байх зуур зөвлөмжийг дарна
+$("hallStart").onclick = () => { $("hallStart").disabled = true; hallSend({ type: "start" }); };
 $("pBack").onclick   = () => { if(mode === "battle") leaveBattle(); else { stopCamera(); show("menu"); } };
 $("go").onclick      = startSolo;
 $("reset").onclick  = reset;

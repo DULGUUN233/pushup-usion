@@ -3,10 +3,17 @@ import { settleBattle } from './elo.js'
 
 /** Тулааны үргэлжлэх хугацаа. */
 export const BATTLE_MS = 30_000
-/** Хоёулаа орсны дараах бэлдэх завсар. */
+/** Хоёулаа камераа бэлдсэний дараах тоолол. */
 export const COUNTDOWN_MS = 5_000
-/** Өрсөлдөгчийг ийм хугацаанд хүлээнэ, ирэхгүй бол тулаан цуцлагдана. */
-export const WAIT_MS = 45_000
+/**
+ * Хүлээлгийн өрөөнд өрсөлдөгчийг хүлээх хугацаа.
+ *
+ * Найз мэдэгдлээ хараад аппаа нээх, эхний удаа камерын зөвшөөрөл өгөх нь
+ * минут авч болно. Богино байвал бэлдэж амжсан хүн хоосон цуцлагдана.
+ */
+export const WAIT_MS = 180_000
+/** Start дарсны дараа камер асаахад өгөх хугацаа. */
+export const ARM_MS = 45_000
 /** Нэг тулаанд хүлээн зөвшөөрөх дээд тоо — утгагүй өгөгдлөөс хамгаална. */
 export const MAX_REPS = 200
 /** Урилга хүчинтэй байх хугацаа. Найз мэдэгдлээ хараад аппаа нээх зай. */
@@ -42,7 +49,7 @@ export async function dropInvite(roomKey) {
  * агшнаас тоолж эхэлбэл удаан ачаалсан хүн секунд алдана. Хоёулаа орсны
  * дараа `start()` цагийг тавина.
  */
-export async function createBattle(roomId, playerIds) {
+export async function createBattle(roomId, playerIds, hostId = null) {
   const ids = [...new Set(playerIds)].sort()
   if (ids.length !== 2) throw new Error('тулаанд яг хоёр тоглогч байх ёстой')
 
@@ -75,8 +82,14 @@ export async function createBattle(roomId, playerIds) {
     roomKey: roomId,
     seq,
     players: ids,
+    // Өрөөг үүсгэсэн хүн. ЗӨВХӨН тэр Start дарж чадна — эс тэгвээс зочин
+    // эзнийг нь бэлэн болоогүй байхад тулааныг эхлүүлж чадна.
+    hostId: ids.includes(hostId) ? hostId : ids[0],
     profiles,
     reps: { [ids[0]]: 0, [ids[1]]: 0 },
+    // Хүлээлгийн өрөөний төлөв: бэлэн үү, камераа асаасан уу
+    ready: { [ids[0]]: false, [ids[1]]: false },
+    armed: { [ids[0]]: false, [ids[1]]: false },
     startsAt: null,
     endsAt: null,
     status: 'waiting',
@@ -97,15 +110,54 @@ export async function createBattle(roomId, playerIds) {
   }
 }
 
+/** Хүлээлгийн өрөөнд «бэлэн» тэмдгээ тавина/авна. */
+export async function setReady(roomId, userId, value) {
+  return battles().findOneAndUpdate(
+    { _id: roomId, status: 'waiting', players: userId },
+    { $set: { [`ready.${userId}`]: !!value } },
+    { returnDocument: 'after' },
+  )
+}
+
 /**
- * Хоёулаа орсны дараа цагийг тавина. Нөхцөлт шинэчлэлт тул хоёр тал зэрэг
- * дуудсан ч цаг ЗӨВХӨН НЭГ УДАА тавигдана — эс тэгвээс хоёр тал өөр өөр
- * эцсийн хугацаа хараад маргаан үүснэ.
+ * Эзэн Start дарлаа. Тулаан ШУУД эхлэхгүй: хоёр тал камераа асаах ёстой тул
+ * `arming` төлөвт орно. Цагийг энд ч тавихгүй — зөвшөөрлийн цонх хүн бүрд
+ * өөр хугацаа авдаг тул хоёулаа бэлэн болсны дараа `setArmed` тавина.
+ *
+ * Нөхцөлт шинэчлэлт: зөвхөн эзэн, зөвхөн хоёулаа бэлэн үед, зөвхөн нэг удаа.
  */
-export async function start(roomId) {
-  const startsAt = new Date(Date.now() + COUNTDOWN_MS)
+export async function beginArming(roomId, userId) {
+  const battle = await battles().findOne({ _id: roomId })
+  if (!battle || battle.status !== 'waiting') return null
+  if (battle.hostId !== userId) return null
+  // Эзний хувьд Start дарах нь өөрөө «би бэлэн» гэсэн үг — Ready, Start гэж
+  // хоёр удаа дарах шаардлагагүй. Бусад нь заавал бэлэн байх ёстой.
+  if (!battle.players.every((id) => id === userId || battle.ready?.[id])) return null
   return battles().findOneAndUpdate(
     { _id: roomId, status: 'waiting' },
+    { $set: { status: 'arming', armingAt: new Date(), [`ready.${userId}`]: true } },
+    { returnDocument: 'after' },
+  )
+}
+
+/**
+ * Камер бэлэн боллоо. ХОЁУЛАА бэлэн болсон агшинд цаг тавигдана — тэр үед л
+ * хоёр тал ижил секундээс эхэлнэ.
+ *
+ * Цаг тавих нь нөхцөлт: хоёр тал зэрэг мэдэгдсэн ч зөвхөн нэг нь стамп дарна.
+ */
+export async function setArmed(roomId, userId) {
+  const armed = await battles().findOneAndUpdate(
+    { _id: roomId, status: 'arming', players: userId },
+    { $set: { [`armed.${userId}`]: true } },
+    { returnDocument: 'after' },
+  )
+  if (!armed) return null
+  if (!armed.players.every((id) => armed.armed?.[id])) return armed
+
+  const startsAt = new Date(Date.now() + COUNTDOWN_MS)
+  const stamped = await battles().findOneAndUpdate(
+    { _id: roomId, status: 'arming' },
     {
       $set: {
         status: 'playing',
@@ -115,6 +167,11 @@ export async function start(roomId) {
     },
     { returnDocument: 'after' },
   )
+  // Хоёр тал зэрэг мэдэгдвэл хоёулаа «бүгд бэлэн» гэж уншиж, хоёулаа стамп
+  // дарахыг оролдоно. Хожигдсон нь null авна — тэр үед `armed`-ыг буцаавал
+  // ЦАГГҮЙ, `arming` төлөвтэй ХУУЧИН баримт тарж, дөнгөж эхэлсэн тулааныг
+  // клиент дээр буцаана. Тиймээс шинэчлэгдсэнийг нь дахин уншина.
+  return stamped ?? (await battles().findOne({ _id: roomId })) ?? armed
 }
 
 /**
@@ -129,10 +186,21 @@ export async function endNow(roomId) {
   )
 }
 
-/** Өрсөлдөгч ирээгүй тулааныг цуцална. Рейтинг хөдлөхгүй. */
+/**
+ * Эхэлж чадаагүй тулааныг цуцална. Рейтинг хөдлөхгүй.
+ *
+ * Хоёр тохиолдол: өрсөлдөгч хүлээлгийн өрөөнд огт ирээгүй, эсвэл Start
+ * дарсан ч нэг нь камераа асааж чадаагүй (зөвшөөрөл өгөөгүй).
+ */
 export async function cancelIfStale(roomId) {
   return battles().findOneAndUpdate(
-    { _id: roomId, status: 'waiting', createdAt: { $lte: new Date(Date.now() - WAIT_MS) } },
+    {
+      _id: roomId,
+      $or: [
+        { status: 'waiting', createdAt: { $lte: new Date(Date.now() - WAIT_MS) } },
+        { status: 'arming', armingAt: { $lte: new Date(Date.now() - ARM_MS) } },
+      ],
+    },
     { $set: { status: 'cancelled', cancelReason: 'no-opponent', finishedAt: new Date() } },
     { returnDocument: 'after' },
   )
@@ -230,17 +298,27 @@ export async function settleIfDue(roomId) {
   )
 }
 
-/** Клиент рүү явуулах хэлбэр — өөрийг нь `you` талд тавина. */
-export function view(battle, userId) {
+/**
+ * Клиент рүү явуулах хэлбэр — өөрийг нь `you` талд тавина.
+ *
+ * `present` нь ЯГ ОДОО socket-оор холбогдсон хүмүүс. Хүлээлгийн өрөө «найз
+ * ирсэн үү» гэдгийг үүгээр мэднэ — өрөөний бүртгэл биш, амьд холболт.
+ */
+export function view(battle, userId, present = null) {
   const opponentId = battle.players.find((id) => id !== userId) ?? null
   const side = (id) => ({
     userId: id,
     reps: battle.reps[id] ?? 0,
+    ready: !!battle.ready?.[id],
+    armed: !!battle.armed?.[id],
+    here: present ? present.includes(id) : null,
     ...(battle.profiles?.[id] ?? { name: id, avatar: null, rating: null }),
   })
   return {
     roomId: battle._id,
     status: battle.status === 'settling' ? 'playing' : battle.status,
+    hostId: battle.hostId ?? battle.players[0],
+    youAreHost: (battle.hostId ?? battle.players[0]) === userId,
     startsAt: battle.startsAt,
     endsAt: battle.endsAt,
     // Серверийн цаг. Утаснуудын цаг хоорондоо зөрдөг тул клиент зөрүүг нь

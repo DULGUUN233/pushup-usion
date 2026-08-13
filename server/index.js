@@ -3,7 +3,7 @@ import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { authMode } from './auth.js'
-import { WAIT_MS, cancelIfStale, settleIfDue, stuckSettling } from './battle.js'
+import { ARM_MS, WAIT_MS, cancelIfStale, settleIfDue, stuckSettling } from './battle.js'
 import battleRoutes from './battleRoutes.js'
 import { attachBattleSocket } from './battleSocket.js'
 import { battles, connect } from './db.js'
@@ -45,10 +45,16 @@ function startSweeper() {
         .toArray()
       for (const b of due) await settleIfDue(b._id)
 
-      // Өрсөлдөгч огт ирээгүй тулаанууд
+      // Эхэлж чадаагүй тулаанууд: өрсөлдөгч огт ирээгүй, эсвэл Start дарсан
+      // ч камераа асааж чадаагүй
       const stale = await battles()
         .find(
-          { status: 'waiting', createdAt: { $lte: new Date(Date.now() - WAIT_MS) } },
+          {
+            $or: [
+              { status: 'waiting', createdAt: { $lte: new Date(Date.now() - WAIT_MS) } },
+              { status: 'arming', armingAt: { $lte: new Date(Date.now() - ARM_MS) } },
+            ],
+          },
           { projection: { _id: 1 } },
         )
         .limit(20)
