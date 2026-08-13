@@ -878,8 +878,21 @@ function countRep(deg, now, th, body){
   }
 }
 
+/**
+ * Rep дунд танилт хэдэн удаа тасалдсаныг тоолно.
+ *
+ * Тасалдал БҮР rep-ийг устгадаггүй: буулт болон ёроол дээр тасарвал дараагийн
+ * сайн кадар дахин гүнд байгаа тул rep үргэлжилнэ. Харин ӨГСӨЛТ дээр тасарвал
+ * өнцөг аль хэдийн босгоос дээш гарсан байдаг тул rep үнэхээр алдагдана.
+ *
+ * Хэмжилт болгож харуулах учир нь: 0 бол танилт биш, өөр шүүлтүүр саад
+ * болж байна гэсэн үг — таамаглахын оронд шууд ялгана.
+ */
+let midDrops = 0;
+
 // Байрлал алдагдсан үед хагас rep-ийг цуцалж, дараа нь дуусгахаас сэргийлнэ
 function idle(){
+  if(phase === "down") midDrops++;
   phase = "up"; repMinAngle = 180; smooth = null;
   shTop = hpTop = shBot = hpBot = null; armBest = -99;
   $("angle").textContent = "–";
@@ -938,6 +951,9 @@ function loop(){
     + ` arm${f2(armLevel(lm, asp))}`
     // Зурган дээр харагдах өнцөг. Дээрх `Өнцөг`-өөс их зөрвөл Z таамаг эвдэрсэн.
     + ` 2d${r0(flatAngle(lm, asp))}`
+    // Rep дунд танилт хэдэн удаа тасалдсан бэ. 0 бол танилт биш, өөр
+    // шүүлтүүр саад болж байна.
+    + ` drop${midDrops}`
     // Видео яагаад зогссоныг ялгах: миний тал зогсоов уу, холболт унав уу
     + (mode === "battle"
         ? ` vid:${videoPaused ? "off" : "on"} ${pc ? pc.connectionState : "–"} ${vidStats}`
@@ -1001,7 +1017,7 @@ const clock = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
 function reset(){
   count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
   loSeen = null; hiSeen = null; badFrames = 0; dipMin = 999;
-  shTop = hpTop = shBot = hpBot = null; armBest = -99;
+  shTop = hpTop = shBot = hpBot = null; armBest = -99; midDrops = 0;
   t0 = performance.now();
   $("count").textContent = 0;
   $("counter").classList.remove("pop");
