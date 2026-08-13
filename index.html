@@ -784,12 +784,33 @@ function rigid(){
   return (hpBot - hpTop) >= RIGID_RATIO * dSh;
 }
 
+/**
+ * Хангалттай гүн буусан уу. ХОЁР хэмжүүр, аль нэг нь хангагдвал болно.
+ *
+ * Тохойн өнцөг ганцаараа хангалтгүй: тохойгоо биедээ наавал дээд гар биеийн
+ * дагуу ХОЙШОО чиглэж, шуу камер өөд босоо болно. Цээж ижил гүнд буусан ч
+ * тохой тийм ихээр нугалагдахгүй — 90° биш 100-105° уншина. Тэр хэв маяг
+ * зөвхөн өнцгөөр шүүвэл ХЭЗЭЭ Ч тоологдохгүй.
+ *
+ * Мөр тохойн түвшинд бууcан эсэх нь тохойн чиглэлээс хамаардаггүй тул хоёр
+ * дахь хаалга болно. Ганцаараа зөвшөөрөхгүй: тохой мужийнхаа мэдэгдэхүйц
+ * хэсгээр нугалагдсан байхыг ч шаардана — эс тэгвээс мөрөө сэгсрэх нь rep
+ * болж хувирна.
+ *
+ * Тоолол, хэмжүүр, ногоон гэрэлтүүлэг ГУРВУУЛАА эндээс уншина — тусад нь
+ * бичвэл нэг нь өөрчлөгдөхөд нөгөө нь хоцорч, дэлгэц худал хэлнэ.
+ */
+function deepEnough(deg, th, arm){
+  if(deg < th.down) return true;
+  return arm !== null && arm >= ARM_LEVEL && deg < th.up - 10;
+}
+
 function countRep(deg, now, th, body){
   if(deg < repMinAngle) repMinAngle = deg;
 
   if(phase === "up"){
     if(deg < dipMin) dipMin = deg;
-    if(deg < th.down){
+    if(deepEnough(deg, th, body.arm)){
       phase = "down"; repStart = now; repMinAngle = deg; dipMin = 999;
       shBot = body.sh; hpBot = body.hp; armBest = body.arm ?? -99;
       if(navigator.vibrate) navigator.vibrate(12);
@@ -900,6 +921,9 @@ function loop(){
   $("poseDiag").textContent = `h${f2(ax&&ax.horiz)} f${f2(ax&&ax.fore)}`
     + ` lo${r0(loSeen)} hi${r0(hiSeen)} sh${f2(dSh)} hp${f2(dHp)}`
     + ` kn${kn.deg === null ? "–" : Math.round(kn.deg)}/${f2(kn.vis)} ${phase}`
+    // Тохой хойшоо байхад өнцөг бус ЭНЭ утга гүнийг хэлнэ. Утсан дээр
+    // яагаад тоологдоогүйг ялгахад хэрэгтэй: -0.08-аас дээш байх ёстой.
+    + ` arm${f2(armLevel(lm, asp))}`
     // Видео яагаад зогссоныг ялгах: миний тал зогсоов уу, холболт унав уу
     + (mode === "battle"
         ? ` vid:${videoPaused ? "off" : "on"} ${pc ? pc.connectionState : "–"} ${vidStats}`
@@ -946,7 +970,7 @@ function loop(){
   // мөрний ёроол өөрөө болж, шугам зурах зай үлдэхгүй.
   const floor = th.down - 25, span = th.up - floor;
   const pct = Math.max(0, Math.min(1, (deg - floor) / span));
-  const deep = deg <= th.down;
+  const deep = deepEnough(deg, th, body.arm);
   $("meter").style.height = (pct*100) + "%";
   $("meter").style.background = deep ? "var(--accent)" : "var(--warn)";
   $("meterLine").style.bottom = ((th.down - floor) / span * 100) + "%";
