@@ -49,10 +49,34 @@ router.post('/room/:roomKey/claim', requireUser, async (req, res) => {
 
   // Энэ өрөөнд аль хэдийн тулаан болсон бол карт нь хуучирсан: шинэ урилга
   // бүр ШИНЭ өрөө авдаг тул хуучин өрөө рүү дахин орох учиргүй.
-  const played = await battles().find({ roomKey }, { projection: { _id: 1 } }).limit(1).next()
-  if (played) return res.status(404).json({ error: 'урилга хүчингүй' })
+  const me = req.user.userId
+  const latest = await battles().find({ roomKey }).sort({ seq: -1 }).limit(1).next()
 
-  const claim = await claimRoom(roomKey, req.user.userId)
+  if (latest) {
+    const live =
+      latest.status === 'waiting' ||
+      latest.status === 'arming' ||
+      ((latest.status === 'playing' || latest.status === 'settling') &&
+        latest.endsAt &&
+        latest.endsAt > new Date())
+
+    // Тулаан аль хэдийн үүссэн ч ҮРГЭЛЖИЛЖ байвал оролцогчийг буцааж оруулна.
+    // Апп дахин ачаалагдах, картаа дахин дарах нь энгийн үзэгдэл — тэднийг
+    // «урилга хүчингүй» гээд гаргавал хүлээлгийн өрөө мөнхөд 1/2 үлдэнэ.
+    if (live) {
+      if (!latest.players.includes(me)) {
+        return res.status(403).json({ error: 'энэ өрөө дүүрэн' })
+      }
+      const hostId = latest.hostId ?? latest.players[0]
+      return res.json({ role: hostId === me ? 'host' : 'guest', hostId })
+    }
+
+    // Дууссан бол карт нь хуучирсан: урилга бүр ШИНЭ өрөө авдаг тул хуучин
+    // өрөө рүү дахин орох учиргүй.
+    return res.status(404).json({ error: 'урилга хүчингүй' })
+  }
+
+  const claim = await claimRoom(roomKey, me)
   if (!claim) return res.status(404).json({ error: 'урилга хүчингүй' })
   res.json(claim)
 })
