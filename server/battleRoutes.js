@@ -1,6 +1,14 @@
 import { Router } from 'express'
 import { requireUser } from './auth.js'
-import { announceInvite, createBattle, dropInvite, liveInvite, settleIfDue, view } from './battle.js'
+import {
+  announceInvite,
+  claimRoom,
+  createBattle,
+  dropInvite,
+  liveInvite,
+  settleIfDue,
+  view,
+} from './battle.js'
 import { battles } from './db.js'
 
 const router = Router()
@@ -28,6 +36,25 @@ router.get('/invite/:roomKey', requireUser, async (req, res) => {
   // Өөрийнхөө урилгын карт руу буцаж орж болохгүй — ганцаараа тулалдана
   if (inv.hostId === req.user.userId) return res.status(404).json({ error: 'урилга хүчингүй' })
   res.json({ hostId: inv.hostId })
+})
+
+/**
+ * Өрөө рүү нээгдсэн хүн үүргээ авна: эзэн үү, зочин уу.
+ *
+ * Чатнаас илгээсэн урилгын картыг хоёулаа дардаг тул хэн нь ч урьсан эзэн
+ * биш байдаг. Эхэлж орсныг нь эзэн болгоно.
+ */
+router.post('/room/:roomKey/claim', requireUser, async (req, res) => {
+  const roomKey = req.params.roomKey
+
+  // Энэ өрөөнд аль хэдийн тулаан болсон бол карт нь хуучирсан: шинэ урилга
+  // бүр ШИНЭ өрөө авдаг тул хуучин өрөө рүү дахин орох учиргүй.
+  const played = await battles().find({ roomKey }, { projection: { _id: 1 } }).limit(1).next()
+  if (played) return res.status(404).json({ error: 'урилга хүчингүй' })
+
+  const claim = await claimRoom(roomKey, req.user.userId)
+  if (!claim) return res.status(404).json({ error: 'урилга хүчингүй' })
+  res.json(claim)
 })
 
 /** Эзэн урилгаасаа буцлаа — картыг нь тэр дороо үхүүлнэ. */

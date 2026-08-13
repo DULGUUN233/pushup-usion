@@ -42,6 +42,37 @@ export async function dropInvite(roomKey) {
 }
 
 /**
+ * Өрөөнд орж ирсэн хүнд үүрэг хуваарилна: эзэн үү, зочин уу.
+ *
+ * Чатнаас илгээсэн урилгын картыг ХОЁУЛАА дардаг. Тэр үед хэн нь ч урьсан
+ * эзэн биш — хоёулаа зүгээр л өрөө рүү нээгддэг. Тиймээс «эхэлж орсон нь
+ * эзэн» гэсэн дүрэм хэрэгтэй, эс тэгвээс хоёулаа нөгөөгөө хүлээгээд царцана.
+ *
+ * Хоёулаа ЯГ ЗЭРЭГ орж ирж болзошгүй тул эзэмшлийг Mongo дээр таслана:
+ * `_id` нь өрөө учраас хоёр дахь оролдлого давхардлаар унаж, тэр нь зочин
+ * болно. Хугацаа нь хэтэрсэн урилгыг дарж бичихийг зөвшөөрнө.
+ */
+export async function claimRoom(roomKey, userId) {
+  const live = await liveInvite(roomKey)
+  if (live) return { role: live.hostId === userId ? 'host' : 'guest', hostId: live.hostId }
+
+  try {
+    await invites().findOneAndUpdate(
+      // Амьд урилга байвал энэ шүүлт таарахгүй тул upsert давхардлаар унана
+      { _id: roomKey, createdAt: { $not: { $gt: new Date(Date.now() - INVITE_TTL_MS) } } },
+      { $set: { hostId: userId, createdAt: new Date() } },
+      { upsert: true },
+    )
+    return { role: 'host', hostId: userId }
+  } catch (err) {
+    if (err?.code !== 11000) throw err
+    const inv = await liveInvite(roomKey)
+    if (!inv) return null
+    return { role: inv.hostId === userId ? 'host' : 'guest', hostId: inv.hostId }
+  }
+}
+
+/**
  * Тулааныг үүсгэнэ. Хоёр тал зэрэг дуудна тул давхардлыг Mongo дээр таслана —
  * _id нь roomId учраас хоёр дахь оролдлого унана, тэгвэл байгааг нь буцаана.
  *

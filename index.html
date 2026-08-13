@@ -1141,6 +1141,15 @@ const USE_MATCHMAKING = false;
 let invitePoll = null;
 /** Эзэн болж урьсан өрөө — буцахдаа урилгаа үхүүлэхэд хэрэгтэй. */
 let hostedRoom = null;
+/**
+ * Платформын share товчоор олгогдсон өрөө.
+ *
+ * Хостын дээд мөрний share товчоор найз урихад хост ШИНЭ өрөө үүсгэж,
+ * `GAME_ROOM_ASSIGNED` илгээдэг. SDK түүнийг хүлээж аваад `config.roomId`-г
+ * шинэчилж, `mode`-ыг multiplayer болгож, өөрөө connect+join хийчихдэг —
+ * бидэнд урих ажил үлдэхгүй, зөвхөн хүлээлгийн өрөөгөө нээнэ.
+ */
+let assignedRoom = null;
 
 /**
  * Урилгын картаас нээгдсэн үү — өрөө, хоёр тоглогч хоёулаа бэлэн байх ёстой.
@@ -1159,20 +1168,32 @@ function guestLaunch(){
  * ирж болзошгүй тул шууд «хүчингүй» гэхгүй, багахан хүлээнэ.
  */
 /**
- * Урилга бүрд ШИНЭ өрөө үүсгэнэ.
+ * Урих ӨМНӨ өрөөнөөс бүрэн салгана.
  *
- * `game.invite()` нь шинэ өрөө үүсгэдэггүй — `game.roomId || config.roomId`-г
- * л илгээдэг. `leave()` нь `game.roomId`-г null болгодог тул урих болгонд
- * анхны нээлтийн өрөө рүү буцаж унаж, хуучин өрсөлдөгч дотор нь үлдсэн
- * хэвээр байдаг. `lobby.queue` нь REST-ээр өрөө үүсгэдэг цорын ганц зам —
- * давтагдашгүй түлхүүр өгвөл өрөө нь ч шинэ гарна.
+ * `game.invite()` нь өөрөө өрөө үүсгэдэггүй — `game.roomId || config.roomId`-г
+ * хостод дамжуулаад л болно. `leave()` нь эхнийхийг цэвэрлэдэг ч хоёр дахь нь
+ * аппыг нээхэд өгсөн өрөө хэвээр үлддэг. Тиймээс урих болгонд тэр нэг өрөө рүү
+ * буцаж, хуучин өрсөлдөгч дотор нь үлдсэн хэвээр байсан.
  *
- * Бүтэхгүй бол null: тэр үед хуучин зам ажиллана, манай урилгын бүртгэл
- * хэн хэнтэй хослохыг хамгаалсаар байна.
+ * Хоёуланг нь цэвэрлэвэл хост өрөөгүй хүсэлт хүлээж авч, ШИНЭ өрөө үүсгээд
+ * биднийг оруулна — баруун дээд булангийн share товч яг ингэж ажилладаг.
+ *
+ * `getLaunchParams().roomId` нь шууд `config.roomId`-г буцаадаг тул зочны
+ * замд ХЭРЭГЛЭЖ БОЛОХГҮЙ — зөвхөн эзэн урихаасаа өмнө дуудна.
+ */
+function clearLaunchRoom(){
+  const s = sdk();
+  try { if(s?.game) s.game.roomId = null; } catch { /* SDK хамгаалалттай байж болно */ }
+  try { if(s?.config) s.config.roomId = null; } catch { /* мөн адил */ }
+}
+
+/**
+ * Хост өрөөгүй хүсэлтийг хүлээж авахгүй байвал REST-ээр өөрсдөө үүсгэнэ.
+ * Зөвхөн нөөц зам — эхний оролдлого өрөө буцаагаагүй үед л ажиллана.
  */
 async function freshRoom(){
   const s = sdk();
-  const serviceId = launchCfg?.serviceId ?? s?.getLaunchParams?.().serviceId;
+  const serviceId = launchCfg?.serviceId ?? s?.config?.serviceId;
   if(!s?.lobby?.queue || !serviceId) return null;
   try{
     const key = `pu_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -1181,16 +1202,16 @@ async function freshRoom(){
   }catch{ return null; }
 }
 
-async function waitForHost(roomKey, ms = 9000){
-  const until = Date.now() + ms;
-  for(;;){
-    try{
-      const r = await api(`/battle/invite/${encodeURIComponent(roomKey)}`);
-      if(r?.hostId) return r.hostId;
-    }catch{ /* хараахан бүртгэгдээгүй, эсвэл үнэхээр хуучирсан */ }
-    if(Date.now() >= until) return null;
-    await new Promise(r => setTimeout(r, 1200));
-  }
+/**
+ * Өрөө рүү нээгдэхэд үүргээ авна: эзэн үү, зочин уу.
+ *
+ * Чатнаас илгээсэн урилгын картыг ХОЁУЛАА дардаг тул хэн нь ч урьсан эзэн
+ * биш. Сервер эхэлж орсныг нь эзэн болгодог. Хуучирсан карт бол null.
+ */
+async function claimRoom(roomKey){
+  try{
+    return await api(`/battle/room/${encodeURIComponent(roomKey)}/claim`, { method: "POST" });
+  }catch{ return null; }
 }
 
 /**
@@ -1229,12 +1250,17 @@ async function findOpponent(onInvited){
     // Картан дээрх тоглогчдын жагсаалтад ИТГЭХГҮЙ: карт чатад мөнхөд үлдэж,
     // тулаан дууссаны дараа ч «Дахин нэгдэх» товч ажилладаг. Тэр жагсаалт
     // нь урьсан агшны байдал тул аппаа огт нээгээгүй хүнтэй хосолно.
-    // Эзэн нь ЯГ ОДОО хүлээж байгаа эсэхийг манай серверээс асууна.
-    const host = await waitForHost(roomId);
-    if(!host) throw new Error("Энэ урилга хүчингүй болжээ — найзаасаа шинээр урь");
+    // Хэн эзэн, хэн зочин болохыг сервер шийднэ.
+    const claim = await claimRoom(roomId);
+    if(!claim) throw new Error("Энэ урилга хүчингүй болжээ — найзаасаа шинээр урь");
     try { await s.game.connect(); await s.game.join(roomId); } catch { /* заавал биш */ }
-    invited();
-    return { roomId, players: [me, host] };
+    if(claim.role === "guest"){
+      invited();
+      return { roomId, players: [me, claim.hostId] };
+    }
+    // Чатнаас илгээсэн картаар эхэлж орлоо — эзэн нь бид болно. Доорх эзний
+    // зам руу шилжинэ: урих шаардлагагүй, өрөө аль хэдийн бэлэн.
+    assignedRoom = roomId;
   }
 
   if(USE_MATCHMAKING){
@@ -1273,48 +1299,70 @@ async function findOpponent(onInvited){
       if(other && rid) settle(resolve, { roomId: rid, players: [me, other] });
     });
 
+    /**
+     * Өрөө бэлэн болсны дараах нийтлэг зам. Хоёр өөр эх сурвалжтай:
+     * манай Battle товч (`invite()`) ба платформын share товч
+     * (`onRoomAssigned`) — цаашид хоёулаа ижил ажиллана.
+     */
+    const haveRoom = async (rid) => {
+      invitedRoom = rid;
+      // Зочин энэ картыг хүчинтэй гэдгийг ЗӨВХӨН эндээс мэднэ — платформ
+      // өрөөний төлөвийг асуух зам өгдөггүй.
+      hostedRoom = rid;
+      api("/battle/invite", { method: "POST", body: JSON.stringify({ roomId: rid }) })
+        .catch(() => { /* нөгөө замууд ажилласаар байна */ });
+      invited();
+      // Өрөөндөө ЗААВАЛ орно: түүнээс өмнө гарсан тул гишүүн биш үлдвэл
+      // найз орсныг огт сонсохгүй
+      try { await s.game.connect(); await s.game.join(rid); } catch { /* заавал биш */ }
+
+      // Платформын үйл явдал ирэхгүй байх нь бий. Зочин орж ирээд тулааныг
+      // МАНАЙ сервер дээр үүсгэдэг тул тэндээс асууж мэдэж болно —
+      // платформоос үл хамаарах нөөц зам.
+      clearInterval(invitePoll);
+      invitePoll = setInterval(async () => {
+        try{
+          const st = await api(`/battle/room/${encodeURIComponent(rid)}/latest`);
+          const other = st?.opponent?.userId;
+          // `other === me` бол таних тэмдэг хутгалдсан гэсэн үг. Тэгснийг
+          // хосолговол сервер «яг хоёр тоглогч» гэж унана — үл хайхарна.
+          if(other && other !== me && (st.status === "waiting" || st.status === "playing")){
+            settle(resolve, { roomId: rid, players: [me, other] });
+          }
+        }catch{ /* хараахан үүсээгүй */ }
+      }, 1500);
+    };
+
+    // Платформын share товч аль хэдийн өрөө олгосон бол урих шаардлагагүй:
+    // хост шинэ өрөө үүсгээд, SDK биднийг холбож оруулчихсан, найз нь
+    // урилгаа авсан. Шууд хүлээлгийн өрөөндөө сууна.
+    if(assignedRoom){
+      const rid = assignedRoom; assignedRoom = null;
+      haveRoom(rid).catch(e => settle(reject, e));
+      return;
+    }
+
     // `invite()` нь ӨРӨӨГӨӨ ДҮҮРГЭДЭГ, шинийг үүсгэдэггүй. Хуучин өрсөлдөгч
     // дотор нь үлдсэн бол өрөө 2/2 дүүрэн тул сонгосон найз ОРЖ ЧАДАХГҮЙ.
     // Тиймээс урихаас өмнө заавал гарна.
     s.game.connect()
       .then(() => s.game.leave?.())
       .catch(() => {})
-      // Урихаас ӨМНӨ шинэ өрөө үүсгэж, түүнд орно. `invite()` нь тэр үед
-      // л шинэ өрөөг картанд бичнэ — эс тэгвээс хуучин өрөө рүү урина.
-      .then(() => freshRoom())
-      .then(rid => rid ? s.game.join(rid).catch(() => {}) : null)
-      .then(() => s.game.invite())
+      // Урихаас ӨМНӨ өрөөнөөс БҮРЭН салгана. Тэгвэл хост өөрөө шинэ өрөө
+      // үүсгэнэ — баруун дээд булангийн share товч яг ингэж ажилладаг.
+      .then(() => { clearLaunchRoom(); return s.game.invite(); })
+      // Хост өрөөгүй хүсэлтийг хүлээж авахгүй бол л REST-ээр өөрсдөө үүсгэнэ
       .then(async r => {
+        if(r?.roomId || r?.success === false) return r;
+        const rid = await freshRoom();
+        if(!rid) return r;
+        try { await s.game.join(rid); } catch { /* заавал биш */ }
+        return s.game.invite();
+      })
+      .then(r => {
         if(r && r.success === false) return settle(reject, new Error("Урилга илгээгдсэнгүй"));
         if(!r?.roomId) return;
-        invitedRoom = r.roomId;
-        // Зочин энэ картыг хүчинтэй гэдгийг ЗӨВХӨН эндээс мэднэ — платформ
-        // өрөөний төлөвийг асуух зам өгдөггүй.
-        hostedRoom = r.roomId;
-        api("/battle/invite", { method: "POST", body: JSON.stringify({ roomId: r.roomId }) })
-          .catch(() => { /* нөгөө замууд ажилласаар байна */ });
-        // Урилга гарсан — одоо камер асаах цаг. Найз ирэхийг хүлээх зуур
-        // зөвшөөрөл авч, модель татна.
-        invited();
-        // Өрөөндөө ЗААВАЛ орно: түүнээс өмнө гарсан тул гишүүн биш үлдвэл
-        // найз орсныг огт сонсохгүй
-        try { await s.game.join(r.roomId); } catch { /* заавал биш */ }
-
-        // Платформын үйл явдал ирэхгүй байх нь бий. Зочин орж ирээд тулааныг
-        // МАНАЙ сервер дээр үүсгэдэг тул тэндээс асууж мэдэж болно —
-        // платформоос үл хамаарах нөөц зам.
-        clearInterval(invitePoll);
-        invitePoll = setInterval(async () => {
-          try{
-            const st = await api(`/battle/room/${encodeURIComponent(r.roomId)}/latest`);
-            const other = st?.opponent?.userId;
-            // `other === me` бол таних тэмдэг хутгалдсан гэсэн үг. Тэгснийг
-            // хосолговол сервер «яг хоёр тоглогч» гэж унана — үл хайхарна.
-            if(other && other !== me && (st.status === "waiting" || st.status === "playing")){
-              settle(resolve, { roomId: r.roomId, players: [me, other] });
-            }
-          }catch{ /* хараахан үүсээгүй */ }
-        }, 1500);
+        return haveRoom(r.roomId);
       })
       .catch(e => settle(reject, e));
   });
@@ -1731,10 +1779,14 @@ function reportResult(state){
   reported = true;
 
   const scores = { [state.you.userId]: state.you.reps, [o.userId]: o.reps };
+  // `matchId` заавал: сервер тулаан бүрийг давхардлаас сэргийлж дедупэлдэг тул
+  // үүнгүйгээр нэг хосын хоёр дахь тулааны карт чатад ОГТ очихгүй байж болно.
+  // Манай тулааны ID нь `өрөө~дугаар` — тулаан бүрд өвөрмөц.
+  const matchId = state.roomId;
   try{
     s.game.reportResult(state.winnerId
-      ? { winnerId: state.winnerId, scores, metric: "push-up" }
-      : { draw: true, scores, metric: "push-up" });
+      ? { winnerId: state.winnerId, scores, metric: "push-up", matchId }
+      : { draw: true, scores, metric: "push-up", matchId });
   }catch{ /* карт очихгүй ч тулаан хүчинтэй хэвээр */ }
 }
 
@@ -1800,7 +1852,7 @@ function leaveBattle(){
   clearInterval(invitePoll); invitePoll = null;
   stopVideo();
   ws?.close(); ws = null;
-  duel = null; mode = "solo"; arming = false;
+  duel = null; mode = "solo"; arming = false; assignedRoom = null;
   // Урьчихаад буцлаа — картаа тэр дороо үхүүлнэ, эс тэгвээс найз хойно нь
   // дараад хэн ч байхгүй өрөөнд ганцаараа үлдэнэ
   if(hostedRoom){
@@ -1873,6 +1925,17 @@ launchCfg = await usionInit();
 if(launchCfg?.userAvatar) $("avatar").src = launchCfg.userAvatar;
 await loadProfile();
 setBack("menu");
+
+// Хостын дээд мөрний share товчоор найз урихад энэ дуудагдана. Заавал
+// нээлтийн горимоос ҮЛ ХАМААРАН бүртгэнэ: ганцаараа тоолж байсан хүн
+// дунд нь найзаа урьж, тулаан руу шилжиж болно.
+sdk()?.game?.onRoomAssigned?.(d => {
+  const rid = d?.roomId;
+  if(!rid) return;
+  assignedRoom = rid;
+  // Аль хэдийн тулаанд байвал `findOpponent` өөрөө үүнийг авна
+  if(mode !== "battle") startBattle();
+});
 
 // Найзын урилгаар нээгдсэн бол цэс дундуур гүйлгэхгүй — шууд тулаан руу.
 // Ердийн нээлтэд ЭНД ОРОХГҮЙ: өмнөх өрөө хадгалагдсаар байдаг тул зөвхөн
