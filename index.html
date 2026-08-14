@@ -667,6 +667,7 @@ const SQUAT_LOCKOUT_HIP = 150;
 const SQUAT_DEPTH_Y_TOLERANCE = 0.01;
 const SQUAT_MIN_REP_MS = 450;
 const SQUAT_CONFIRM_FRAMES = 3;
+const SQUAT_FRAME_MARGIN = 0.02;
 
 // ---- төлөв ----
 let landmarker = null, visionFileset = null, running = false, stream = null;
@@ -865,16 +866,20 @@ function squatMetrics(lm, world, aspect){
     if(knee2d === null || hip2d === null) continue;
     best = {
       vis, knee:knee2d, hip:hip2d, knee3d,
-      hipY:lm[side.hip].y, kneeY:lm[side.knee].y, ankleY:lm[side.ankle].y
+      shoulderY:lm[side.shoulder].y, hipY:lm[side.hip].y,
+      kneeY:lm[side.knee].y, ankleY:lm[side.ankle].y
     };
   }
   return best;
 }
 
 function squatPositionCheck(lm, metrics){
-  if(!metrics || !seen(lm,0)) return "Толгойноос хөл хүртэл бүтэн биеэ багтаа";
-  if(metrics.ankleY > 0.98 || lm[0].y < 0.02)
-    return "Камераа холдуул — бүтэн бие кадарт багтана";
+  // Squat-ын өнцөгт толгой оролцдоггүй. Толгой кадрын захад хүрэхэд бүрэн
+  // батлагдсан down → standing cycle-ийг reset хийж, зөв rep-ийг алдаж байв.
+  // Сонгосон талын мөр–ташаа–өвдөг–шагай харагдаж байвал тоолоход хангалттай.
+  if(!metrics) return "Мөрнөөс шагай хүртэл биеэ камерт багтаа";
+  if(metrics.shoulderY < -SQUAT_FRAME_MARGIN || metrics.ankleY > 1 + SQUAT_FRAME_MARGIN)
+    return "Камераа холдуул — мөрнөөс шагай хүртэл кадарт багтаа";
   return null;
 }
 
@@ -901,7 +906,9 @@ function countSquatRep(){
     + ` hip${Math.round(squatMinHip)} y${squatMaxDepthDelta.toFixed(3)}`;
   if(navigator.vibrate) navigator.vibrate([18,40,18]);
   sndRep();
-  setMsg(`${count} — сайн суулт!`, "var(--accent)");
+  // Push-up-тэй адил battle-ийн оноог сервер л баталгаажуулна.
+  if(mode === "battle") sendRep();
+  else setMsg(`${count} — сайн суулт!`, "var(--accent)");
   resetSquatCycle(true);
 }
 
