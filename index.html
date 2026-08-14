@@ -206,7 +206,7 @@
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:18px;padding:28px;text-align:center}
   #start h2{margin:0;font-size:24px;letter-spacing:-.02em}
-  #howto{width:min(280px,80vw);height:auto}
+  .howto{width:min(280px,80vw);height:auto}
   #start p{margin:0;max-width:340px;color:var(--dim);font-size:14px;line-height:1.65}
   #err{color:var(--bad);font-size:13px;max-width:340px;line-height:1.6}
 </style>
@@ -230,6 +230,7 @@
   </div>
 
   <button class="mode go" id="mPush">Push Up<small>Чөлөөтэй тоол — нийт дүнд нэмэгдэнэ</small></button>
+  <button class="mode go" id="mSquat">Squat · Суулт<small>Хажуу/45°-аас бүтэн суултыг тоолно</small></button>
   <button class="mode duel" id="mBattle">Battle<small>30 секунд, 1v1, ELO</small></button>
   <button id="mBoard">Тэргүүлэгчид</button>
 
@@ -320,8 +321,8 @@
   </div>
 
   <div id="start">
-    <h2>Push Up</h2>
-    <svg id="howto" viewBox="0 0 280 168" aria-label="Тохойгоо задгай байлгах зураг">
+    <h2 id="startTitle">Push Up</h2>
+    <svg id="howtoPush" class="howto" viewBox="0 0 280 168" aria-label="Тохойгоо задгай байлгах зураг">
       <line x1="18" y1="132" x2="262" y2="132" stroke="rgba(255,255,255,.28)" stroke-width="3"/>
       <path d="M140,70 L140,106" stroke="#ff6a3d" stroke-width="6" stroke-linecap="round"/>
       <path d="M110,70 L170,70" stroke="#ff6a3d" stroke-width="6" stroke-linecap="round"/>
@@ -338,7 +339,24 @@
       <text x="140" y="160" text-anchor="middle" font-size="13" font-weight="700"
             fill="#ffd21e">тохой хоёулаа ил, задгай</text>
     </svg>
-    <p>Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга — биедээ
+    <svg id="howtoSquat" class="howto hidden" viewBox="0 0 280 168" aria-label="Хажуугаас бүтэн суулт хийх зураг">
+      <line x1="18" y1="140" x2="262" y2="140" stroke="rgba(255,255,255,.28)" stroke-width="3"/>
+      <circle cx="100" cy="34" r="17" fill="#ff6a3d"/>
+      <path d="M105,52 L132,82 L174,90" stroke="#ff6a3d" stroke-width="7" fill="none"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M132,82 L171,111 L204,140" stroke="#ff6a3d" stroke-width="7" fill="none"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M132,82 L100,115 L78,140" stroke="#ff6a3d" stroke-width="7" fill="none"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M119,64 L157,74" stroke="#ff6a3d" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="132" cy="82" r="5" fill="#fff"/><circle cx="171" cy="111" r="5" fill="#fff"/>
+      <circle cx="100" cy="115" r="5" fill="#fff"/><circle cx="204" cy="140" r="5" fill="#fff"/>
+      <circle cx="78" cy="140" r="5" fill="#fff"/>
+      <line x1="125" y1="106" x2="184" y2="106" stroke="#ffd21e" stroke-width="2.5" stroke-dasharray="6 5"/>
+      <text x="140" y="162" text-anchor="middle" font-size="13" font-weight="700"
+            fill="#ffd21e">ташаа өвдөгний түвшинд хүрнэ</text>
+    </svg>
+    <p id="startHint">Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга — биедээ
        наавал халхлагдаж, өнцөг буруу уншина.</p>
     <button class="primary" id="go">Камер асаах</button>
     <button id="pBack">← Буцах</button>
@@ -555,6 +573,18 @@ const RIGID_RATIO = 0.25;
 // аарцаг унжсан эсвэл хэт өргөгдсөн гэж үзнэ.
 const BODY_STRAIGHT_MIN = 155;
 
+// Squat нь push-up-ийн adaptive тохойн босгыг ашиглахгүй. Lateral/45°
+// зурагт ташаа→өвдөг→шагайн өнцөг 115°-аас доош, мөн ташааны цэг
+// өвдөгний түвшинд хүрсэн үед л ёроолд хүрсэн гэж үзнэ. Эцэст нь өвдөг,
+// ташаа хоёулаа тэнийж байж нэг давталт дуусна.
+const SQUAT_DESCENT_KNEE = 145;
+const SQUAT_DEPTH_KNEE = 115;
+const SQUAT_LOCKOUT_KNEE = 160;
+const SQUAT_LOCKOUT_HIP = 150;
+const SQUAT_DEPTH_Y_TOLERANCE = 0.01;
+const SQUAT_MIN_REP_MS = 450;
+const SQUAT_CONFIRM_FRAMES = 3;
+
 // ---- төлөв ----
 let landmarker = null, visionFileset = null, running = false, stream = null;
 let modelVariant = "heavy", switchingToLite = false, lowFpsSince = 0;
@@ -565,6 +595,9 @@ let shTop = null, hpTop = null, shBot = null, hpBot = null;   // rep дотор�
 let lastKnee = { deg: null, vis: 0 };   // rep тоологдох агшинд бичих оношлогоо
 let armBest = -99;                      // rep дотор мөр тохойд хэр ойртсон
 let bodyMinAngle = 180, bodyAngleSeen = false; // rep доторх хамгийн муу биеийн шугам
+let exercise = "pushup";                                  // solo дасгал
+let squatReady = false, squatDepthFrames = 0, squatStandFrames = 0;
+let squatMinKnee = 180, squatMinHip = 180, squatMaxDepthDelta = -1;
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
 // Утасны цаг серверийнхээс зөрдөг. Зөрүүг тооцоогүй бол хоёр тоглогч
 // өөр өөр секунд хараад, нэг нь илүү хугацаа хийж байна гэж бодно.
@@ -719,6 +752,177 @@ function kneeAngle(lm, world){
     }
   }
   return { deg: vals.length ? vals.reduce((p,q) => p + q, 0)/vals.length : null, vis: best };
+}
+
+/**
+ * Squat-д хоёр хөлийг дундажлахгүй: хажуугийн зурагт камерын цаадах хөл
+ * халхлагдаж, landmark нь таамаг болдог. Хамгийн тод харагдсан нэг талыг
+ * сонгож, зураг дээрх 2D өнцгийг aspect ratio-аар засаж хэмжинэ.
+ */
+function squatMetrics(lm, world, aspect){
+  const sides = [
+    { shoulder:11, hip:23, knee:25, ankle:27 },
+    { shoulder:12, hip:24, knee:26, ankle:28 }
+  ];
+  let best = null;
+  for(const side of sides){
+    const ids = [side.shoulder, side.hip, side.knee, side.ankle];
+    const vis = Math.min(...ids.map(i => lm[i].visibility ?? 1));
+    if(vis <= SURE || (best && vis <= best.vis)) continue;
+    const p = i => ({ x:lm[i].x * aspect, y:lm[i].y, z:0 });
+    const knee2d = angle3(p(side.hip), p(side.knee), p(side.ankle));
+    const hip2d = angle3(p(side.shoulder), p(side.hip), p(side.knee));
+    const knee3d = angle3(world[side.hip], world[side.knee], world[side.ankle]);
+    if(knee2d === null || hip2d === null) continue;
+    best = {
+      vis, knee:knee2d, hip:hip2d, knee3d,
+      hipY:lm[side.hip].y, kneeY:lm[side.knee].y, ankleY:lm[side.ankle].y
+    };
+  }
+  return best;
+}
+
+function squatPositionCheck(lm, metrics){
+  if(!metrics || !seen(lm,0)) return "Толгойноос хөл хүртэл бүтэн биеэ багтаа";
+  if(metrics.ankleY > 0.98 || lm[0].y < 0.02)
+    return "Камераа холдуул — бүтэн бие кадарт багтана";
+  return null;
+}
+
+function resetSquatCycle(keepReady = false){
+  phase = "up";
+  squatReady = keepReady;
+  squatDepthFrames = squatStandFrames = 0;
+  squatMinKnee = 180;
+  squatMinHip = 180;
+  squatMaxDepthDelta = -1;
+  repStart = 0;
+}
+
+function countSquatRep(){
+  count++;
+  $("count").textContent = count;
+  const c = $("counter");
+  c.classList.remove("pop"); void c.offsetWidth; c.classList.add("pop");
+  if(bestDepth === null || squatMinKnee < bestDepth){
+    bestDepth = squatMinKnee;
+    $("deep").textContent = Math.round(bestDepth) + "°";
+  }
+  $("repDiag").textContent = `#${count} squat min${Math.round(squatMinKnee)}`
+    + ` hip${Math.round(squatMinHip)} y${squatMaxDepthDelta.toFixed(3)}`;
+  if(navigator.vibrate) navigator.vibrate([18,40,18]);
+  sndRep();
+  setMsg(`${count} — сайн суулт!`, "var(--accent)");
+  resetSquatCycle(true);
+}
+
+/** Standing → descending → depth → standing гэсэн дөрвөн хаалгатай. */
+function processSquatFrame(lm, world, aspect, now){
+  const m = squatMetrics(lm, world, aspect);
+  const bad = squatPositionCheck(lm, m);
+  if(bad){
+    setMsg(bad, "var(--dim)");
+    if(++badFrames >= BAD_FRAMES){
+      resetSquatCycle(false);
+      smooth = null;
+      $("angle").textContent = "–";
+      $("meter").style.height = "0%";
+    }
+    return;
+  }
+  badFrames = 0;
+
+  smooth = smooth === null ? m.knee : smooth*0.55 + m.knee*0.45;
+  const knee = smooth;
+  // HUD-ийг тайван харагдуулахад smooth өнцөг хэрэглэнэ. State transition-д
+  // raw өнцгийг 3 дараалсан кадраар батална — smooth + hold-оор давхар
+  // хоцроовол хурдан боловч зөв squat-ын ёроол алдагдана.
+  const gateKnee = m.knee;
+  const standing = gateKnee >= SQUAT_LOCKOUT_KNEE && m.hip >= SQUAT_LOCKOUT_HIP;
+  // Landmark-ийн 1% өндрийн tolerance нь хувцас, камерын налуу, нэг кадрын
+  // чимээг тэсвэрлэнэ; knee-angle хаалга давхар тул хагас суулт нэвтрэхгүй.
+  const depthDelta = m.hipY - m.kneeY;
+  const atDepth = gateKnee <= SQUAT_DEPTH_KNEE
+    && depthDelta >= -SQUAT_DEPTH_Y_TOLERANCE;
+
+  $("angle").textContent = Math.round(knee) + "°";
+  $("poseDiag").textContent = `sq k${Math.round(knee)}/${Math.round(m.knee3d)}`
+    + ` hip${Math.round(m.hip)} y${depthDelta.toFixed(3)}`
+    + ` v${m.vis.toFixed(2)} ${phase} drop${midDrops} ${modelVariant}`;
+
+  const floor = 65, ceiling = 175, span = ceiling - floor;
+  const pct = Math.max(0, Math.min(1, (knee - floor) / span));
+  $("meter").style.height = (pct*100) + "%";
+  $("meter").style.background = atDepth ? "var(--accent)" : "var(--warn)";
+  $("meterLine").style.bottom = ((SQUAT_DEPTH_KNEE - floor) / span * 100) + "%";
+  $("deepGlow").classList.toggle("on", atDepth);
+
+  if(phase === "up"){
+    if(standing){
+      if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
+        squatReady = true;
+        squatStandFrames = SQUAT_CONFIRM_FRAMES;
+        setMsg("Бэлэн — доошоо суу");
+      }
+    } else squatStandFrames = 0;
+
+    if(!squatReady){
+      setMsg("Эхлээд цэх зогсож өвдгөө тэнийлгэ", "var(--dim)");
+      return;
+    }
+    if(gateKnee < SQUAT_DESCENT_KNEE){
+      phase = "descending";
+      repStart = now;
+      squatMinKnee = gateKnee;
+      squatMinHip = m.hip;
+      squatMaxDepthDelta = depthDelta;
+      squatDepthFrames = squatStandFrames = 0;
+      setMsg("Доошоо — ташаагаа өвдөгний түвшинд хүргэ", "var(--warn)");
+    }
+    return;
+  }
+
+  if(gateKnee < squatMinKnee) squatMinKnee = gateKnee;
+  if(m.hip < squatMinHip) squatMinHip = m.hip;
+  if(depthDelta > squatMaxDepthDelta) squatMaxDepthDelta = depthDelta;
+
+  if(phase === "descending"){
+    if(atDepth){
+      if(++squatDepthFrames >= SQUAT_CONFIRM_FRAMES){
+        phase = "down";
+        squatDepthFrames = 0;
+        if(navigator.vibrate) navigator.vibrate(12);
+        setMsg("Гүн ✓ Одоо бүрэн бос", "var(--warn)");
+      }
+    } else {
+      squatDepthFrames = 0;
+      if(gateKnee <= SQUAT_DEPTH_KNEE)
+        setMsg("Ташаагаа бага зэрэг доошлуул", "var(--bad)");
+    }
+
+    if(standing){
+      if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
+        resetSquatCycle(true);
+        setMsg("Гүн дутуу — ташаа өвдөгний түвшинд хүрнэ", "var(--bad)");
+      }
+    } else squatStandFrames = 0;
+    return;
+  }
+
+  if(phase === "down"){
+    if(standing){
+      if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
+        if(now - repStart < SQUAT_MIN_REP_MS){
+          resetSquatCycle(true);
+          setMsg("Хэт хурдан — хөдөлгөөнөө хяна", "var(--bad)");
+        } else countSquatRep();
+      }
+    } else {
+      squatStandFrames = 0;
+      if(gateKnee > SQUAT_DEPTH_KNEE + 10)
+        setMsg("Бүрэн босож өвдөг, ташаагаа тэнийлгэ", "var(--bad)");
+    }
+  }
 }
 
 function positionCheck(lm, world, aspect){
@@ -936,6 +1140,14 @@ let midDrops = 0;
 
 // Байрлал алдагдсан үед хагас rep-ийг цуцалж, дараа нь дуусгахаас сэргийлнэ
 function idle(){
+  if(exercise === "squat"){
+    if(phase !== "up") midDrops++;
+    resetSquatCycle(false);
+    smooth = null;
+    $("angle").textContent = "–";
+    $("meter").style.height = "0%";
+    return;
+  }
   if(phase === "down") midDrops++;
   phase = "up"; repMinAngle = 180; smooth = null;
   shTop = hpTop = shBot = hpBot = null; armBest = -99;
@@ -985,6 +1197,11 @@ function loop(){
 
   // оношлогоо: аль шүүлтүүр саатуулж байгааг утсан дээрээс харах
   const asp = canvas.width/canvas.height;
+  if(exercise === "squat"){
+    processSquatFrame(lm, world, asp, now);
+    $("time").textContent = clock(elapsed());
+    return;
+  }
   const ax = (seen(lm,11)&&seen(lm,12)&&seen(lm,23)&&seen(lm,24)) ? bodyAxis(lm,world,asp) : null;
   const f2 = v => v === null ? "–" : v.toFixed(2);
   const r0 = v => v === null ? "–" : Math.round(v);
@@ -1076,13 +1293,16 @@ function reset(){
   loSeen = null; hiSeen = null; badFrames = 0; dipMin = 999;
   shTop = hpTop = shBot = hpBot = null; armBest = -99; midDrops = 0;
   bodyMinAngle = 180; bodyAngleSeen = false;
+  resetSquatCycle(false);
   t0 = performance.now();
   $("count").textContent = 0;
   $("counter").classList.remove("pop");
   $("deep").textContent = "–";
   $("repDiag").textContent = "–";
   $("time").textContent = "0:00";
-  setMsg("Эхлэхэд бэлэн");
+  setMsg(exercise === "squat"
+    ? "Цэх зогсоод бүтэн биеэ камерт багтаа"
+    : "Эхлэхэд бэлэн");
 }
 
 // Зөвхөн урд камер: хэрэглэгч дэлгэцээ хараад тоолуур, цагаа харах ёстой тул
@@ -1122,6 +1342,7 @@ function stopCamera(){
 }
 
 const HEAVY_MODEL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task";
+const FULL_MODEL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task";
 const LITE_MODEL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
 const isAndroid = /Android/i.test(navigator.userAgent);
 
@@ -1140,22 +1361,24 @@ async function createLandmarker(modelAssetPath){
 
 function maybeSwitchToLite(now){
   // Heavy модель үндсэн сонголт. Android хөтөч 5 секунд дараалан 12 fps
-  // хүрэхгүй бол л тооллын тасралтгүй ажиллагааг хамгаалж lite руу шилжинэ.
-  if(!isAndroid || modelVariant === "lite" || switchingToLite || !fpsEma) return;
+  // хүрэхгүй бол тооллын тасралтгүй ажиллагааг хамгаалж fallback руу шилжинэ.
+  // Squat доод биеийн нарийвчлал шаарддаг тул Full, push-up бол Lite ашиглана.
+  if(!isAndroid || modelVariant !== "heavy" || switchingToLite || !fpsEma) return;
   if(fpsEma >= 12){ lowFpsSince = 0; return; }
   lowFpsSince ||= now;
   if(now - lowFpsSince >= 5000) switchToLite();
 }
 
 async function switchToLite(){
-  if(switchingToLite || modelVariant === "lite") return;
+  if(switchingToLite || modelVariant !== "heavy") return;
   switchingToLite = true;
   try{
-    const next = await createLandmarker(LITE_MODEL);
+    const nextVariant = exercise === "squat" ? "full" : "lite";
+    const next = await createLandmarker(nextVariant === "full" ? FULL_MODEL : LITE_MODEL);
     if(!running){ next.close(); return; }
     const previous = landmarker;
     landmarker = next;
-    modelVariant = "lite";
+    modelVariant = nextVariant;
     previous?.close();
     fpsEma = 0;
     lastFrame = 0;
@@ -1179,6 +1402,13 @@ async function startEngine(){
   if(!landmarker){
     landmarker = await createLandmarker(HEAVY_MODEL);
     modelVariant = "heavy";
+  } else if(exercise === "squat" && modelVariant === "lite"){
+    // Өмнөх push-up Android дээр Lite руу буусан байж болно. Squat-ийн
+    // өвдөг/ташааны цэгүүдэд Full-ээс доош оруулахгүй.
+    const next = await createLandmarker(FULL_MODEL);
+    landmarker.close();
+    landmarker = next;
+    modelVariant = "full";
   }
 
   await openCamera();
@@ -1232,6 +1462,13 @@ async function finish(){
   const reps = count, seconds = elapsed();
   stopCamera();
   show("menu");
+  if(exercise === "squat"){
+    note(reps < 1
+      ? "Тоологдсон squat алга."
+      : `${reps} squat · ${clock(seconds)} — эхний хувилбарт локал дүн, push-up нийтэд нэмэгдэхгүй.`,
+    reps < 1 ? "" : "ok");
+    return;
+  }
   if(reps < 1){ note("Тоологдсон push-up алга.", ""); return; }
   await saveSet(reps, seconds);
 }
@@ -2000,6 +2237,9 @@ function endDuel(state){
 async function startBattle(){
   // Дуу нээх боломж бол ЗӨВХӨН хэрэглэгчийн дарлага
   try{ ac(); }catch{ /* дуугүй ажиллана */ }
+  // Battle-ийн серверийн metric одоогоор push-up. Squat solo сонголтоос
+  // шууд Battle руу орсон ч хоёр дасгалын тоолуур холилдох ёсгүй.
+  exercise = "pushup";
   mode = "battle"; duel = null; reported = false; arming = false;
   show("hall");
   $("hallTitle").textContent = guestLaunch() ? "Тулаанд холбогдож байна…" : "Хүлээлгийн өрөө";
@@ -2073,7 +2313,28 @@ async function openBoard(){
 
 // ======================= холболт =======================
 
-$("mPush").onclick   = () => { mode = "solo"; show("play"); $("start").classList.remove("hidden"); };
+function openSolo(kind){
+  exercise = kind;
+  mode = "solo";
+  $("play").classList.remove("duel");
+  $("startTitle").textContent = kind === "squat" ? "Squat · Суулт" : "Push Up";
+  $("howtoPush").classList.toggle("hidden", kind === "squat");
+  $("howtoSquat").classList.toggle("hidden", kind !== "squat");
+  $("startHint").innerHTML = kind === "squat"
+    ? `Утсаа биеэсээ <b>2–3 метр</b> зайд, ташааны өндөрт байрлуул. Камер руу
+       хажуу эсвэл 45° харж, толгойноос хөл хүртэл бүтэн биеэ багтаа.`
+    : `Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга —
+       биедээ наавал халхлагдаж, өнцөг буруу уншина.`;
+  $("go").disabled = false;
+  $("go").textContent = "Камер асаах";
+  $("err").classList.add("hidden");
+  $("err").textContent = "";
+  show("play");
+  $("start").classList.remove("hidden");
+}
+
+$("mPush").onclick   = () => openSolo("pushup");
+$("mSquat").onclick  = () => openSolo("squat");
 $("mBattle").onclick = startBattle;
 $("mBoard").onclick  = openBoard;
 $("retrySave").onclick = () => pendingSet && saveSet(pendingSet.reps, pendingSet.seconds);
