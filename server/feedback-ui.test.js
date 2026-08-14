@@ -50,3 +50,7 @@ test('dynamic status message-үүд accessibility role-той', () => {
     assert.match(html, new RegExp(`id="${id}"[^>]*role="(?:status|alert)"`))
   }
 })
+
+test('камерын булангийн хөгжүүлэлтийн хэмжүүрүүд хэрэглэгчид харагдахгүй', () => {
+  assert.match(html, /<div id="top" class="hidden" aria-hidden="true">/)
+})
