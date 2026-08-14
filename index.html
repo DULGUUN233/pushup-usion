@@ -24,6 +24,8 @@
   button:disabled{opacity:.4}
   button.primary{background:var(--accent);color:#04140c;padding:13px 22px;font-size:15px}
 
+  #boot{display:grid;place-items:center;text-align:center;color:var(--dim);font-size:14px}
+
   /* ---------- цэс ---------- */
   #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto}
   #who{display:flex;align-items:center;gap:12px}
@@ -264,6 +266,17 @@
   #breakClock{font-size:54px;font-weight:900;color:var(--gold);font-variant-numeric:tabular-nums}
   #breakNext{color:var(--dim);font-size:14px}
 
+  #battleCountdown{position:absolute;inset:0;z-index:8;display:grid;place-items:center;
+    pointer-events:none;background:rgba(0,0,0,.18)}
+  #battleCountdownNum{font-size:clamp(96px,32vw,168px);font-weight:900;line-height:1;
+    color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.06em;
+    text-shadow:0 4px 24px rgba(0,0,0,.95),0 0 40px rgba(255,210,30,.28)}
+  @keyframes battleTick{from{opacity:.45;transform:scale(.78)}to{opacity:1;transform:scale(1)}}
+  #battleCountdownNum.tick{animation:battleTick .24s cubic-bezier(.2,.8,.2,1)}
+  @media (prefers-reduced-motion:reduce){
+    #battleCountdownNum.tick{animation:none}
+  }
+
   #start{position:absolute;inset:0;background:var(--bg);z-index:10;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:18px;padding:28px;text-align:center}
@@ -275,8 +288,12 @@
 </head>
 <body>
 
+<section id="boot" class="screen">
+  <div>Холбогдож байна…</div>
+</section>
+
 <!-- ================= ЦЭС ================= -->
-<section id="menu" class="screen">
+<section id="menu" class="screen hidden">
   <div id="who">
     <img id="avatar" alt="">
     <div>
@@ -296,7 +313,7 @@
   <button class="mode duel" id="mBattle">Battle<small>Push-up · Squat · Хосолсон, 1v1, ELO</small></button>
   <button id="mBoard">Тэргүүлэгчид</button>
 
-  <div id="note"></div>
+  <div id="note" role="status" aria-live="polite" aria-atomic="true"></div>
   <button id="retrySave" class="hidden">Дахин хадгалах</button>
 </section>
 
@@ -319,7 +336,7 @@
     <div id="hallVs">VS</div>
     <div class="seat away" id="seatOpp"></div>
   </div>
-  <div id="hallHint"></div>
+  <div id="hallHint" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="battleTypes">
     <span>Тулааны төрөл · Эзэн сонгоно</span>
     <div id="battleTypeBtns">
@@ -366,6 +383,9 @@
       </div>
       <div id="tug"><div id="tugYou"></div></div>
     </div>
+    <div id="battleCountdown" class="hidden" role="timer" aria-label="Тулаан эхлэх тоолуур">
+      <span id="battleCountdownNum">10</span>
+    </div>
     <div id="top">
       <div id="stats">
         <div>Өнцөг <b id="angle">–</b></div>
@@ -382,7 +402,7 @@
     </div>
     <div id="meterWrap"><div id="meter"></div><div id="meterLine"></div></div>
     <div id="bottom">
-      <div id="msg">Бэлдэж байна…</div>
+      <div id="msg" role="status" aria-live="polite" aria-atomic="true">Бэлдэж байна…</div>
       <div id="counter"><span id="count">0</span></div>
       <div id="btns">
         <button id="reset">Тэглэх</button>
@@ -434,12 +454,12 @@
        наавал халхлагдаж, өнцөг буруу уншина.</p>
     <button class="primary" id="go">Камер асаах</button>
     <button id="pBack">← Буцах</button>
-    <div id="err" class="hidden"></div>
+    <div id="err" class="hidden" role="alert" aria-live="assertive" aria-atomic="true"></div>
   </div>
 
   <div id="seek" class="hidden">
     <h2 id="seekTitle">Өрсөлдөгч хайж байна…</h2>
-    <p>Энэ зуур байрлалаа тохируулаарай. Нөгөө тал ормогц 5 секунд тоолоод эхэлнэ.</p>
+    <p>Энэ зуур байрлалаа тохируулаарай. Нөгөө тал ормогц 10 секунд тоолоод эхэлнэ.</p>
     <button id="seekCancel">Болих</button>
   </div>
 
@@ -538,8 +558,29 @@ async function api(path, opts = {}){
   return body;
 }
 
+/** Техникийн/серверийн алдааг богино, буруутгалгүй, засах алхамтай текст болгоно. */
+function friendlyError(error, fallback = "Үйлдэл амжилтгүй. Дахин оролдоно уу."){
+  const raw = String(error?.message ?? error ?? "").toLowerCase();
+  const name = String(error?.name ?? "").toLowerCase();
+  if(name === "notallowederror" || raw.includes("permission") || raw.includes("denied")) return "Камерын зөвшөөрөл хаалттай байна. Тохиргооноос камерын зөвшөөрлийг нээгээд дахин оролдоно уу.";
+  if(name === "notfounderror") return "Камер олдсонгүй. Камертай төхөөрөмжөөр дахин оролдоно уу.";
+  if(name === "notreadableerror") return "Камерыг өөр апп ашиглаж байна. Тэр аппыг хаагаад дахин оролдоно уу.";
+  if(name === "aborterror" || raw.includes("камер цуцлагдсан")) return "Камерын хүсэлт цуцлагдлаа. Дахин оролдоно уу.";
+  if(raw.includes("урилга хүчингүй")) return "Энэ урилга хүчингүй болсон. Найзаасаа шинэ урилга аваарай.";
+  if(raw.includes("өрөө дүүрэн")) return "Өрөө дүүрсэн байна. Найзаасаа шинэ урилга аваарай.";
+  if(raw.includes("төрлийг зөвхөн эзэн")) return "Тулааны төрлийг зөвхөн өрөөний эзэн сонгоно.";
+  if(raw.includes("хоёулаа өрөөнд")) return "Найзыгаа өрөөнд орж иртэл хүлээнэ үү.";
+  if(raw.includes("эхлүүлэх боломжгүй")) return "Найз Ready өгсөн эсэхийг шалгаад дахин эхлүүлнэ үү.";
+  if(raw.includes("usion олдсонгүй") || raw.includes("хэрэглэгч тодорхойгүй")) return "Тоглоомын холболт бэлэн биш байна. Аппаа хааж дахин нээнэ үү.";
+  if(raw.includes("http 401") || raw.includes("token")) return "Нэвтрэх хугацаа дууссан байна. Аппаа хааж дахин нээнэ үү.";
+  if(raw.includes("http 429")) return "Хэт олон хүсэлт илгээлээ. Түр хүлээгээд дахин оролдоно уу.";
+  if(raw.includes("fetch") || raw.includes("network") || raw.includes("http 5") || raw.includes("service_id") || raw.includes("үйлчилгээ хүрэхгүй")) return "Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.";
+  return fallback;
+}
+
 function note(text, kind){
   const el = $("note");
+  if(el.textContent === (text || "") && el.className === (kind || "")) return;
   el.textContent = text || "";
   el.className = kind || "";
 }
@@ -581,7 +622,7 @@ async function loadProfile(){
     note("");
   } catch(e) {
     $("sub").textContent = "офлайн";
-    note(`Сервертэй холбогдсонгүй: ${e.message}. Тоолуур ажиллана, дүн хадгалагдахгүй.`, "bad");
+    note(`${friendlyError(e, "Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.")} Тоолуур офлайнаар ажиллана.`, "bad");
   }
 }
 
@@ -683,6 +724,12 @@ let exercise = "pushup";                                  // solo дасгал
 let squatReady = false, squatDepthFrames = 0, squatStandFrames = 0;
 let squatMinKnee = 180, squatMinHip = 180, squatMaxDepthDelta = -1;
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
+let battleCountdownSecond = null;
+const POSE_NEUTRAL_DELAY_MS = 450;
+const POSE_ERROR_DELAY_MS = 250;
+let posePendingText = "", posePendingColor = "", posePendingAt = 0, poseHoldUntil = 0;
+let poseShownText = "", poseShownColor = "";
+let posePriority = 0;
 // Утасны цаг серверийнхээс зөрдөг. Зөрүүг тооцоогүй бол хоёр тоглогч
 // өөр өөр секунд хараад, нэг нь илүү хугацаа хийж байна гэж бодно.
 let clockOffset = 0;
@@ -877,7 +924,7 @@ function squatPositionCheck(lm, metrics){
   // Squat-ын өнцөгт толгой оролцдоггүй. Толгой кадрын захад хүрэхэд бүрэн
   // батлагдсан down → standing cycle-ийг reset хийж, зөв rep-ийг алдаж байв.
   // Сонгосон талын мөр–ташаа–өвдөг–шагай харагдаж байвал тоолоход хангалттай.
-  if(!metrics) return "Мөрнөөс шагай хүртэл биеэ камерт багтаа";
+  if(!metrics) return "Камераа холдуул — мөрнөөс шагай хүртэл багтаа";
   if(metrics.shoulderY < -SQUAT_FRAME_MARGIN || metrics.ankleY > 1 + SQUAT_FRAME_MARGIN)
     return "Камераа холдуул — мөрнөөс шагай хүртэл кадарт багтаа";
   return null;
@@ -906,6 +953,7 @@ function countSquatRep(){
     + ` hip${Math.round(squatMinHip)} y${squatMaxDepthDelta.toFixed(3)}`;
   if(navigator.vibrate) navigator.vibrate([18,40,18]);
   sndRep();
+  resetPoseFeedback();
   // Push-up-тэй адил battle-ийн оноог сервер л баталгаажуулна.
   if(mode === "battle") sendRep();
   else setMsg(`${count} — сайн суулт!`, "var(--accent)");
@@ -917,7 +965,7 @@ function processSquatFrame(lm, world, aspect, now){
   const m = squatMetrics(lm, world, aspect);
   const bad = squatPositionCheck(lm, m);
   if(bad){
-    setMsg(bad, "var(--dim)");
+    setPoseMsg(bad, "var(--dim)");
     if(++badFrames >= BAD_FRAMES){
       resetSquatCycle(false);
       smooth = null;
@@ -958,12 +1006,12 @@ function processSquatFrame(lm, world, aspect, now){
       if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
         squatReady = true;
         squatStandFrames = SQUAT_CONFIRM_FRAMES;
-        setMsg("Бэлэн — доошоо суу");
+        setPoseMsg("Бэлэн — доошоо суу");
       }
     } else squatStandFrames = 0;
 
     if(!squatReady){
-      setMsg("Эхлээд цэх зогсож өвдгөө тэнийлгэ", "var(--dim)");
+      setPoseMsg("Өвдөг, ташаагаа бүрэн тэнийлгэ", "var(--dim)");
       return;
     }
     if(gateKnee < SQUAT_DESCENT_KNEE){
@@ -973,7 +1021,7 @@ function processSquatFrame(lm, world, aspect, now){
       squatMinHip = m.hip;
       squatMaxDepthDelta = depthDelta;
       squatDepthFrames = squatStandFrames = 0;
-      setMsg("Доошоо — ташаагаа өвдөгний түвшинд хүргэ", "var(--warn)");
+      setPoseMsg("Доошоо — ташаагаа өвдөгний түвшинд хүргэ", "var(--warn)");
     }
     return;
   }
@@ -988,18 +1036,18 @@ function processSquatFrame(lm, world, aspect, now){
         phase = "down";
         squatDepthFrames = 0;
         if(navigator.vibrate) navigator.vibrate(12);
-        setMsg("Гүн ✓ Одоо бүрэн бос", "var(--warn)");
+        setPoseMsg("Гүн ✓ Одоо бүрэн бос", "var(--warn)");
       }
     } else {
       squatDepthFrames = 0;
       if(gateKnee <= SQUAT_DEPTH_KNEE)
-        setMsg("Ташаагаа бага зэрэг доошлуул", "var(--bad)");
+        setPoseMsg("Илүү гүн суу — ташаа өвдөгний түвшинд хүрнэ", "var(--bad)");
     }
 
     if(standing){
       if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
         resetSquatCycle(true);
-        setMsg("Гүн дутуу — ташаа өвдөгний түвшинд хүрнэ", "var(--bad)");
+        setPoseMsg("Илүү гүн суу — ташаа өвдөгний түвшинд хүрнэ", "var(--bad)");
       }
     } else squatStandFrames = 0;
     return;
@@ -1010,13 +1058,13 @@ function processSquatFrame(lm, world, aspect, now){
       if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
         if(now - repStart < SQUAT_MIN_REP_MS){
           resetSquatCycle(true);
-          setMsg("Хэт хурдан — хөдөлгөөнөө хяна", "var(--bad)");
+          setPoseMsg("Арай удаан, хөдөлгөөнөө бүтэн хий", "var(--bad)");
         } else countSquatRep();
       }
     } else {
       squatStandFrames = 0;
       if(gateKnee > SQUAT_DEPTH_KNEE + 10)
-        setMsg("Бүрэн босож өвдөг, ташаагаа тэнийлгэ", "var(--bad)");
+        setPoseMsg("Өвдөг, ташаагаа бүрэн тэнийлгэ", "var(--bad)");
     }
   }
 }
@@ -1072,8 +1120,40 @@ const sndRep = () => { tone(660, 70); tone(990, 90, 0.06); };
 
 function setMsg(text, color){
   const el = $("msg");
+  const key = color || "var(--fg)";
+  if(el.textContent === text && el.dataset.feedbackColor === key) return;
   el.textContent = text;
-  el.style.color = color || "var(--fg)";
+  el.style.color = key;
+  el.dataset.feedbackColor = key;
+}
+
+function resetPoseFeedback(){
+  posePendingText = posePendingColor = "";
+  posePendingAt = poseHoldUntil = 0;
+  poseShownText = poseShownColor = "";
+  posePriority = 0;
+}
+
+/** Нэг кадрын савлагааг алдаа болгохгүй; тогтвортой нэг зөвлөгөөг л харуулна. */
+function setPoseMsg(text, color){
+  const now = performance.now();
+  const priority = color === "var(--bad)" ? 2
+    : ["var(--warn)", "var(--accent)", "var(--gold)"].includes(color) ? 1 : 0;
+  const delay = priority === 2 ? POSE_ERROR_DELAY_MS : priority === 0 ? POSE_NEUTRAL_DELAY_MS : 0;
+  if(text !== posePendingText || color !== posePendingColor){
+    posePendingText = text;
+    posePendingColor = color;
+    posePendingAt = now;
+    if(delay > 0) return;
+  }
+  if(now - posePendingAt < delay) return;
+  if(now < poseHoldUntil && priority === 0 && posePriority > 0) return;
+  if(text === poseShownText && color === poseShownColor) return;
+  setMsg(text, color);
+  poseShownText = text;
+  poseShownColor = color;
+  posePriority = priority;
+  poseHoldUntil = now + (priority === 2 ? 900 : priority === 1 ? 450 : 500);
 }
 
 // Ажиглагдсан доод/дээд өнцгийн муж. Шинэ хязгаарт шууд тэлж, дараа нь
@@ -1157,11 +1237,11 @@ function countRep(deg, now, th, body){
       bodyMinAngle = body.line ?? 180;
       bodyAngleSeen = body.line !== null;
       if(navigator.vibrate) navigator.vibrate(12);
-      setMsg("Доошоо ✓", "var(--warn)");
+      setPoseMsg("Доошоо ✓", "var(--warn)");
     }
     // Буусан ч гүнд хүрээгүй бол яагаад тоологдоогүйг хэлнэ
     else if(deg > th.up && dipMin < th.up - 5){
-      setMsg("Гүн дутуу — доошоо буу", "var(--bad)");
+      setPoseMsg("Илүү гүн буу — мөр тохойн түвшинд хүрнэ", "var(--bad)");
       dipMin = 999;
     }
     return;
@@ -1179,20 +1259,20 @@ function countRep(deg, now, th, body){
 
   const upGate = Math.max(th.up, LOCKOUT_ANGLE);
   if(phase === "down" && deg > th.up && deg <= upGate){
-    setMsg("Гараа бүрэн тэнийлгэ", "var(--bad)");
+    setPoseMsg("Гараа бүрэн тэнийлгэ", "var(--bad)");
   }
 
   if(phase === "down" && deg > upGate){
     phase = "up";
     if(now - repStart < MIN_REP_MS){
-      setMsg("Хэт хурдан — бүтэн хий", "var(--bad)");
+      setPoseMsg("Арай удаан, хөдөлгөөнөө бүтэн хий", "var(--bad)");
     } else if(!rigid()){
-      setMsg("Биеэ бүхэлд нь буулга", "var(--bad)");
+      setPoseMsg("Биеэ бүхэлд нь буулга", "var(--bad)");
     } else if(bodyAngleSeen && bodyMinAngle < BODY_STRAIGHT_MIN){
-      setMsg("Биеэ шулуун байлга — аарцгаа унжуулах/өргөхгүй", "var(--bad)");
+      setPoseMsg("Биеэ шулуун байлга", "var(--bad)");
     } else if(armBest > -90 && armBest < ARM_LEVEL){
       // Хэмжиж чадсан үед л шаардана — цэг нь харагдаагүй бол алгасна
-      setMsg("Гүн дутуу — тохой мөрний түвшинд хүрээгүй", "var(--bad)");
+      setPoseMsg("Илүү гүн буу — мөр тохойн түвшинд хүрнэ", "var(--bad)");
     } else {
       count++;
       $("count").textContent = count;
@@ -1212,6 +1292,7 @@ function countRep(deg, now, th, body){
         + ` sh${dSh.toFixed(3)} hp${dHp.toFixed(3)} r${(dHp/dSh).toFixed(2)}`
         + ` arm${armBest > -90 ? armBest.toFixed(2) : "–"}`
         + ` line${bodyAngleSeen ? Math.round(bodyMinAngle) : "–"}`;
+      resetPoseFeedback();
       if(mode === "battle") sendRep(); else setMsg(`${count} — сайн байна!`, "var(--accent)");
     }
     repMinAngle = 180;
@@ -1284,7 +1365,7 @@ function loop(){
   const lm = res.landmarks && res.landmarks[0];
   const world = res.worldLandmarks && res.worldLandmarks[0];
   if(!lm || !world){
-    setMsg("Хүн олдсонгүй — бүтэн биеэ багтаа", "var(--dim)");
+    setPoseMsg("Камераа холдуул — бүтэн биеэ багтаа", "var(--dim)");
     if(++badFrames >= BAD_FRAMES) idle();
     return;
   }
@@ -1292,7 +1373,7 @@ function loop(){
   drawSkeleton(lm);
 
   // Battle-ийн оноог зөвхөн серверийн authoritative 30 секундэд тоолно.
-  // Эхлэх 5 секунд болон combined-ийн 10 секундийн амралтын хөдөлгөөн rep биш.
+  // Эхлэх 10 секунд болон combined-ийн 10 секундийн амралтын хөдөлгөөн rep биш.
   if(!battleRepWindowOpen()){
     if(smooth !== null || phase !== "up") idle();
     $("time").textContent = "0:00";
@@ -1334,7 +1415,7 @@ function loop(){
 
   const bad = positionCheck(lm, world, asp);
   if(bad){
-    setMsg(bad, "var(--dim)");
+    setPoseMsg(bad, "var(--dim)");
     // Нэг муу кадарт rep-ийг цуцлахгүй — доод цэгт бугуй халхлагдахад
     // цэгийн итгэлцүүр хэсэг зуур унадаг тул бүх rep алдагдаж байсан.
     if(++badFrames >= BAD_FRAMES) idle();
@@ -1343,7 +1424,7 @@ function loop(){
 
   const raw = meanAngle(world, lm, ARMS);
   if(raw === null){
-    setMsg("Гар харагдахгүй байна", "var(--dim)");
+    setPoseMsg("Гараа камерт бүтэн багтаа", "var(--dim)");
     if(++badFrames >= BAD_FRAMES) idle();
     return;
   }
@@ -1369,7 +1450,7 @@ function loop(){
 
   const th = envelope(deg);
   if(!th){
-    setMsg("Тохируулж байна — нэг удаа бүтэн хий", "var(--dim)");
+    setPoseMsg("Нэг удаа бүтэн хийж тохируулна уу", "var(--dim)");
     $("meter").style.height = "0%";
     return;
   }
@@ -1393,6 +1474,7 @@ const elapsed = () => Math.floor((performance.now() - t0)/1000);
 const clock = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
 
 function reset(){
+  resetPoseFeedback();
   count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
   loSeen = null; hiSeen = null; badFrames = 0; dipMin = 999;
   shTop = hpTop = shBot = hpBot = null; armBest = -99; midDrops = 0;
@@ -1521,10 +1603,15 @@ async function startEngine(){
   if(!navigator.mediaDevices?.getUserMedia)
     throw new Error("Камер дэмжихгүй байна. HTTPS эсвэл localhost дээр нээнэ үү.");
 
-  // Модель нэг л удаа ачаална — горим руу дахин орох бүрд 26 MB татахгүй.
-  await ensureExerciseModel();
-
-  await openCamera();
+  // Permission хүсэлтийг хэрэглэгчийн даралтын дараа шууд гаргана. Heavy model
+  // камераас хамааралгүй тул зэрэг ачаалж, эхний нээлтийн хүлээлтийг багасгана.
+  // Аль нэг нь бүтэлгүйтвэл нээгдсэн байж болох камерыг заавал хаана.
+  try{
+    await Promise.all([openCamera(), ensureExerciseModel()]);
+  }catch(e){
+    stopCamera();
+    throw e;
+  }
   fpsEma = 0;
   lastFrame = 0;
   lowFpsSince = 0;
@@ -1542,7 +1629,7 @@ async function startSolo(){
     $("start").classList.add("hidden");
   }catch(e){
     err.classList.remove("hidden");
-    err.textContent = e.message || String(e);
+    err.textContent = friendlyError(e, "Камер ассангүй. Дахин оролдоно уу.");
     $("go").disabled = false;
     $("go").textContent = "Дахин оролдох";
   }
@@ -1572,7 +1659,7 @@ async function saveSet(reps, seconds, kind = exercise){
   }catch(e){
     pendingSet = { reps, seconds, exercise:kind };
     $("retrySave").classList.remove("hidden");
-    note(`${reps} хадгалагдсангүй: ${e.message} — тоо алдагдаагүй, дахин оролдоно уу.`, "bad");
+    note(`${friendlyError(e, "Дүн хадгалагдсангүй. “Дахин хадгалах” товчийг дарна уу.")} Тоо алдагдаагүй.`, "bad");
   }
 }
 
@@ -1611,6 +1698,7 @@ let hostedRoom = null;
  * бидэнд урих ажил үлдэхгүй, зөвхөн хүлээлгийн өрөөгөө нээнэ.
  */
 let assignedRoom = null;
+let startupInvitePending = false;
 
 /**
  * Урилгын картаас нээгдсэн үү — өрөө, хоёр тоглогч хоёулаа бэлэн байх ёстой.
@@ -1842,7 +1930,7 @@ function openSocket(roomId){
     const m = JSON.parse(ev.data);
     if(m.type === "state") applyDuel(m.state);
     else if(m.type === "signal") onSignal(m.data);
-    else if(m.type === "error") $("hallHint").textContent = m.error;
+    else if(m.type === "error") $("hallHint").textContent = friendlyError(m.error, "Тулааны үйлдэл амжилтгүй. Дахин оролдоно уу.");
   };
 }
 
@@ -2172,7 +2260,7 @@ function renderHall(state){
     : !state                 ? "Найз чинь урилгыг хүлээж авбал энд харагдана."
     : !oppHere               ? "Найз чинь орж ирэхийг хүлээж байна…"
     : host && !opp.ready     ? "Найз чинь «Бэлэн» дархыг хүлээж байна."
-    : host                   ? "Эхлүүлэхэд хоёуланд нь камер асч, 5 секунд тоолоод эхэлнэ."
+    : host                   ? "Эхлүүлэхэд хоёуланд нь камер асч, 10 секунд тоолоод эхэлнэ."
     : state.you.ready        ? "Эзэн эхлүүлэхийг хүлээж байна…"
     :                          "«Бэлэн» дарж эзэнд мэдэгд.";
 }
@@ -2195,6 +2283,7 @@ async function armForBattle(){
   $("start").classList.add("hidden");
   $("over").classList.add("hidden");
   $("roundBreak").classList.add("hidden");
+  resetBattleCountdown();
   $("oRounds").textContent = "";
   $("duelBar").classList.add("hidden");
   $("stats").classList.add("hidden");
@@ -2210,8 +2299,17 @@ async function armForBattle(){
     $("seekTitle").textContent = "Өрсөлдөгчөө хүлээж байна…";
   }catch(e){
     leaveBattle();
-    note("Камер асаагүй: " + e.message, "bad");
+    note(friendlyError(e, "Камер ассангүй. Дахин оролдоно уу."), "bad");
   }
+}
+
+function renderConnectingHall(){
+  renderHall(null);
+  $("hallTitle").textContent = "Тулаанд холбогдож байна…";
+  $("hallHint").textContent = "Урилгын өрөөг нээж байна…";
+  $("battleTypes").classList.add("hidden");
+  $("hallReady").classList.add("hidden");
+  $("hallStart").classList.add("hidden");
 }
 
 function syncBattleExercise(state){
@@ -2222,7 +2320,7 @@ function syncBattleExercise(state){
   reset();
   // Combined-ийн завсарлагаар squat-д хэрэгтэй доод биеийн model-ийг урьдчилан бэлдэнэ.
   if(running) ensureExerciseModel().catch(() => {
-    setMsg("Squat model ачаалсангүй", "var(--bad)");
+    setMsg("Squat танилт ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.", "var(--bad)");
   });
 }
 
@@ -2275,13 +2373,13 @@ function applyDuel(state){
     if($("play").classList.contains("hidden")) show("play");
     $("seek").classList.add("hidden");
     $("roundBreak").classList.add("hidden");
-    $("duelBar").classList.remove("hidden");
     if(!tick) startClock();
     if(state.opponent) startVideo(y.userId, state.opponent.userId);
   }
   if(state.status === "intermission"){
     if($("play").classList.contains("hidden")) show("play");
     $("seek").classList.add("hidden");
+    resetBattleCountdown();
     $("duelBar").classList.remove("hidden");
     renderRoundBreak(state);
     $("roundBreak").classList.remove("hidden");
@@ -2292,12 +2390,33 @@ function applyDuel(state){
   if(state.status === "finished") endDuel(state);
 }
 
+function resetBattleCountdown(){
+  $("battleCountdown").classList.add("hidden");
+  $("battleCountdownNum").classList.remove("tick");
+  battleCountdownSecond = null;
+}
+
+function showBattleCountdown(seconds){
+  const next = Math.max(1, Math.ceil(seconds));
+  $("battleCountdown").classList.remove("hidden");
+  $("duelBar").classList.add("hidden");
+  if(next === battleCountdownSecond) return;
+  const number = $("battleCountdownNum");
+  number.textContent = next;
+  number.classList.remove("tick");
+  void number.offsetWidth;
+  number.classList.add("tick");
+  battleCountdownSecond = next;
+}
+
 function startClock(){
   clearInterval(tick);
   const update = () => {
     if(!duel) return;
     const now = serverNow();
     if(duel.status === "intermission"){
+      resetBattleCountdown();
+      $("duelBar").classList.remove("hidden");
       const end = new Date(duel.intermissionEndsAt).getTime();
       const left = Math.max(0, Math.ceil((end - now) / 1000));
       $("clock").textContent = clock(left);
@@ -2306,13 +2425,22 @@ function startClock(){
       return;
     }
     // Хоёулаа ортол цаг тавигдаагүй байна
-    if(!duel.startsAt){ $("clock").textContent = "…"; return; }
+    if(!duel.startsAt){
+      resetBattleCountdown();
+      $("duelBar").classList.add("hidden");
+      $("clock").textContent = "…";
+      return;
+    }
     const begin = new Date(duel.startsAt).getTime();
     const end = new Date(duel.endsAt).getTime();
     if(now < begin){
-      $("clock").textContent = Math.ceil((begin - now) / 1000);
+      const left = Math.ceil((begin - now) / 1000);
+      showBattleCountdown(left);
+      $("clock").textContent = left;
       setMsg("Бэлдэж бай…", "var(--warn)");
     } else {
+      resetBattleCountdown();
+      $("duelBar").classList.remove("hidden");
       const left = Math.max(0, Math.ceil((end - now) / 1000));
       // clock() ашиглана — "0:60" биш "1:00" гэж гарах ёстой
       $("clock").textContent = clock(left);
@@ -2340,6 +2468,7 @@ function cancelDuel(state){
   show("play");
   arming = false;
   clearInterval(tick); tick = null;
+  resetBattleCountdown();
   stopVideo();
   stopCamera();
   ws?.close(); ws = null;
@@ -2392,6 +2521,7 @@ function endDuel(state){
   show("play");
   arming = false;
   clearInterval(tick); tick = null;
+  resetBattleCountdown();
   stopVideo();
   stopCamera();
   ws?.close(); ws = null;
@@ -2431,17 +2561,24 @@ async function startBattle(){
   try{ ac(); }catch{ /* дуугүй ажиллана */ }
   // Серверийн waiting room-оос сонгосон төрлийг applyDuel автоматаар солино.
   // Энд анхны дэлгэцийг тогтвортой push-up төлөвөөс эхлүүлж байна.
+  const joiningInvite = guestLaunch();
   exercise = "pushup";
   $("play").classList.remove("squat-duel");
   mode = "battle"; duel = null; reported = false; arming = false;
   show("hall");
-  $("hallTitle").textContent = guestLaunch() ? "Тулаанд холбогдож байна…" : "Хүлээлгийн өрөө";
-  renderHall(null);
+  if(joiningInvite) renderConnectingHall();
+  else {
+    $("hallTitle").textContent = "Хүлээлгийн өрөө";
+    renderHall(null);
+  }
 
   try{
     const match = await findOpponent(() => {
-      $("hallTitle").textContent = "Хүлээлгийн өрөө";
-      renderHall(null);
+      if(joiningInvite) renderConnectingHall();
+      else {
+        $("hallTitle").textContent = "Хүлээлгийн өрөө";
+        renderHall(null);
+      }
     });
     // Socket-д ӨРӨӨНИЙ биш, СЕРВЕРИЙН буцаасан тулааны ID хэрэгтэй — нэг
     // өрөөнд олон тулаан дараалан үүсдэг тул хоёр нь өөр.
@@ -2450,12 +2587,14 @@ async function startBattle(){
     applyDuel(state);
   }catch(e){
     leaveBattle();
-    note("Тулаан эхэлсэнгүй: " + e.message, "bad");
+    note(friendlyError(e, "Тулаанд холбогдож чадсангүй. Дахин оролдоно уу."), "bad");
   }
 }
 
 function leaveBattle(){
+  startupInvitePending = false;
   clearInterval(tick); tick = null;
+  resetBattleCountdown();
   clearInterval(invitePoll); invitePoll = null;
   stopVideo();
   ws?.close(); ws = null;
@@ -2505,7 +2644,7 @@ async function loadBoard(kind){
       rows.appendChild(el);
     }
   }catch(e){
-    rows.textContent = "Ачаалж чадсангүй: " + e.message;
+    rows.textContent = friendlyError(e, "Жагсаалт ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
   }
 }
 
@@ -2516,6 +2655,7 @@ const openBoard = () => loadBoard("pushup");
 function openSolo(kind){
   exercise = kind;
   mode = "solo";
+  resetBattleCountdown();
   $("play").classList.remove("duel");
   $("play").classList.remove("squat-duel");
   $("startTitle").textContent = kind === "squat" ? "Squat · Суулт" : "Push Up";
@@ -2563,9 +2703,19 @@ document.addEventListener("visibilitychange", () => {
 });
 
 launchCfg = await usionInit();
+const directInvite = guestLaunch();
+startupInvitePending = directInvite;
 if(launchCfg?.userAvatar) $("avatar").src = launchCfg.userAvatar;
-await loadProfile();
-setBack("menu");
+
+// Урилгын картаас орж ирвэл profile API-г хүлээлгүй waiting room-ийг шууд
+// харуулна. Энгийн нээлт л menu рүү орно — эхний frame дээр menu анивчихгүй.
+if(directInvite){
+  mode = "battle";
+  show("hall");
+  renderConnectingHall();
+} else {
+  show("menu");
+}
 
 // Хостын дээд мөрний share товчоор найз урихад энэ дуудагдана. Заавал
 // нээлтийн горимоос ҮЛ ХАМААРАН бүртгэнэ: ганцаараа тоолж байсан хүн
@@ -2578,10 +2728,13 @@ sdk()?.game?.onRoomAssigned?.(d => {
   if(mode !== "battle") startBattle();
 });
 
+await loadProfile();
+
 // Найзын урилгаар нээгдсэн бол цэс дундуур гүйлгэхгүй — шууд тулаан руу.
 // Ердийн нээлтэд ЭНД ОРОХГҮЙ: өмнөх өрөө хадгалагдсаар байдаг тул зөвхөн
 // `mode` дээр тулгуурлана.
-if(guestLaunch()){
+if(startupInvitePending){
+  startupInvitePending = false;
   startBattle();
 }
 </script>

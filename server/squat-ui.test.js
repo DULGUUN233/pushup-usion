@@ -19,6 +19,7 @@ test('battle squat батлагдахад сервер рүү rep илгээнэ
     const sendRep = () => sent++;
     const sndRep = () => {};
     const setMsg = () => messages++;
+    const resetPoseFeedback = () => {};
     const resetSquatCycle = () => {};
     const navigator = {};
     const node = { textContent: "", offsetWidth: 1,
@@ -68,6 +69,8 @@ test('standing → depth → standing бүтэн cycle battle-д яг нэг rep
     const sendRep = () => sent++;
     const sndRep = () => {};
     const setMsg = () => {};
+    const setPoseMsg = setMsg;
+    const resetPoseFeedback = () => {};
     const navigator = {};
     const node = { textContent: "", offsetWidth: 1, style: {},
       classList: { add(){}, remove(){}, toggle(){} } };

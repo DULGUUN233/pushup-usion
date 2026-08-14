@@ -6,7 +6,7 @@ export const BATTLE_MS = 30_000
 /** Combined battle-ийн хоёр round-ийн хоорондох амралт. */
 export const INTERMISSION_MS = 10_000
 /** Хоёулаа камераа бэлдсэний дараах тоолол. */
-export const COUNTDOWN_MS = 5_000
+export const COUNTDOWN_MS = 10_000
 /**
  * Хүлээлгийн өрөөнд өрсөлдөгчийг хүлээх хугацаа.
  *
@@ -186,7 +186,7 @@ export async function setReady(roomId, userId, value) {
   )
 }
 
-/** Waiting room-д зөвхөн host battle төрлийг сонгоно. Соливол Ready reset. */
+/** Waiting room-д зөвхөн host battle төрлийг сонгоно. Өгсөн Ready-г хадгална. */
 export async function setBattleType(roomId, userId, value) {
   const battleType = normalizeBattleType(value)
   const battle = await battles().findOne({ _id: roomId, status: 'waiting' })
@@ -207,7 +207,6 @@ export async function setBattleType(roomId, userId, value) {
           squat: emptyReps(battle.players),
         },
         roundWinners: {},
-        ready: emptyReps(battle.players),
         armed: emptyReps(battle.players),
       },
     },

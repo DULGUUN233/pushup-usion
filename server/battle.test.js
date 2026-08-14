@@ -3,12 +3,17 @@ import test from 'node:test'
 import {
   battleIsLive,
   combinedWinner,
+  COUNTDOWN_MS,
   normalizeBattleType,
   view,
   winnerFromReps,
 } from './battle.js'
 
 const players = ['a', 'b']
+
+test('камер бэлэн болсны дараах эхлэх тоолол 10 секунд', () => {
+  assert.equal(COUNTDOWN_MS, 10_000)
+})
 
 test('battle type зөвхөн зөвшөөрөгдсөн утгыг авна', () => {
   assert.equal(normalizeBattleType('squat'), 'squat')
