@@ -105,7 +105,7 @@
   #deepGlow.on{opacity:1}
 
   #hud{position:absolute;inset:0;pointer-events:none;
-    display:flex;flex-direction:column;justify-content:space-between;
+    display:flex;flex-direction:column;justify-content:flex-end;
     padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 16px)}
   #hud button{pointer-events:auto}
 
@@ -147,13 +147,17 @@
   #done{background:var(--accent);color:#04140c;padding:12px 24px;font-size:15px}
 
   /* ---------- тулаан: дэлгэц дээр/доор хуваагдана ---------- */
-  #oppVid{display:none}
+  #oppVid,#oppCanvas{display:none}
   /* Дээд тал — өрсөлдөгч, доод тал — чи. Толин тусгал хийхгүй: нөгөө талын
      урсгал аль хэдийн жинхэнэ чиглэлтэй ирдэг. */
   /* inset:0 нь top ба bottom хоёуланг тогтоодог тул height хүчингүй болно —
      bottom:auto тавихгүй бол хуваалт ажиллахгүй. */
-  #play.duel #oppVid{display:block;position:absolute;top:0;left:0;right:0;bottom:auto;
-    height:50%;width:100%;object-fit:cover;background:#0d1117}
+  #play.duel #oppVid, #play.duel #oppCanvas{
+    display:block;position:absolute;top:0;left:0;right:0;bottom:auto;
+    height:50%;width:100%;object-fit:cover
+  }
+  #play.duel #oppVid{background:#0d1117}
+  #play.duel #oppCanvas{z-index:1;pointer-events:none;background:transparent}
   #play.duel #video, #play.duel #canvas{top:50%;bottom:auto;height:50%}
   #play.duel #deepGlow{top:50%;bottom:auto;height:50%}
   /* Өрсөлдөгчийн видео зогсвол хөлдсөн кадар үлддэг — юу болсныг хэлнэ */
@@ -169,7 +173,8 @@
   /* Squat: portrait дэлгэцийг зүүн/баруун хуваана. Lane бүр бүтэн өндөртэй
      тул cover нь толгой–хөлийг огтлохгүй, зөвхөн кадрын хажуу ирмэгийг тайрна. */
   #play.duel.squat-duel{--squat-head:calc(env(safe-area-inset-top) + 78px)}
-  #play.duel.squat-duel #oppVid{
+  #play.duel.squat-duel #oppVid,
+  #play.duel.squat-duel #oppCanvas{
     top:var(--squat-head);left:0;right:auto;bottom:auto;
     width:50%;height:calc(100% - var(--squat-head));object-fit:cover;object-position:center
   }
@@ -200,12 +205,21 @@
     text-overflow:ellipsis
   }
   #play.duel.squat-duel #meterWrap{top:56%;height:34vh}
+  #play.duel.squat-duel #bottom{
+    align-self:flex-end;width:calc(50% - 4px);gap:8px
+  }
+  #play.duel.squat-duel #msg{
+    max-width:100%;padding:7px 10px;font-size:12px;line-height:1.25
+  }
 
   /* Landscape-д lane өргөн болдог тул crop хийхгүй — бүх кадрыг баталгаатай харуулна. */
   @media (orientation:landscape){
     #play.duel.squat-duel #oppVid,
+    #play.duel.squat-duel #oppCanvas,
     #play.duel.squat-duel #video,
-    #play.duel.squat-duel #canvas{object-fit:contain;background:#05070a}
+    #play.duel.squat-duel #canvas{object-fit:contain}
+    #play.duel.squat-duel #oppVid,
+    #play.duel.squat-duel #video{background:#05070a}
   }
 
   #duelBar{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);
@@ -355,6 +369,7 @@
 <!-- ================= ТООЛОХ ================= -->
 <section id="play" class="screen hidden">
   <video id="oppVid" playsinline autoplay muted></video>
+  <canvas id="oppCanvas" aria-hidden="true"></canvas>
   <video id="video" playsinline muted autoplay></video>
   <canvas id="canvas"></canvas>
   <div id="deepGlow"></div>
@@ -486,6 +501,7 @@ import { PoseLandmarker, FilesetResolver }
 
 const $ = id => document.getElementById(id);
 const video = $("video"), canvas = $("canvas"), ctx = canvas.getContext("2d");
+const oppCanvas = $("oppCanvas"), oppCtx = oppCanvas.getContext("2d");
 
 // ======================= Usion + сервер =======================
 
@@ -757,31 +773,31 @@ const BONES = [[11,12],[11,13],[13,15],[12,14],[14,16],
 const JOINTS = [11,12,13,14,15,16,23,24,25,26,27,28];
 const DRAW_VIS = 0.4;  // үүнээс бага итгэлцүүртэй цэг бол таамаг, зурахгүй
 
-function drawSkeleton(lm){
-  const W = canvas.width, H = canvas.height;
+function drawSkeleton(lm, target = canvas, targetCtx = ctx, accent = "#ff6a3d"){
+  const W = target.width, H = target.height;
   const lw = Math.max(3, W/170);
   const at = i => [lm[i].x*W, lm[i].y*H];
-  const ok = i => (lm[i].visibility ?? 1) > DRAW_VIS;
+  const ok = i => lm[i] && (lm[i].visibility ?? 1) > DRAW_VIS;
 
-  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  targetCtx.lineCap = "round"; targetCtx.lineJoin = "round";
   // Шар улаан шугам + цагаан үе: цагаан шугам цайвар шалан дээр бүдгэрдэг.
   // Доор нь бараан сүүдэр — бараан дэвсгэр дээр ч тодорхой хэвээр байна.
-  for(const [color, width] of [["rgba(0,0,0,.45)", lw*2.1], ["#ff6a3d", lw]]){
-    ctx.strokeStyle = color; ctx.lineWidth = width;
-    ctx.beginPath();
+  for(const [color, width] of [["rgba(0,0,0,.45)", lw*2.1], [accent, lw]]){
+    targetCtx.strokeStyle = color; targetCtx.lineWidth = width;
+    targetCtx.beginPath();
     for(const [a,b] of BONES){
       if(!ok(a) || !ok(b)) continue;
       const [ax,ay] = at(a), [bx,by] = at(b);
-      ctx.moveTo(ax,ay); ctx.lineTo(bx,by);
+      targetCtx.moveTo(ax,ay); targetCtx.lineTo(bx,by);
     }
-    ctx.stroke();
+    targetCtx.stroke();
   }
   for(const i of JOINTS){
     if(!ok(i)) continue;
     const [x,y] = at(i);
-    ctx.beginPath(); ctx.arc(x, y, lw*1.7, 0, Math.PI*2);
-    ctx.fillStyle = "#ffffff"; ctx.fill();
-    ctx.lineWidth = lw*0.55; ctx.strokeStyle = "#ff6a3d"; ctx.stroke();
+    targetCtx.beginPath(); targetCtx.arc(x, y, lw*1.7, 0, Math.PI*2);
+    targetCtx.fillStyle = "#ffffff"; targetCtx.fill();
+    targetCtx.lineWidth = lw*0.55; targetCtx.strokeStyle = accent; targetCtx.stroke();
   }
 }
 
@@ -1364,6 +1380,7 @@ function loop(){
 
   const lm = res.landmarks && res.landmarks[0];
   const world = res.worldLandmarks && res.worldLandmarks[0];
+  sendPose(lm, now);
   if(!lm || !world){
     setPoseMsg("Камераа холдуул — бүтэн биеэ багтаа", "var(--dim)");
     if(++badFrames >= BAD_FRAMES) idle();
@@ -1942,8 +1959,9 @@ function sendRep(){
 // Signaling нь ӨӨРИЙН socket-оор явна — Usion-ы relay-гээс хамаарахгүй тул
 // локалд хоёр табаар шалгаж болно.
 
-let pc = null, vidSender = null, fpsGuard = null;
+let pc = null, vidSender = null, fpsGuard = null, poseChannel = null;
 let isOfferer = false, iceTimer = null;
+let lastPoseSentAt = 0, remotePoseTimer = null;
 
 // Өрсөлдөгчөө харах урсгалыг хэзээ ч бүрэн салгахгүй. Pose тоолуур эсвэл
 // сүлжээ ачаалбал нягтрал/битрейт/FPS-ийг шатлалтай бууруулж хөдөлгөөнийг
@@ -1985,12 +2003,76 @@ const signal = data => {
   if(ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "signal", data }));
 };
 
+function clearOpponentPose(){
+  clearTimeout(remotePoseTimer); remotePoseTimer = null;
+  oppCtx.clearRect(0, 0, oppCanvas.width, oppCanvas.height);
+}
+
+function renderOpponentPose(points){
+  const remote = $("oppVid");
+  const width = remote.videoWidth, height = remote.videoHeight;
+  if(!width || !height) return;
+  if(oppCanvas.width !== width || oppCanvas.height !== height){
+    oppCanvas.width = width;
+    oppCanvas.height = height;
+  }
+  clearOpponentPose();
+  if(!Array.isArray(points) || points.length !== JOINTS.length) return;
+
+  const landmarks = Array(33);
+  for(let n = 0; n < JOINTS.length; n++){
+    const point = points[n];
+    if(!Array.isArray(point) || point.length !== 3) return clearOpponentPose();
+    const [x, y, visibility] = point.map(Number);
+    if(!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(visibility))
+      return clearOpponentPose();
+    landmarks[JOINTS[n]] = {
+      x:Math.max(-0.1, Math.min(1.1, x)),
+      y:Math.max(-0.1, Math.min(1.1, y)),
+      visibility:Math.max(0, Math.min(1, visibility))
+    };
+  }
+  drawSkeleton(landmarks, oppCanvas, oppCtx, "#ff5c5c");
+  remotePoseTimer = setTimeout(clearOpponentPose, 500);
+}
+
+function bindPoseChannel(channel){
+  if(!channel || channel.label !== "pose") return;
+  poseChannel = channel;
+  channel.onmessage = event => {
+    if(typeof event.data !== "string" || event.data.length > 2_048) return;
+    try{
+      const message = JSON.parse(event.data);
+      if(message?.type === "pose") renderOpponentPose(message.points);
+    }catch{ /* эвдэрсэн эсвэл хуучирсан pose frame-ийг алгасана */ }
+  };
+  channel.onclose = clearOpponentPose;
+  channel.onerror = clearOpponentPose;
+}
+
+function sendPose(lm, now){
+  if(mode !== "battle" || poseChannel?.readyState !== "open") return;
+  if(now - lastPoseSentAt < 80 || poseChannel.bufferedAmount > 16_384) return;
+  lastPoseSentAt = now;
+  const round = value => Math.round(value * 1000) / 1000;
+  const points = lm ? JOINTS.map(index => {
+    const point = lm[index];
+    return [round(point.x), round(point.y), round(point.visibility ?? 1)];
+  }) : null;
+  try{ poseChannel.send(JSON.stringify({ type:"pose", points })); }
+  catch{ /* видео үргэлжилнэ; дараагийн pose frame дахин оролдоно */ }
+}
+
 async function startVideo(myId, otherId){
   if(pc || !stream) return;
   let iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
   try { ({ iceServers } = await api("/ice")); } catch { /* STUN-ээр үргэлжилнэ */ }
 
   pc = new RTCPeerConnection({ iceServers });
+  isOfferer = myId < otherId;
+  pc.ondatachannel = e => bindPoseChannel(e.channel);
+  if(isOfferer)
+    bindPoseChannel(pc.createDataChannel("pose",{ ordered:false, maxRetransmits:0 }));
   pc.onicecandidate = e => { if(e.candidate) signal({ candidate: e.candidate }); };
   pc.ontrack = e => {
     const remote = $("oppVid");
@@ -2012,7 +2094,6 @@ async function startVideo(myId, otherId){
   }
 
   // Хоёр тал зэрэг offer явуулбал мөргөлдөнө — ID-гаар эрэмбэлж нэгийг сонгоно
-  isOfferer = myId < otherId;
   watchConnection();
   if(isOfferer){
     await pc.setLocalDescription(await pc.createOffer());
@@ -2183,8 +2264,10 @@ function stopVideo(){
   videoProfileIndex = 0; profileBusy = false; profileChangedAt = 0;
   lastRemoteFrames = null; remoteStillTicks = networkLimitTicks = 0;
   lastFreezeCount = lastPacketsLost = 0;
+  poseChannel?.close(); poseChannel = null; lastPoseSentAt = 0;
   pc?.close(); pc = null; vidSender = null;
   $("oppVid").srcObject = null;
+  clearOpponentPose();
   oppNote("");
 }
 
