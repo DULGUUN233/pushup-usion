@@ -49,6 +49,9 @@
 
   /* ---------- тэргүүлэгчид ---------- */
   #board h2{margin:0 0 14px;font-size:20px}
+  #boardTabs{display:flex;gap:8px;max-width:460px;margin:0 auto 12px}
+  #boardTabs button{flex:1;border-radius:12px}
+  #boardTabs button.active{background:var(--gold);color:#231a00}
   #rows{display:flex;flex-direction:column;gap:2px;max-width:460px;margin:0 auto}
   .row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;
     background:var(--card)}
@@ -79,6 +82,13 @@
   #hallVs{text-align:center;font-size:11px;font-weight:800;letter-spacing:.3em;color:var(--dim)}
   #hallHint{font-size:12.5px;line-height:1.6;color:var(--dim);min-height:40px}
   #hallBtns{display:flex;flex-direction:column;gap:8px}
+  #battleTypes{padding:13px;border-radius:16px;background:var(--card)}
+  #battleTypes>span{display:block;font-size:11px;font-weight:800;color:var(--dim);
+    letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
+  #battleTypeBtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .battleType{border-radius:11px;padding:10px 6px;font-size:11px;line-height:1.25}
+  .battleType.active{background:var(--gold);color:#231a00}
+  .battleType:disabled{opacity:.72}
 
   /* ---------- тоолох дэлгэц ---------- */
   #play{padding:0;overflow:hidden;background:#000}
@@ -201,6 +211,16 @@
   #oScore{font-size:40px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
   #oElo{font-size:15px;color:var(--dim)}
   #oElo b{color:var(--fg)}
+  #oRounds{font-size:13px;color:var(--dim);line-height:1.7}
+
+  #roundBreak{position:absolute;inset:0;background:rgba(8,12,20,.88);z-index:10;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;padding:28px;text-align:center;backdrop-filter:blur(7px)}
+  #roundBreak small{color:var(--dim);font-weight:800;letter-spacing:.12em}
+  #breakTitle{margin:0;font-size:28px}
+  #breakScore{font-size:38px;font-weight:900;font-variant-numeric:tabular-nums}
+  #breakClock{font-size:54px;font-weight:900;color:var(--gold);font-variant-numeric:tabular-nums}
+  #breakNext{color:var(--dim);font-size:14px}
 
   #start{position:absolute;inset:0;background:var(--bg);z-index:10;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -231,7 +251,7 @@
 
   <button class="mode go" id="mPush">Push Up<small>Чөлөөтэй тоол — нийт дүнд нэмэгдэнэ</small></button>
   <button class="mode go" id="mSquat">Squat · Суулт<small>Хажуу/45°-аас бүтэн суултыг тоолно</small></button>
-  <button class="mode duel" id="mBattle">Battle<small>30 секунд, 1v1, ELO</small></button>
+  <button class="mode duel" id="mBattle">Battle<small>Push-up · Squat · Хосолсон, 1v1, ELO</small></button>
   <button id="mBoard">Тэргүүлэгчид</button>
 
   <div id="note"></div>
@@ -241,6 +261,10 @@
 <!-- ================= ТЭРГҮҮЛЭГЧИД ================= -->
 <section id="board" class="screen hidden">
   <h2>Тэргүүлэгчид</h2>
+  <div id="boardTabs">
+    <button id="boardPush" class="active">Push-up</button>
+    <button id="boardSquat">Squat</button>
+  </div>
   <div id="rows"></div>
   <div style="max-width:460px;margin:16px auto 0"><button id="bBack">← Буцах</button></div>
 </section>
@@ -254,6 +278,14 @@
     <div class="seat away" id="seatOpp"></div>
   </div>
   <div id="hallHint"></div>
+  <div id="battleTypes">
+    <span>Тулааны төрөл · Эзэн сонгоно</span>
+    <div id="battleTypeBtns">
+      <button class="battleType active" data-battle-type="pushup">Push-up<br>30 сек</button>
+      <button class="battleType" data-battle-type="squat">Squat<br>30 сек</button>
+      <button class="battleType" data-battle-type="combined">Хосолсон<br>30 + 10 + 30</button>
+    </div>
+  </div>
   <div id="hallBtns">
     <button class="primary hidden" id="hallReady">Бэлэн</button>
     <button class="primary hidden" id="hallStart">Эхлүүлэх</button>
@@ -280,7 +312,7 @@
             <span class="dElo" id="oppElo">–</span>
           </div>
         </div>
-        <div class="dTime"><span>TIME</span><div id="clock">…</div></div>
+        <div class="dTime"><span id="roundName">TIME</span><div id="clock">…</div></div>
         <div class="dSide you">
           <div id="youAv" class="pfp"></div>
           <div class="dTxt">
@@ -369,10 +401,19 @@
     <button id="seekCancel">Болих</button>
   </div>
 
+  <div id="roundBreak" class="hidden">
+    <small>1-Р ROUND ДУУСЛАА</small>
+    <h2 id="breakTitle">—</h2>
+    <div id="breakScore">—</div>
+    <div id="breakClock">10</div>
+    <div id="breakNext">Дараагийн round: Squat</div>
+  </div>
+
   <div id="over" class="hidden">
     <h2 id="oTitle">—</h2>
     <div id="oScore">—</div>
     <div id="oElo">—</div>
+    <div id="oRounds"></div>
     <button class="primary" id="oBack">Цэс рүү</button>
   </div>
 </section>
@@ -464,7 +505,7 @@ function note(text, kind){
 function renderProfile(){
   if(!profile) return;
   $("nm").textContent = profile.name || "Тоглогч";
-  $("sub").textContent = `${profile.wins}W · ${profile.losses}L · шилдэг сет ${profile.bestSet}`;
+  $("sub").textContent = `${profile.wins}W · ${profile.losses}L · PU ${profile.bestSet} · SQ ${profile.squatBestSet ?? 0}`;
   $("cTotal").textContent = profile.totalReps;
   $("cRank").textContent = profile.totalReps > 0 ? "#" + profile.rank : "–";
   $("cElo").textContent = profile.rating;
@@ -603,6 +644,12 @@ let mode = "solo", ws = null, duel = null, tick = null;   // тулааны тө
 // өөр өөр секунд хараад, нэг нь илүү хугацаа хийж байна гэж бодно.
 let clockOffset = 0;
 const serverNow = () => Date.now() + clockOffset;
+const battleRepWindowOpen = () => {
+  if(mode !== "battle") return true;
+  if(duel?.status !== "playing" || !duel.startsAt || !duel.endsAt) return false;
+  const now = serverNow();
+  return now >= new Date(duel.startsAt).getTime() && now < new Date(duel.endsAt).getTime();
+};
 
 const ARMS = [[11,13,15],[12,14,16]];  // мөр → тохой → бугуй
 const LEGS = [[23,25,27],[24,26,28]];  // аарцаг → өвдөг → шагай
@@ -1195,6 +1242,14 @@ function loop(){
 
   drawSkeleton(lm);
 
+  // Battle-ийн оноог зөвхөн серверийн authoritative 30 секундэд тоолно.
+  // Эхлэх 5 секунд болон combined-ийн 10 секундийн амралтын хөдөлгөөн rep биш.
+  if(!battleRepWindowOpen()){
+    if(smooth !== null || phase !== "up") idle();
+    $("time").textContent = "0:00";
+    return;
+  }
+
   // оношлогоо: аль шүүлтүүр саатуулж байгааг утсан дээрээс харах
   const asp = canvas.width/canvas.height;
   if(exercise === "squat"){
@@ -1373,7 +1428,10 @@ async function switchToLite(){
   if(switchingToLite || modelVariant !== "heavy") return;
   switchingToLite = true;
   try{
-    const nextVariant = exercise === "squat" ? "full" : "lite";
+    // Combined-ийн эхний round push-up байсан ч дараагийн squat-д доод биеийн
+    // нарийвчлал хэрэгтэй. Тиймээс Heavy-гээс Lite биш Full руу буулгана.
+    const needsLowerBody = exercise === "squat" || (mode === "battle" && duel?.battleType === "combined");
+    const nextVariant = needsLowerBody ? "full" : "lite";
     const next = await createLandmarker(nextVariant === "full" ? FULL_MODEL : LITE_MODEL);
     if(!running){ next.close(); return; }
     const previous = landmarker;
@@ -1391,6 +1449,22 @@ async function switchToLite(){
   }
 }
 
+async function ensureExerciseModel(){
+  const needsLowerBody = exercise === "squat" || (mode === "battle" && duel?.battleType === "combined");
+  if(!landmarker){
+    landmarker = await createLandmarker(HEAVY_MODEL);
+    modelVariant = "heavy";
+  } else if(needsLowerBody && modelVariant === "lite"){
+    // Combined бол камер асаахаас өмнө, бусад тохиолдолд завсарлагаар
+    // доод биеийн цэгийг Lite-ээс Full руу ахиулна.
+    const next = await createLandmarker(FULL_MODEL);
+    const previous = landmarker;
+    landmarker = next;
+    modelVariant = "full";
+    previous.close();
+  }
+}
+
 async function startEngine(){
   // Дуу нээх ЦОРЫН ГАНЦ боломж бол хэрэглэгчийн дарлага. Энэ функц товч
   // дарснаас л дуудагддаг тул audio-г яг энд асаана.
@@ -1399,17 +1473,7 @@ async function startEngine(){
     throw new Error("Камер дэмжихгүй байна. HTTPS эсвэл localhost дээр нээнэ үү.");
 
   // Модель нэг л удаа ачаална — горим руу дахин орох бүрд 26 MB татахгүй.
-  if(!landmarker){
-    landmarker = await createLandmarker(HEAVY_MODEL);
-    modelVariant = "heavy";
-  } else if(exercise === "squat" && modelVariant === "lite"){
-    // Өмнөх push-up Android дээр Lite руу буусан байж болно. Squat-ийн
-    // өвдөг/ташааны цэгүүдэд Full-ээс доош оруулахгүй.
-    const next = await createLandmarker(FULL_MODEL);
-    landmarker.close();
-    landmarker = next;
-    modelVariant = "full";
-  }
+  await ensureExerciseModel();
 
   await openCamera();
   fpsEma = 0;
@@ -1441,17 +1505,23 @@ async function startSolo(){
  */
 let pendingSet = null;
 
-async function saveSet(reps, seconds){
-  note(`${reps} бүртгэж байна…`, "");
+async function saveSet(reps, seconds, kind = exercise){
+  const label = kind === "squat" ? "squat" : "push-up";
+  note(`${reps} ${label} бүртгэж байна…`, "");
   try{
-    profile = await api("/session", { method: "POST", body: JSON.stringify({ reps, seconds }) });
+    profile = await api("/session", {
+      method: "POST",
+      body: JSON.stringify({ reps, seconds, exercise:kind })
+    });
     pendingSet = null;
     $("retrySave").classList.add("hidden");
     renderProfile();
-    submitScore();
-    note(`+${reps} бүртгэгдлээ. Нийт ${profile.totalReps}, #${profile.rank}`, "ok");
+    if(kind === "pushup") submitScore();
+    const total = kind === "squat" ? profile.squatTotalReps : profile.totalReps;
+    const rank = kind === "squat" ? profile.squatRank : profile.rank;
+    note(`+${reps} ${label} бүртгэгдлээ. Нийт ${total}, #${rank}`, "ok");
   }catch(e){
-    pendingSet = { reps, seconds };
+    pendingSet = { reps, seconds, exercise:kind };
     $("retrySave").classList.remove("hidden");
     note(`${reps} хадгалагдсангүй: ${e.message} — тоо алдагдаагүй, дахин оролдоно уу.`, "bad");
   }
@@ -1462,15 +1532,9 @@ async function finish(){
   const reps = count, seconds = elapsed();
   stopCamera();
   show("menu");
-  if(exercise === "squat"){
-    note(reps < 1
-      ? "Тоологдсон squat алга."
-      : `${reps} squat · ${clock(seconds)} — эхний хувилбарт локал дүн, push-up нийтэд нэмэгдэхгүй.`,
-    reps < 1 ? "" : "ok");
-    return;
-  }
-  if(reps < 1){ note("Тоологдсон push-up алга.", ""); return; }
-  await saveSet(reps, seconds);
+  const label = exercise === "squat" ? "squat" : "push-up";
+  if(reps < 1){ note(`Тоологдсон ${label} алга.`, ""); return; }
+  await saveSet(reps, seconds, exercise);
 }
 
 // ======================= тулаан =======================
@@ -1674,7 +1738,7 @@ async function findOpponent(onInvited){
           const other = st?.opponent?.userId;
           // `other === me` бол таних тэмдэг хутгалдсан гэсэн үг. Тэгснийг
           // хосолговол сервер «яг хоёр тоглогч» гэж унана — үл хайхарна.
-          if(other && other !== me && (st.status === "waiting" || st.status === "playing")){
+          if(other && other !== me && ["waiting", "arming", "playing", "intermission"].includes(st.status)){
             settle(resolve, { roomId: rid, players: [me, other] });
           }
         }catch{ /* хараахан үүсээгүй */ }
@@ -2041,6 +2105,13 @@ function renderHall(state){
   const opp = state?.opponent;
   const oppHere = !!opp && opp.here !== false;
   const canStart = host && oppHere && !!opp.ready;
+  const battleType = state?.battleType ?? "pushup";
+
+  $("battleTypes").classList.toggle("hidden", !waiting);
+  for(const button of document.querySelectorAll(".battleType")){
+    button.classList.toggle("active", button.dataset.battleType === battleType);
+    button.disabled = !state || !host || !waiting;
+  }
 
   $("hallReady").classList.toggle("hidden", !state || host || !waiting);
   $("hallStart").classList.toggle("hidden", !host || !waiting);
@@ -2074,6 +2145,8 @@ async function armForBattle(){
   $("play").classList.add("duel");
   $("start").classList.add("hidden");
   $("over").classList.add("hidden");
+  $("roundBreak").classList.add("hidden");
+  $("oRounds").textContent = "";
   $("duelBar").classList.add("hidden");
   $("stats").classList.add("hidden");
   $("reset").classList.add("hidden");
@@ -2092,9 +2165,44 @@ async function armForBattle(){
   }
 }
 
+function syncBattleExercise(state){
+  const next = state.exercise === "squat" ? "squat" : "pushup";
+  if(exercise === next) return;
+  exercise = next;
+  reset();
+  // Combined-ийн завсарлагаар squat-д хэрэгтэй доод биеийн model-ийг урьдчилан бэлдэнэ.
+  if(running) ensureExerciseModel().catch(() => {
+    setMsg("Squat model ачаалсангүй", "var(--bad)");
+  });
+}
+
+function roundLabel(state){
+  if(state.status === "intermission") return "АМРАЛТ";
+  if(state.battleType === "combined")
+    return state.exercise === "squat" ? "2/2 SQUAT" : "1/2 PUSH-UP";
+  return state.exercise === "squat" ? "SQUAT" : "PUSH-UP";
+}
+
+function renderRoundBreak(state){
+  const y = state.you;
+  const o = state.opponent ?? { userId:null, name:"Өрсөлдөгч", roundReps:{ pushup:0 } };
+  const winner = state.roundWinners?.pushup;
+  $("breakTitle").textContent = winner === null
+    ? "Push-up round тэнцлээ"
+    : winner === y.userId
+      ? "Push-up round хожлоо!"
+      : `${o.name || "Өрсөлдөгч"} push-up round хожлоо`;
+  $("breakTitle").style.color = winner === null
+    ? "var(--fg)"
+    : winner === y.userId ? "var(--accent)" : "var(--bad)";
+  $("breakScore").textContent = `${y.roundReps?.pushup ?? 0} : ${o.roundReps?.pushup ?? 0}`;
+  $("breakNext").textContent = "Дараагийн round: Squat · 30 сек";
+}
+
 function applyDuel(state){
   duel = state;
   if(state.now) clockOffset = new Date(state.now).getTime() - Date.now();
+  syncBattleExercise(state);
   const y = state.you, o = state.opponent ?? { reps: 0, name: "Хүлээж байна", rating: null };
   $("youName").textContent = y.name || "Чи";
   $("oppName").textContent = o.name || "Өрсөлдөгч";
@@ -2104,6 +2212,7 @@ function applyDuel(state){
   setPfp($("oppAv"), o);
   $("youReps").textContent = y.reps;
   $("oppReps").textContent = o.reps;
+  $("roundName").textContent = roundLabel(state);
   const total = y.reps + o.reps;
   $("tugYou").style.width = (total ? (y.reps / total) * 100 : 50) + "%";
   if(state.status === "waiting"){
@@ -2115,7 +2224,17 @@ function applyDuel(state){
   if(state.status === "playing"){
     if($("play").classList.contains("hidden")) show("play");
     $("seek").classList.add("hidden");
+    $("roundBreak").classList.add("hidden");
     $("duelBar").classList.remove("hidden");
+    if(!tick) startClock();
+    if(state.opponent) startVideo(y.userId, state.opponent.userId);
+  }
+  if(state.status === "intermission"){
+    if($("play").classList.contains("hidden")) show("play");
+    $("seek").classList.add("hidden");
+    $("duelBar").classList.remove("hidden");
+    renderRoundBreak(state);
+    $("roundBreak").classList.remove("hidden");
     if(!tick) startClock();
     if(state.opponent) startVideo(y.userId, state.opponent.userId);
   }
@@ -2125,11 +2244,19 @@ function applyDuel(state){
 
 function startClock(){
   clearInterval(tick);
-  tick = setInterval(() => {
+  const update = () => {
     if(!duel) return;
+    const now = serverNow();
+    if(duel.status === "intermission"){
+      const end = new Date(duel.intermissionEndsAt).getTime();
+      const left = Math.max(0, Math.ceil((end - now) / 1000));
+      $("clock").textContent = clock(left);
+      $("breakClock").textContent = left;
+      setMsg(`Squat эхлэхэд ${left} сек`, "var(--gold)");
+      return;
+    }
     // Хоёулаа ортол цаг тавигдаагүй байна
     if(!duel.startsAt){ $("clock").textContent = "…"; return; }
-    const now = serverNow();
     const begin = new Date(duel.startsAt).getTime();
     const end = new Date(duel.endsAt).getTime();
     if(now < begin){
@@ -2141,7 +2268,9 @@ function startClock(){
       $("clock").textContent = clock(left);
       if(left === 0) setMsg("Дууслаа", "var(--dim)");
     }
-  }, 200);
+  };
+  update();
+  tick = setInterval(update, 200);
 }
 
 /**
@@ -2170,6 +2299,8 @@ function cancelDuel(state){
   $("oTitle").style.color = "var(--dim)";
   $("oScore").textContent = "—";
   $("oElo").textContent = "Рейтинг өөрчлөгдөөгүй";
+  $("oRounds").textContent = "";
+  $("roundBreak").classList.add("hidden");
   $("over").classList.remove("hidden");
 }
 
@@ -2189,15 +2320,19 @@ function reportResult(state){
   if(state.you.userId > o.userId) return;
   reported = true;
 
-  const scores = { [state.you.userId]: state.you.reps, [o.userId]: o.reps };
+  const combined = state.battleType === "combined";
+  const scores = combined
+    ? { [state.you.userId]: state.you.roundPoints, [o.userId]: o.roundPoints }
+    : { [state.you.userId]: state.you.reps, [o.userId]: o.reps };
+  const metric = combined ? "push-up+squat" : state.exercise === "squat" ? "squat" : "push-up";
   // `matchId` заавал: сервер тулаан бүрийг давхардлаас сэргийлж дедупэлдэг тул
   // үүнгүйгээр нэг хосын хоёр дахь тулааны карт чатад ОГТ очихгүй байж болно.
   // Манай тулааны ID нь `өрөө~дугаар` — тулаан бүрд өвөрмөц.
   const matchId = state.roomId;
   try{
     s.game.reportResult(state.winnerId
-      ? { winnerId: state.winnerId, scores, metric: "push-up", matchId }
-      : { draw: true, scores, metric: "push-up", matchId });
+      ? { winnerId: state.winnerId, scores, metric, matchId }
+      : { draw: true, scores, metric, matchId });
   }catch{ /* карт очихгүй ч тулаан хүчинтэй хэвээр */ }
 }
 
@@ -2210,13 +2345,20 @@ function endDuel(state){
   stopVideo();
   stopCamera();
   ws?.close(); ws = null;
+  $("roundBreak").classList.add("hidden");
 
   const y = state.you, o = state.opponent;
   const draw = state.winnerId === null;
   const win = state.winnerId === y.userId;
   $("oTitle").textContent = draw ? "Тэнцлээ" : win ? "Хожлоо!" : "Хожигдлоо";
   $("oTitle").style.color = draw ? "var(--fg)" : win ? "var(--accent)" : "var(--bad)";
-  $("oScore").textContent = `${y.reps} : ${o?.reps ?? 0}`;
+  if(state.battleType === "combined"){
+    $("oScore").textContent = `${y.roundPoints} : ${o?.roundPoints ?? 0}`;
+    $("oRounds").textContent = `Push-up ${y.roundReps?.pushup ?? 0}:${o?.roundReps?.pushup ?? 0} · Squat ${y.roundReps?.squat ?? 0}:${o?.roundReps?.squat ?? 0}`;
+  } else {
+    $("oScore").textContent = `${y.reps} : ${o?.reps ?? 0}`;
+    $("oRounds").textContent = state.exercise === "squat" ? "Squat · 30 сек" : "Push-up · 30 сек";
+  }
   const r = state.ratings?.[y.userId];
   if(r){
     const d = r.after - r.before;
@@ -2237,8 +2379,8 @@ function endDuel(state){
 async function startBattle(){
   // Дуу нээх боломж бол ЗӨВХӨН хэрэглэгчийн дарлага
   try{ ac(); }catch{ /* дуугүй ажиллана */ }
-  // Battle-ийн серверийн metric одоогоор push-up. Squat solo сонголтоос
-  // шууд Battle руу орсон ч хоёр дасгалын тоолуур холилдох ёсгүй.
+  // Серверийн waiting room-оос сонгосон төрлийг applyDuel автоматаар солино.
+  // Энд анхны дэлгэцийг тогтвортой push-up төлөвөөс эхлүүлж байна.
   exercise = "pushup";
   mode = "battle"; duel = null; reported = false; arming = false;
   show("hall");
@@ -2284,18 +2426,22 @@ function leaveBattle(){
   $("done").classList.remove("hidden");
   $("quit").classList.add("hidden");
   $("over").classList.add("hidden");
+  $("roundBreak").classList.add("hidden");
+  $("oRounds").textContent = "";
   show("menu");
   loadProfile();
 }
 
 // ======================= тэргүүлэгчид =======================
 
-async function openBoard(){
+async function loadBoard(kind){
+  $("boardPush").classList.toggle("active", kind === "pushup");
+  $("boardSquat").classList.toggle("active", kind === "squat");
   show("board");
   const rows = $("rows");
   rows.textContent = "Ачаалж байна…";
   try{
-    const list = await api("/leaderboard?limit=50");
+    const list = await api(`/leaderboard?limit=50&exercise=${kind}`);
     rows.textContent = "";
     if(!list.length){ rows.textContent = "Хараахан хэн ч бүртгүүлээгүй байна."; return; }
     for(const r of list){
@@ -2310,6 +2456,8 @@ async function openBoard(){
     rows.textContent = "Ачаалж чадсангүй: " + e.message;
   }
 }
+
+const openBoard = () => loadBoard("pushup");
 
 // ======================= холболт =======================
 
@@ -2337,13 +2485,18 @@ $("mPush").onclick   = () => openSolo("pushup");
 $("mSquat").onclick  = () => openSolo("squat");
 $("mBattle").onclick = startBattle;
 $("mBoard").onclick  = openBoard;
-$("retrySave").onclick = () => pendingSet && saveSet(pendingSet.reps, pendingSet.seconds);
+$("boardPush").onclick = () => loadBoard("pushup");
+$("boardSquat").onclick = () => loadBoard("squat");
+$("retrySave").onclick = () => pendingSet && saveSet(pendingSet.reps, pendingSet.seconds, pendingSet.exercise);
 $("bBack").onclick   = () => show("menu");
 $("oBack").onclick   = leaveBattle;
 $("seekCancel").onclick = leaveBattle;
 $("quit").onclick    = leaveBattle;
 $("hallBack").onclick  = leaveBattle;
 $("hallReady").onclick = () => hallSend({ type: "ready", value: !duel?.you?.ready });
+for(const button of document.querySelectorAll(".battleType")){
+  button.onclick = () => hallSend({ type:"battleType", value:button.dataset.battleType });
+}
 // Давхар даралт нь серверээс «эхлүүлэх боломжгүй» гэсэн хариу авчирч,
 // камер асаж байх зуур зөвлөмжийг дарна
 $("hallStart").onclick = () => { $("hallStart").disabled = true; hallSend({ type: "start" }); };

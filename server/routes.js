@@ -11,50 +11,69 @@ const MAX_REPS = 1000
 
 const router = Router()
 
-function publicUser(u, rank) {
+const exerciseFields = (exercise) =>
+  exercise === 'squat'
+    ? { total: 'squatTotalReps', best: 'squatBestSet' }
+    : { total: 'totalReps', best: 'bestSet' }
+
+function publicUser(u, rank, squatRank) {
   return {
     userId: u._id,
     name: u.name,
     avatar: u.avatar ?? null,
-    totalReps: u.totalReps,
-    bestSet: u.bestSet,
+    totalReps: u.totalReps ?? 0,
+    bestSet: u.bestSet ?? 0,
+    squatTotalReps: u.squatTotalReps ?? 0,
+    squatBestSet: u.squatBestSet ?? 0,
     rating: u.rating,
     battles: u.battles,
     wins: u.wins,
     losses: u.losses,
     rank,
+    squatRank,
   }
 }
 
 router.get('/me', requireUser, async (req, res) => {
   const user = await findOrCreateUser(req.user)
-  res.json(publicUser(user, await rankOf(user.totalReps)))
+  const [rank, squatRank] = await Promise.all([
+    rankOf(user.totalReps ?? 0),
+    rankOf(user.squatTotalReps ?? 0, 'squat'),
+  ])
+  res.json(publicUser(user, rank, squatRank))
 })
 
 /** Дуусгасан сетийг бүртгэнэ. Нийт тоо болон хамгийн сайн сет шинэчлэгдэнэ. */
 router.post('/session', requireUser, async (req, res) => {
   const reps = Number(req.body?.reps)
   const seconds = Number(req.body?.seconds)
+  const exercise = req.body?.exercise === 'squat' ? 'squat' : 'pushup'
   if (!Number.isInteger(reps) || reps < 1 || reps > MAX_REPS) {
     return res.status(400).json({ error: `reps нь 1-${MAX_REPS} хооронд бүхэл тоо байх ёстой` })
   }
 
   await findOrCreateUser(req.user)
+  const fields = exerciseFields(exercise)
   const user = await users().findOneAndUpdate(
     { _id: req.user.userId },
-    { $inc: { totalReps: reps }, $max: { bestSet: reps } },
+    { $inc: { [fields.total]: reps }, $max: { [fields.best]: reps } },
     { returnDocument: 'after' },
   )
 
   await sessions().insertOne({
     userId: req.user.userId,
     reps,
+    exercise,
     seconds: Number.isFinite(seconds) ? Math.round(seconds) : null,
     mode: 'solo',
     finishedAt: new Date(),
   })
 
-  res.json(publicUser(user, await rankOf(user.totalReps)))
+  const [rank, squatRank] = await Promise.all([
+    rankOf(user.totalReps ?? 0),
+    rankOf(user.squatTotalReps ?? 0, 'squat'),
+  ])
+  res.json(publicUser(user, rank, squatRank))
 })
 
 /**
@@ -95,9 +114,14 @@ router.get('/ice', requireUser, async (_req, res) => {
 
 router.get('/leaderboard', async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100)
+  const exercise = req.query.exercise === 'squat' ? 'squat' : 'pushup'
+  const fields = exerciseFields(exercise)
   const top = await users()
-    .find({ totalReps: { $gt: 0 } }, { projection: { name: 1, avatar: 1, totalReps: 1, bestSet: 1, rating: 1 } })
-    .sort({ totalReps: -1 })
+    .find(
+      { [fields.total]: { $gt: 0 } },
+      { projection: { name: 1, avatar: 1, [fields.total]: 1, [fields.best]: 1, rating: 1 } },
+    )
+    .sort({ [fields.total]: -1 })
     .limit(limit)
     .toArray()
 
@@ -107,9 +131,10 @@ router.get('/leaderboard', async (req, res) => {
       userId: u._id,
       name: u.name,
       avatar: u.avatar ?? null,
-      totalReps: u.totalReps,
-      bestSet: u.bestSet,
+      totalReps: u[fields.total] ?? 0,
+      bestSet: u[fields.best] ?? 0,
       rating: u.rating,
+      exercise,
     })),
   )
 })

@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { requireUser } from './auth.js'
 import {
   announceInvite,
+  battleIsLive,
   claimRoom,
   createBattle,
   dropInvite,
@@ -53,17 +54,10 @@ router.post('/room/:roomKey/claim', requireUser, async (req, res) => {
   const latest = await battles().find({ roomKey }).sort({ seq: -1 }).limit(1).next()
 
   if (latest) {
-    const live =
-      latest.status === 'waiting' ||
-      latest.status === 'arming' ||
-      ((latest.status === 'playing' || latest.status === 'settling') &&
-        latest.endsAt &&
-        latest.endsAt > new Date())
-
     // Тулаан аль хэдийн үүссэн ч ҮРГЭЛЖИЛЖ байвал оролцогчийг буцааж оруулна.
     // Апп дахин ачаалагдах, картаа дахин дарах нь энгийн үзэгдэл — тэднийг
     // «урилга хүчингүй» гээд гаргавал хүлээлгийн өрөө мөнхөд 1/2 үлдэнэ.
-    if (live) {
+    if (battleIsLive(latest)) {
       if (!latest.players.includes(me)) {
         return res.status(403).json({ error: 'энэ өрөө дүүрэн' })
       }

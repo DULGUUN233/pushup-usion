@@ -12,6 +12,7 @@ export async function connect() {
 
   // Leaderboard нийт тоогоор эрэмбэлэгддэг тул тэр индекс заавал хэрэгтэй.
   await users().createIndex({ totalReps: -1 })
+  await users().createIndex({ squatTotalReps: -1 })
   await users().createIndex({ rating: -1 })
   await sessions().createIndex({ userId: 1, finishedAt: -1 })
   // Өрөө бүрийн хамгийн сүүлийн тулааныг олоход
@@ -26,7 +27,7 @@ export function users() {
   return db.collection('users')
 }
 
-/** Дуусгасан сет бүр — Push Up горим ба Battle хоёулаа энд бичигдэнэ. */
+/** Дуусгасан сет бүр — exercise талбар нь pushup эсвэл squat. */
 export function sessions() {
   return db.collection('sessions')
 }
@@ -59,6 +60,8 @@ export async function findOrCreateUser({ userId, name, avatar = null }) {
       $setOnInsert: {
         totalReps: 0,
         bestSet: 0,
+        squatTotalReps: 0,
+        squatBestSet: 0,
         rating: START_RATING,
         battles: 0,
         wins: 0,
@@ -90,6 +93,8 @@ export async function ensureUsers(userIds) {
             avatar: null,
             totalReps: 0,
             bestSet: 0,
+            squatTotalReps: 0,
+            squatBestSet: 0,
             rating: START_RATING,
             battles: 0,
             wins: 0,
@@ -104,9 +109,10 @@ export async function ensureUsers(userIds) {
   )
 }
 
-/** Нийт тоогоор хэдэн дүгээрт байгаа — өөрөөс нь илүү тоотой хүний тоо + 1. */
-export async function rankOf(totalReps) {
-  return (await users().countDocuments({ totalReps: { $gt: totalReps } })) + 1
+/** Тухайн дасгалын нийт тоогоор хэдэн дүгээрт байгаа. */
+export async function rankOf(totalReps, exercise = 'pushup') {
+  const field = exercise === 'squat' ? 'squatTotalReps' : 'totalReps'
+  return (await users().countDocuments({ [field]: { $gt: totalReps } })) + 1
 }
 
 export async function close() {

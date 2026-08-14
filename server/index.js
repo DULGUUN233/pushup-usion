@@ -3,7 +3,7 @@ import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { authMode } from './auth.js'
-import { ARM_MS, WAIT_MS, cancelIfStale, settleIfDue, stuckSettling } from './battle.js'
+import { ARM_MS, WAIT_MS, cancelIfStale, stuckSettling } from './battle.js'
 import battleRoutes from './battleRoutes.js'
 import { attachBattleSocket } from './battleSocket.js'
 import { battles, connect } from './db.js'
@@ -28,7 +28,7 @@ app.use((_req, res) => {
  * үлдэнэ. Тогтмол шүүрдэлт нь рейтинг бичигдэлгүй өлгөөтэй үлдэхээс
  * сэргийлнэ.
  */
-function startSweeper() {
+function startSweeper(realtime) {
   setInterval(async () => {
     try {
       // `settling`-д гацсаныг ч хамруулна — дүгнэлт дунд нь унавал тулаан
@@ -36,14 +36,17 @@ function startSweeper() {
       const due = await battles()
         .find(
           {
-            endsAt: { $lte: new Date() },
-            $or: [{ status: 'playing' }, { status: 'settling', ...stuckSettling() }],
+            $or: [
+              { status: 'playing', endsAt: { $lte: new Date() } },
+              { status: 'settling', endsAt: { $lte: new Date() }, ...stuckSettling() },
+              { status: 'intermission', intermissionEndsAt: { $lte: new Date() } },
+            ],
           },
           { projection: { _id: 1 } },
         )
         .limit(20)
         .toArray()
-      for (const b of due) await settleIfDue(b._id)
+      for (const b of due) await realtime.advanceDue(b._id)
 
       // Эхэлж чадаагүй тулаанууд: өрсөлдөгч огт ирээгүй, эсвэл Start дарсан
       // ч камераа асааж чадаагүй
@@ -69,8 +72,8 @@ function startSweeper() {
 const port = process.env.PORT || 8080
 await connect()
 const server = http.createServer(app)
-attachBattleSocket(server)
-startSweeper()
+const realtime = attachBattleSocket(server)
+startSweeper(realtime)
 server.listen(port, '0.0.0.0', () => {
   console.log(`pushup :${port} — auth: ${authMode}`)
 })

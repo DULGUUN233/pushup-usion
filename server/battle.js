@@ -3,6 +3,8 @@ import { settleBattle } from './elo.js'
 
 /** Тулааны үргэлжлэх хугацаа. */
 export const BATTLE_MS = 30_000
+/** Combined battle-ийн хоёр round-ийн хоорондох амралт. */
+export const INTERMISSION_MS = 10_000
 /** Хоёулаа камераа бэлдсэний дараах тоолол. */
 export const COUNTDOWN_MS = 5_000
 /**
@@ -18,6 +20,38 @@ export const ARM_MS = 45_000
 export const MAX_REPS = 200
 /** Урилга хүчинтэй байх хугацаа. Найз мэдэгдлээ хараад аппаа нээх зай. */
 export const INVITE_TTL_MS = 3 * 60_000
+
+export const BATTLE_TYPES = ['pushup', 'squat', 'combined']
+export const normalizeBattleType = (value) => (BATTLE_TYPES.includes(value) ? value : 'pushup')
+export const emptyReps = (players) => Object.fromEntries(players.map((id) => [id, 0]))
+
+/** Нэг round-ийн ялагч. null нь тэнцээ. */
+export function winnerFromReps(reps, players) {
+  const [aId, bId] = players
+  const a = reps?.[aId] ?? 0
+  const b = reps?.[bId] ?? 0
+  return a === b ? null : a > b ? aId : bId
+}
+
+/** Combined-д дасгал бүр ижил 1 оноотой; 1–1 бол draw. */
+export function combinedWinner(roundWinners, players) {
+  const points = Object.fromEntries(players.map((id) => [id, 0]))
+  for (const exercise of ['pushup', 'squat']) {
+    if (!Object.hasOwn(roundWinners ?? {}, exercise)) continue
+    const winner = roundWinners[exercise]
+    if (winner === null) players.forEach((id) => (points[id] += 0.5))
+    else if (Object.hasOwn(points, winner)) points[winner] += 1
+  }
+  const [aId, bId] = players
+  return points[aId] === points[bId] ? null : points[aId] > points[bId] ? aId : bId
+}
+
+/** Reconnect/хуучин invite нь аль төлөвийг үргэлжилж буй гэж үзэх вэ. */
+export function battleIsLive(battle, now = new Date()) {
+  if (!battle) return false
+  if (['waiting', 'arming', 'intermission', 'settling'].includes(battle.status)) return true
+  return battle.status === 'playing' && battle.endsAt && battle.endsAt > now
+}
 
 /** Эзэн найзаа хүлээж эхэлснээ мэдэгдэнэ. Нэг өрөөнд сүүлийнх нь хүчинтэй. */
 export async function announceInvite(roomKey, hostId) {
@@ -91,10 +125,7 @@ export async function createBattle(roomId, playerIds, hostId = null) {
   // Үргэлжилж БАЙГАА тулаанд л эргэж орно. Хугацаа нь дууссан мөртлөө
   // дүгнэгдээгүй байгаа тулаан руу буцаавал дууссан тоглолт руу оруулна —
   // дүгнэлт нь шүүрдэлтээр хийгдэж, энд шинийг эхлүүлнэ.
-  const live =
-    latest?.status === 'waiting' ||
-    (latest?.status === 'playing' && latest.endsAt && latest.endsAt > new Date())
-  if (live) return latest
+  if (battleIsLive(latest)) return latest
   const seq = (latest?.seq ?? 0) + 1
   // Тусгаарлагч нь URL-д аюулгүй байх ёстой: '#' нь хаягийн фрагмент эхлүүлж,
   // /api/battle/<id> зам таслагдана. '~' нь тайлбаргүй тэмдэг.
@@ -117,7 +148,12 @@ export async function createBattle(roomId, playerIds, hostId = null) {
     // эзнийг нь бэлэн болоогүй байхад тулааныг эхлүүлж чадна.
     hostId: ids.includes(hostId) ? hostId : ids[0],
     profiles,
-    reps: { [ids[0]]: 0, [ids[1]]: 0 },
+    battleType: 'pushup',
+    exercise: 'pushup',
+    currentRound: 1,
+    reps: emptyReps(ids),
+    roundReps: { pushup: emptyReps(ids), squat: emptyReps(ids) },
+    roundWinners: {},
     // Хүлээлгийн өрөөний төлөв: бэлэн үү, камераа асаасан уу
     ready: { [ids[0]]: false, [ids[1]]: false },
     armed: { [ids[0]]: false, [ids[1]]: false },
@@ -146,6 +182,35 @@ export async function setReady(roomId, userId, value) {
   return battles().findOneAndUpdate(
     { _id: roomId, status: 'waiting', players: userId },
     { $set: { [`ready.${userId}`]: !!value } },
+    { returnDocument: 'after' },
+  )
+}
+
+/** Waiting room-д зөвхөн host battle төрлийг сонгоно. Соливол Ready reset. */
+export async function setBattleType(roomId, userId, value) {
+  const battleType = normalizeBattleType(value)
+  const battle = await battles().findOne({ _id: roomId, status: 'waiting' })
+  if (!battle || battle.hostId !== userId) return null
+  if (battle.battleType === battleType) return battle
+
+  const exercise = battleType === 'squat' ? 'squat' : 'pushup'
+  return battles().findOneAndUpdate(
+    { _id: roomId, status: 'waiting', hostId: userId },
+    {
+      $set: {
+        battleType,
+        exercise,
+        currentRound: 1,
+        reps: emptyReps(battle.players),
+        roundReps: {
+          pushup: emptyReps(battle.players),
+          squat: emptyReps(battle.players),
+        },
+        roundWinners: {},
+        ready: emptyReps(battle.players),
+        armed: emptyReps(battle.players),
+      },
+    },
     { returnDocument: 'after' },
   )
 }
@@ -187,13 +252,20 @@ export async function setArmed(roomId, userId) {
   if (!armed.players.every((id) => armed.armed?.[id])) return armed
 
   const startsAt = new Date(Date.now() + COUNTDOWN_MS)
+  const exercise = armed.battleType === 'squat' ? 'squat' : 'pushup'
   const stamped = await battles().findOneAndUpdate(
     { _id: roomId, status: 'arming' },
     {
       $set: {
         status: 'playing',
+        exercise,
+        currentRound: 1,
+        reps: emptyReps(armed.players),
+        roundReps: { pushup: emptyReps(armed.players), squat: emptyReps(armed.players) },
+        roundWinners: {},
         startsAt,
         endsAt: new Date(startsAt.getTime() + BATTLE_MS),
+        intermissionEndsAt: null,
       },
     },
     { returnDocument: 'after' },
@@ -210,9 +282,15 @@ export async function setArmed(roomId, userId) {
  * гарвал энэ дуудагдахгүй: үлдсэн тоглогч бүтэн хугацаагаа ашиглах ёстой.
  */
 export async function endNow(roomId) {
-  return battles().findOneAndUpdate(
+  const playing = await battles().findOneAndUpdate(
     { _id: roomId, status: 'playing' },
     { $set: { endsAt: new Date() } },
+    { returnDocument: 'after' },
+  )
+  if (playing) return playing
+  return battles().findOneAndUpdate(
+    { _id: roomId, status: 'intermission' },
+    { $set: { intermissionEndsAt: new Date() } },
     { returnDocument: 'after' },
   )
 }
@@ -257,6 +335,36 @@ export const stuckSettling = () => ({
 })
 
 export async function settleIfDue(roomId) {
+  // Combined-ийн 10 секунд дууссан бол squat round-ийг серверийн цагаар
+  // эхлүүлнэ. Хоёр timer зэрэг дуудсан ч status нөхцөлөөр нэг нь л ялна.
+  const dueBreak = await battles().findOne({
+    _id: roomId,
+    status: 'intermission',
+    intermissionEndsAt: { $lte: new Date() },
+  })
+  if (dueBreak) {
+    const startsAt = new Date()
+    const advanced = await battles().findOneAndUpdate(
+      {
+        _id: roomId,
+        status: 'intermission',
+        intermissionEndsAt: { $lte: new Date() },
+      },
+      {
+        $set: {
+          status: 'playing',
+          exercise: 'squat',
+          currentRound: 2,
+          reps: emptyReps(dueBreak.players),
+          startsAt,
+          endsAt: new Date(startsAt.getTime() + BATTLE_MS),
+        },
+      },
+      { returnDocument: 'after' },
+    )
+    if (advanced) return advanced
+  }
+
   // Эзэмшлийг `settling` төлөвөөр авна. Дунд нь алдаа гарвал тулаан тэр
   // төлөвт үлдэнэ — тиймээс хугацаа өнгөрсөн бол ДАХИН эзэмшихийг зөвшөөрнө,
   // эс тэгвээс мөнхөд хатаж, ELO бичигдэхгүй үлдэнэ.
@@ -272,13 +380,48 @@ export async function settleIfDue(roomId) {
   if (!claimed) return null
 
   const [aId, bId] = claimed.players
-  const aReps = claimed.reps[aId] ?? 0
-  const bReps = claimed.reps[bId] ?? 0
+  const battleType = normalizeBattleType(claimed.battleType)
+  const currentExercise = claimed.exercise === 'squat' ? 'squat' : 'pushup'
+  const roundReps = {
+    pushup: { ...emptyReps(claimed.players), ...(claimed.roundReps?.pushup ?? {}) },
+    squat: { ...emptyReps(claimed.players), ...(claimed.roundReps?.squat ?? {}) },
+    [currentExercise]: { ...emptyReps(claimed.players), ...(claimed.reps ?? {}) },
+  }
+  const roundWinners = {
+    ...(claimed.roundWinners ?? {}),
+    [currentExercise]: winnerFromReps(roundReps[currentExercise], claimed.players),
+  }
+
+  // Combined-ийн эхний round дууслаа: ELO/нийт дүнг одоо бичихгүй. Round
+  // дүнг хадгалаад 10 секундийн authoritative intermission эхлүүлнэ.
+  if (battleType === 'combined' && (claimed.currentRound ?? 1) === 1) {
+    return battles().findOneAndUpdate(
+      { _id: roomId, status: 'settling' },
+      {
+        $set: {
+          status: 'intermission',
+          exercise: 'squat',
+          currentRound: 2,
+          roundReps,
+          roundWinners,
+          startsAt: null,
+          endsAt: null,
+          intermissionEndsAt: new Date(Date.now() + INTERMISSION_MS),
+        },
+      },
+      { returnDocument: 'after' },
+    )
+  }
+
+  const aPush = roundReps.pushup[aId] ?? 0
+  const bPush = roundReps.pushup[bId] ?? 0
+  const aSquat = roundReps.squat[aId] ?? 0
+  const bSquat = roundReps.squat[bId] ?? 0
 
   // Хоёулаа нэг ч хийгээгүй бол тулаан болоогүй гэсэн үг — камер асаагүй,
   // холболт тасарсан, эсвэл зүгээр орхисон. Үүнийг тэнцсэн гэж бүртгэвэл
   // өндөр рейтингтэй нь юу ч хийлгүй оноо алдана.
-  if (aReps === 0 && bReps === 0) {
+  if (aPush + bPush + aSquat + bSquat === 0) {
     return battles().findOneAndUpdate(
       { _id: roomId },
       { $set: { status: 'cancelled', cancelReason: 'no-reps', finishedAt: new Date() } },
@@ -286,7 +429,10 @@ export async function settleIfDue(roomId) {
     )
   }
 
-  const winnerId = aReps === bReps ? null : aReps > bReps ? aId : bId
+  const winnerId =
+    battleType === 'combined'
+      ? combinedWinner(roundWinners, claimed.players)
+      : roundWinners[currentExercise]
 
   // Бүртгэл байхгүй бол доорх уншилт алдаа өгч, тулаан `settling`-д хатна
   await ensureUsers([aId, bId])
@@ -297,34 +443,53 @@ export async function settleIfDue(roomId) {
     winnerId,
   })
 
-  // Тулаанд хийсэн push-up нь нийт дүнд бас нэмэгдэнэ.
-  const bump = (id, reps) => ({
+  // Тулааны дасгал бүр зөвхөн өөрийн leaderboard нийтэд нэмэгдэнэ.
+  const bump = (id, pushupReps, squatReps) => ({
     $set: { rating: ratings[id].after },
     $inc: {
-      totalReps: reps,
+      totalReps: pushupReps,
+      squatTotalReps: squatReps,
       battles: 1,
       wins: winnerId === id ? 1 : 0,
       losses: winnerId !== null && winnerId !== id ? 1 : 0,
       draws: winnerId === null ? 1 : 0,
     },
-    $max: { bestSet: reps },
+    $max: { bestSet: pushupReps, squatBestSet: squatReps },
   })
 
   await Promise.all([
-    users().updateOne({ _id: aId }, bump(aId, aReps)),
-    users().updateOne({ _id: bId }, bump(bId, bReps)),
+    users().updateOne({ _id: aId }, bump(aId, aPush, aSquat)),
+    users().updateOne({ _id: bId }, bump(bId, bPush, bSquat)),
   ])
-  const rows = [
-    { userId: aId, reps: aReps },
-    { userId: bId, reps: bReps },
-  ]
+  const rows = claimed.players
+    .flatMap((userId) => [
+      { userId, exercise: 'pushup', reps: roundReps.pushup[userId] ?? 0 },
+      { userId, exercise: 'squat', reps: roundReps.squat[userId] ?? 0 },
+    ])
     .filter((s) => s.reps > 0)
-    .map((s) => ({ ...s, seconds: BATTLE_MS / 1000, mode: 'battle', roomId, finishedAt: new Date() }))
+    .map((s) => ({
+      ...s,
+      seconds: BATTLE_MS / 1000,
+      mode: 'battle',
+      battleType,
+      roomId,
+      finishedAt: new Date(),
+    }))
   if (rows.length) await sessions().insertMany(rows)
 
   return battles().findOneAndUpdate(
     { _id: roomId },
-    { $set: { status: 'finished', winnerId, ratings, finishedAt: new Date() } },
+    {
+      $set: {
+        status: 'finished',
+        battleType,
+        roundReps,
+        roundWinners,
+        winnerId,
+        ratings,
+        finishedAt: new Date(),
+      },
+    },
     { returnDocument: 'after' },
   )
 }
@@ -337,9 +502,20 @@ export async function settleIfDue(roomId) {
  */
 export function view(battle, userId, present = null) {
   const opponentId = battle.players.find((id) => id !== userId) ?? null
+  const roundWinners = battle.roundWinners ?? {}
+  const roundPoints = (id) =>
+    ['pushup', 'squat'].reduce((sum, exercise) => {
+      if (!Object.hasOwn(roundWinners, exercise)) return sum
+      return sum + (roundWinners[exercise] === null ? 0.5 : roundWinners[exercise] === id ? 1 : 0)
+    }, 0)
   const side = (id) => ({
     userId: id,
-    reps: battle.reps[id] ?? 0,
+    reps: battle.reps?.[id] ?? 0,
+    roundReps: {
+      pushup: battle.roundReps?.pushup?.[id] ?? 0,
+      squat: battle.roundReps?.squat?.[id] ?? 0,
+    },
+    roundPoints: roundPoints(id),
     ready: !!battle.ready?.[id],
     armed: !!battle.armed?.[id],
     here: present ? present.includes(id) : null,
@@ -350,8 +526,13 @@ export function view(battle, userId, present = null) {
     status: battle.status === 'settling' ? 'playing' : battle.status,
     hostId: battle.hostId ?? battle.players[0],
     youAreHost: (battle.hostId ?? battle.players[0]) === userId,
+    battleType: normalizeBattleType(battle.battleType),
+    exercise: battle.exercise === 'squat' ? 'squat' : 'pushup',
+    currentRound: battle.currentRound ?? 1,
     startsAt: battle.startsAt,
     endsAt: battle.endsAt,
+    intermissionEndsAt: battle.intermissionEndsAt ?? null,
+    roundWinners,
     // Серверийн цаг. Утаснуудын цаг хоорондоо зөрдөг тул клиент зөрүүг нь
     // тооцоолж байж хоёр тал ижил секунд харна.
     now: new Date(),

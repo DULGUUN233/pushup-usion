@@ -7,6 +7,7 @@ import {
   cancelIfStale,
   endNow,
   setArmed,
+  setBattleType,
   setReady,
   settleIfDue,
   view,
@@ -18,6 +19,8 @@ const DEV_AUTH = process.env.ALLOW_DEV_AUTH === '1' && !process.env.USION_SERVIC
 
 /** roomId → Set<socket> */
 const rooms = new Map()
+/** Нэг тулаанд нэг л round/intermission timer ажиллуулна. */
+const phaseTimers = new Map()
 /**
  * roomId → тулааны баримт, санах ойд. Rep бүр дээр Mongo руу бичээд байвал
  * өрсөлдөгч оноог чинь 50–300 мс хоцроож харна — тэр нь тулаанд мэдрэгдэнэ.
@@ -73,7 +76,12 @@ function leave(socket) {
     try {
       if (!(await endNow(roomId))) return
       await flush(roomId)
-      if (await settleIfDue(roomId)) live.delete(roomId)
+      const done = await settleIfDue(roomId)
+      if (done) {
+        if (done.status === 'finished' || done.status === 'cancelled') live.delete(roomId)
+        else live.set(roomId, done)
+        schedulePhase(roomId, done)
+      }
     } catch (err) {
       console.error('хоосон өрөө хаахад алдаа:', err.message)
     }
@@ -121,20 +129,52 @@ async function authenticate(message) {
  * Хугацаа нь дуусмагц хаана. Клиентийн мессежийг хүлээвэл хожигдож байгаа
  * тал зүгээр л дуугүй болоод тулааныг дуусгахгүй байлгаж чадна.
  */
-function scheduleSettle(roomId, endsAt) {
-  const wait = Math.max(0, new Date(endsAt).getTime() - Date.now())
-  setTimeout(async () => {
-    try {
-      await flush(roomId)
-      const done = await settleIfDue(roomId)
-      if (done) {
-        live.delete(roomId)
-        broadcast(roomId, done)
-      }
-    } catch (err) {
-      console.error('settle алдаа:', err.message)
+function publishPhase(roomId, doc) {
+  if (doc.status === 'finished' || doc.status === 'cancelled') live.delete(roomId)
+  else live.set(roomId, doc)
+  broadcast(roomId, doc)
+  schedulePhase(roomId, doc)
+}
+
+async function advancePhase(roomId, flushFirst) {
+  try {
+    if (flushFirst) await flush(roomId)
+    // Sweeper түрүүлж төлөв шилжүүлсэн бол settleIfDue() null буцаана.
+    // Mongo-гийн шинэ төлөвийг дахин уншиж socket клиентүүдэд заавал тараана.
+    const next = (await settleIfDue(roomId)) ?? (await battles().findOne({ _id: roomId }))
+    if (!next) return
+    if (next.status === 'settling') {
+      clearTimeout(phaseTimers.get(roomId))
+      const timer = setTimeout(() => advancePhase(roomId, false), 500)
+      phaseTimers.set(roomId, timer)
+      return
     }
+    publishPhase(roomId, next)
+  } catch (err) {
+    console.error('тулааны үе шилжүүлэхэд алдаа:', err.message)
+  }
+}
+
+function schedulePhase(roomId, doc) {
+  clearTimeout(phaseTimers.get(roomId))
+  phaseTimers.delete(roomId)
+
+  let dueAt = null
+  let flushFirst = false
+  if (doc?.status === 'playing' && doc.endsAt) {
+    dueAt = doc.endsAt
+    flushFirst = true
+  } else if (doc?.status === 'intermission' && doc.intermissionEndsAt) {
+    dueAt = doc.intermissionEndsAt
+  }
+  if (!dueAt) return
+
+  const wait = Math.max(0, new Date(dueAt).getTime() - Date.now())
+  const timer = setTimeout(() => {
+    phaseTimers.delete(roomId)
+    advancePhase(roomId, flushFirst)
   }, wait + 250)
+  phaseTimers.set(roomId, timer)
 }
 
 /** Өрсөлдөгч ирэхгүй бол тулааныг цуцалж, хүнийг мөнхөд хүлээлгэхгүй. */
@@ -197,7 +237,7 @@ export function attachBattleSocket(server) {
         // Start дарж байж эхэлнэ. Орж ирснийг нөгөө талд нь мэдэгдэнэ —
         // хүлээлгийн өрөө «найз ирлээ» гэдгийг үүгээр л мэднэ.
         broadcast(socket.roomId, doc)
-        if (doc.status === 'playing') scheduleSettle(socket.roomId, doc.endsAt)
+        schedulePhase(socket.roomId, doc)
         if (doc.status === 'waiting') scheduleWaitTimeout(socket.roomId, doc.createdAt, WAIT_MS)
         if (doc.status === 'arming') scheduleWaitTimeout(socket.roomId, doc.armingAt, ARM_MS)
         return
@@ -213,6 +253,14 @@ export function attachBattleSocket(server) {
           live.set(socket.roomId, doc)
           broadcast(socket.roomId, doc)
         }
+        return
+      }
+
+      if (message.type === 'battleType') {
+        const doc = await setBattleType(socket.roomId, socket.user.userId, message.value)
+        if (!doc) return send(socket, { type: 'error', error: 'Төрлийг зөвхөн эзэн сонгоно' })
+        live.set(socket.roomId, doc)
+        broadcast(socket.roomId, doc)
         return
       }
 
@@ -237,7 +285,7 @@ export function attachBattleSocket(server) {
         if (!doc) return
         live.set(socket.roomId, doc)
         broadcast(socket.roomId, doc)
-        if (doc.status === 'playing') scheduleSettle(socket.roomId, doc.endsAt)
+        schedulePhase(socket.roomId, doc)
         return
       }
 
@@ -266,4 +314,8 @@ export function attachBattleSocket(server) {
     })
     socket.on('error', () => leave(socket))
   })
+
+  // Sweeper ч энэ замаар орвол санах ой дахь хамгийн сүүлийн rep эхлээд
+  // Mongo-д бууж, дараагийн төлөв socket-оор шууд тарна.
+  return { advanceDue: (roomId) => advancePhase(roomId, true) }
 }
