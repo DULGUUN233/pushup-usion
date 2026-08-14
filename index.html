@@ -164,6 +164,48 @@
   #play.duel #counter{display:none}
   #play.duel #meterWrap{top:74%;height:20vh}
 
+  /* Squat: portrait дэлгэцийг зүүн/баруун хуваана. Lane бүр бүтэн өндөртэй
+     тул cover нь толгой–хөлийг огтлохгүй, зөвхөн кадрын хажуу ирмэгийг тайрна. */
+  #play.duel.squat-duel{--squat-head:calc(env(safe-area-inset-top) + 78px)}
+  #play.duel.squat-duel #oppVid{
+    top:var(--squat-head);left:0;right:auto;bottom:auto;
+    width:50%;height:calc(100% - var(--squat-head));object-fit:cover;object-position:center
+  }
+  #play.duel.squat-duel #video,
+  #play.duel.squat-duel #canvas{
+    top:var(--squat-head);left:50%;right:auto;bottom:auto;
+    width:50%;height:calc(100% - var(--squat-head));object-fit:cover;object-position:center
+  }
+  #play.duel.squat-duel #deepGlow{
+    top:var(--squat-head);left:50%;right:auto;bottom:auto;
+    width:50%;height:calc(100% - var(--squat-head))
+  }
+  #play.duel.squat-duel::after{
+    content:"";position:absolute;z-index:1;pointer-events:none;
+    top:var(--squat-head);bottom:0;left:50%;width:1px;
+    background:rgba(255,255,255,.32);box-shadow:0 0 12px rgba(0,0,0,.85)
+  }
+  #play.duel.squat-duel #duelBar{
+    top:calc(env(safe-area-inset-top) + 6px);left:8px;right:8px;
+    transform:none;border-radius:14px;padding:6px 10px 8px
+  }
+  #play.duel.squat-duel .dSide{min-width:0;flex:1}
+  #play.duel.squat-duel .dSide b{font-size:23px}
+  #play.duel.squat-duel .pfp{width:32px;height:32px}
+  #play.duel.squat-duel .dNm{max-width:72px}
+  #play.duel.squat-duel #oppNote{
+    top:calc(var(--squat-head) + 8px);left:25%;max-width:46%;overflow:hidden;
+    text-overflow:ellipsis
+  }
+  #play.duel.squat-duel #meterWrap{top:56%;height:34vh}
+
+  /* Landscape-д lane өргөн болдог тул crop хийхгүй — бүх кадрыг баталгаатай харуулна. */
+  @media (orientation:landscape){
+    #play.duel.squat-duel #oppVid,
+    #play.duel.squat-duel #video,
+    #play.duel.squat-duel #canvas{object-fit:contain;background:#05070a}
+  }
+
   #duelBar{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);
     background:rgba(9,14,32,.9);backdrop-filter:blur(12px);
     padding:7px 14px 9px;box-shadow:0 0 26px rgba(0,0,0,.6)}
@@ -1221,7 +1263,7 @@ function loop(){
   lastFrame = now;
   maybeSwitchToLite(now);
 
-  if(canvas.width !== video.videoWidth){
+  if(canvas.width !== video.videoWidth || canvas.height !== video.videoHeight){
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
   }
@@ -2167,6 +2209,7 @@ async function armForBattle(){
 
 function syncBattleExercise(state){
   const next = state.exercise === "squat" ? "squat" : "pushup";
+  $("play").classList.toggle("squat-duel", next === "squat");
   if(exercise === next) return;
   exercise = next;
   reset();
@@ -2382,6 +2425,7 @@ async function startBattle(){
   // Серверийн waiting room-оос сонгосон төрлийг applyDuel автоматаар солино.
   // Энд анхны дэлгэцийг тогтвортой push-up төлөвөөс эхлүүлж байна.
   exercise = "pushup";
+  $("play").classList.remove("squat-duel");
   mode = "battle"; duel = null; reported = false; arming = false;
   show("hall");
   $("hallTitle").textContent = guestLaunch() ? "Тулаанд холбогдож байна…" : "Хүлээлгийн өрөө";
@@ -2417,6 +2461,7 @@ function leaveBattle(){
   }
   leaveRoom();
   $("play").classList.remove("duel");
+  $("play").classList.remove("squat-duel");
   stopCamera();
   sdk()?.matchmaking?.cancel?.();
   $("duelBar").classList.add("hidden");
@@ -2465,6 +2510,7 @@ function openSolo(kind){
   exercise = kind;
   mode = "solo";
   $("play").classList.remove("duel");
+  $("play").classList.remove("squat-duel");
   $("startTitle").textContent = kind === "squat" ? "Squat · Суулт" : "Push Up";
   $("howtoPush").classList.toggle("hidden", kind === "squat");
   $("howtoSquat").classList.toggle("hidden", kind !== "squat");
