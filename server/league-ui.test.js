@@ -26,6 +26,13 @@ test('hub-ийн лигийн карт rank-аа зүүн, мэдээллээ г
   assert.match(html, /class="leagueTitleRow"><h3>Лигүүд<\/h3>/)
 })
 
+test('лигийг нүүрэн дээр урьдчилж ачаалаад нээхэд ижил хүсэлтийг давхардуулахгүй', () => {
+  assert.match(html, /let leagueHubData = null;/)
+  assert.match(html, /if\(leagueHubPromise\) return leagueHubPromise;/)
+  assert.match(html, /fetchLeagueHub\(\)\.catch\(\(\) => \{\}\);/)
+  assert.match(html, /loadLeagueHub\(false\);/)
+})
+
 test('лиг UI reduced motion ба keyboard focus-ийг дэмжинэ', () => {
   assert.match(html, /@media \(prefers-reduced-motion:reduce\)/)
   assert.match(html, /#board button:focus-visible/)

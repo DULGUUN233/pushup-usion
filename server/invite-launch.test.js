@@ -13,7 +13,7 @@ test('урилгын waiting room profile API-г хүлээлгүй шууд х�
   const init = html.indexOf('launchCfg = await usionInit();')
   const branch = html.indexOf('const directInvite = guestLaunch();', init)
   const hall = html.indexOf('show("hall");', branch)
-  const profile = html.indexOf('await loadProfile();', branch)
+  const profile = html.indexOf('await Promise.all([loadProfile(), loadDailyActivity()]);', branch)
 
   assert.ok(init >= 0 && branch > init, 'invite startup branch олдсонгүй')
   assert.ok(hall > branch && hall < profile, 'waiting room profile ачааллаас өмнө харагдах ёстой')

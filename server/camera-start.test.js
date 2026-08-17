@@ -71,13 +71,14 @@ test('Heavy model урьдчилан болон camera start-аас зэрэг �
   assert.strictEqual(result.models[0], result.landmarker)
 })
 
-test('AI эх үүсвэрүүдтэй урьдчилан холбогдож, menu эсвэл hall дээр model-оо халаана', () => {
+test('AI эх үүсвэрүүдтэй урьдчилан холбогдож, critical data-ийн дараа model-оо халаана', () => {
   assert.match(html, /<link rel="preconnect" href="https:\/\/cdn\.jsdelivr\.net" crossorigin>/)
   assert.match(html, /<link rel="preconnect" href="https:\/\/storage\.googleapis\.com" crossorigin>/)
-  const warmupAt = html.indexOf('scheduleModelWarmup();')
   const usionAt = html.indexOf('launchCfg = await usionInit();')
-  const profileAt = html.indexOf('await loadProfile();')
-  assert.ok(warmupAt > 0 && warmupAt < usionAt && usionAt < profileAt)
+  const criticalAt = html.indexOf('await Promise.all([loadProfile(), loadDailyActivity()]);')
+  const normalWarmupAt = html.indexOf('setTimeout(scheduleModelWarmup, 600);')
+  assert.ok(usionAt > 0 && usionAt < criticalAt && criticalAt < normalWarmupAt)
+  assert.match(html, /if\(directInvite\)\{[\s\S]*?scheduleModelWarmup\(\);/)
 })
 
 test('cold start loading төлөв нь хүртээмжтэй, богино warm start дээр анивчихгүй', () => {

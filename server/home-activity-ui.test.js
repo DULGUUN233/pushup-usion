@@ -40,6 +40,16 @@ test('өдрийн activity хэрэглэгчийн timezone-аар серве�
   assert.match(html, /loadDailyActivity\(\)/)
 })
 
+test('өдрийн activity cache-ээс шууд харагдаад profile-тэй зэрэг шинэчлэгдэнэ', () => {
+  assert.match(html, /function restoreDailyActivity\(exercise\)/)
+  assert.match(html, /localStorage\.setItem\(activityCacheKey\(exercise\)/)
+  assert.match(html, /restoreDailyActivity\("pushup"\);[\s\S]*?restoreDailyActivity\("squat"\);/)
+  assert.match(html, /await Promise\.all\(\[loadProfile\(\), loadDailyActivity\(\)\]\);/)
+  assert.match(html, /addDailyActivityReps\(kind, reps\);/)
+  const profileSource = html.match(/async function loadProfile\(\)\{[\s\S]*?\n\}/)?.[0] ?? ''
+  assert.doesNotMatch(profileSource, /loadDailyActivity/)
+})
+
 test('Нүүр дээр daily summary-ийн дараа зөвхөн Battle Friend товч байна', () => {
   const daily = html.indexOf('id="dailyPushups"')
   const battle = html.indexOf('id="mBattle"')
@@ -51,7 +61,12 @@ test('Нүүр дээр daily summary-ийн дараа зөвхөн Battle Frie
 test('Battle Friend товч navigation-ийн дээр тод үндсэн CTA байна', () => {
   assert.match(html, /#mBattle\{position:fixed;left:50%;bottom:calc\(env\(safe-area-inset-bottom\) \+ 80px\)/)
   assert.match(html, /background:linear-gradient\(135deg,#39d98a 0%,#20b8ff 100%\)/)
+  assert.match(html, /#mBattle\{[^}]*min-height:56px;[^}]*padding:10px 16px/s)
   assert.match(html, /#menu\{[^}]*padding-bottom:calc\(env\(safe-area-inset-bottom\) \+ 172px\)/)
+})
+
+test('activity switch нягт боловч mobile touch target-аа хадгална', () => {
+  assert.match(html, /\.activitySwitch button\{min-height:44px;padding:8px 12px/)
 })
 
 test('Push Up ба Суулт доод navigation-аас бэлтгэл дэлгэц нээнэ', () => {

@@ -206,8 +206,10 @@ router.post('/leagues/join', requireUser, async (req, res) => {
 })
 
 router.get('/leagues', requireUser, async (req, res) => {
-  const me = await findOrCreateUser(req.user)
-  const mine = await leagues().find({ memberIds: req.user.userId }).sort({ createdAt: -1 }).toArray()
+  const [me, mine] = await Promise.all([
+    findOrCreateUser(req.user),
+    leagues().find({ memberIds: req.user.userId }).sort({ createdAt: -1 }).toArray(),
+  ])
   const memberIds = [...new Set(mine.flatMap((league) => league.memberIds))]
   const members = memberIds.length
     ? await users().find({ _id: { $in: memberIds } }).toArray()
@@ -218,15 +220,22 @@ router.get('/leagues', requireUser, async (req, res) => {
     const ranked = Object.fromEntries(Object.keys(METRICS).map((metric) => [metric, rankUsers(leagueUsers, metric)]))
     return leagueSummary(league, ranked, req.user.userId)
   })
-  const battleRank = (await users().countDocuments({ battles: { $gt: 0 }, rating: { $gt: me.rating ?? 1000 } })) + 1
+  const [memberCount, pushupRank, squatRank, higherBattleCount] = await Promise.all([
+    users().countDocuments({}),
+    rankOf(me.totalReps ?? 0),
+    rankOf(me.squatTotalReps ?? 0, 'squat'),
+    me.battles > 0
+      ? users().countDocuments({ battles: { $gt: 0 }, rating: { $gt: me.rating ?? 1000 } })
+      : Promise.resolve(null),
+  ])
   res.json({
     leagues: summaries,
     global: {
-      memberCount: await users().countDocuments({}),
+      memberCount,
       ranks: {
-        pushup: await rankOf(me.totalReps ?? 0),
-        squat: await rankOf(me.squatTotalReps ?? 0, 'squat'),
-        battle: me.battles > 0 ? battleRank : null,
+        pushup: pushupRank,
+        squat: squatRank,
+        battle: higherBattleCount === null ? null : higherBattleCount + 1,
       },
     },
   })

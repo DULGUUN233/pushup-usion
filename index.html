@@ -36,10 +36,10 @@
     padding-bottom:calc(env(safe-area-inset-bottom) + 172px)}
   #dailyPushups{--activity:#39d98a;--activity-alt:#20b8ff;display:flex;flex-direction:column;gap:12px}
   #dailyPushups.squat{--activity:#ffb020;--activity-alt:#d96bff}
-  .activitySwitch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;
+  .activitySwitch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;border-radius:14px;
     background:var(--card);border:1px solid rgba(255,255,255,.07)}
-  .activitySwitch button{min-height:48px;padding:10px 12px;border-radius:12px;background:transparent;
-    color:var(--dim);font-size:14px;transition:color .18s ease,background .18s ease,box-shadow .18s ease}
+  .activitySwitch button{min-height:44px;padding:8px 12px;border-radius:11px;background:transparent;
+    color:var(--dim);font-size:13px;transition:color .18s ease,background .18s ease,box-shadow .18s ease}
   .activitySwitch button[aria-pressed="true"]{background:linear-gradient(135deg,var(--activity),var(--activity-alt));
     color:#04140c;box-shadow:0 5px 16px rgba(57,217,138,.24)}
   #dailyPushups.squat .activitySwitch button[aria-pressed="true"]{box-shadow:0 5px 16px rgba(255,176,32,.22)}
@@ -83,12 +83,12 @@
   .mode small{font-size:12px;font-weight:500;opacity:.75}
   .mode.duel{background:#2a1e3d;color:#e6dcff}
   #mBattle{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 80px);z-index:29;
-    width:min(calc(100% - 36px),460px);min-height:64px;transform:translateX(-50%);
+    width:min(calc(100% - 36px),460px);min-height:56px;padding:10px 16px;transform:translateX(-50%);
     align-items:center;justify-content:center;text-align:center;border:1px solid rgba(255,255,255,.2);
     background:linear-gradient(135deg,#39d98a 0%,#20b8ff 100%);color:#04140c;
     box-shadow:0 12px 30px rgba(32,184,255,.22),0 5px 16px rgba(57,217,138,.2);
-    font-size:18px;font-weight:900;transition:filter .18s ease,box-shadow .18s ease}
-  #mBattle small{font-size:12px;font-weight:700;opacity:.72}
+    font-size:16px;font-weight:900;transition:filter .18s ease,box-shadow .18s ease}
+  #mBattle small{font-size:11px;font-weight:700;opacity:.72}
   #mBattle:focus-visible{outline:3px solid #fff;outline-offset:3px}
   #mBattle:active{transform:translateX(-50%) scale(.98);filter:brightness(.9);
     box-shadow:0 6px 18px rgba(32,184,255,.16)}
@@ -880,6 +880,30 @@ const activityWeekdays = ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"
 let activityExercise = localStorage.getItem("pushup:activityExercise") === "squat" ? "squat" : "pushup";
 const dailyActivity = { pushup:[], squat:[] };
 
+function activityCacheKey(exercise){
+  const userId = profile?.userId ?? launchCfg?.userId ?? sdk()?.user?.getId?.() ?? devId();
+  return `pushup:activity:v1:${userId}:${exercise}:${localTimeZone}`;
+}
+
+function restoreDailyActivity(exercise){
+  try{
+    const cached = JSON.parse(localStorage.getItem(activityCacheKey(exercise)));
+    if(Array.isArray(cached?.days) && cached.days.length === 7) dailyActivity[exercise] = cached.days;
+  }catch{ /* cache байхгүй эсвэл хуучирсан бол серверээс шинэчилнэ */ }
+}
+
+function cacheDailyActivity(exercise){
+  localStorage.setItem(activityCacheKey(exercise), JSON.stringify({ days:dailyActivity[exercise] }));
+}
+
+function addDailyActivityReps(exercise, reps){
+  if(dailyActivity[exercise].length !== 7) dailyActivity[exercise] = emptyActivityDays();
+  const today = dailyActivity[exercise].at(-1);
+  today.reps = Math.max(0, Number(today.reps) || 0) + Math.max(0, Number(reps) || 0);
+  cacheDailyActivity(exercise);
+  if(exercise === activityExercise) renderDailyActivity();
+}
+
 function emptyActivityDays(){
   const now = new Date();
   return Array.from({ length:7 }, (_, index) => {
@@ -949,9 +973,8 @@ async function loadDailyActivity(exercise = activityExercise){
   try{
     const data = await api(`/activity?days=7&exercise=${exercise}&timeZone=${encodeURIComponent(localTimeZone)}`);
     dailyActivity[exercise] = Array.isArray(data.days) ? data.days : [];
-  }catch{
-    dailyActivity[exercise] = [];
-  }
+    cacheDailyActivity(exercise);
+  }catch{ /* сүлжээ тасарсан үед хамгийн сүүлийн амжилттай утгаа хадгална */ }
   if(exercise === activityExercise){
     $("dailyPushups").removeAttribute("aria-busy");
     renderDailyActivity();
@@ -976,7 +999,6 @@ async function loadProfile(){
   try {
     profile = await api("/me");
     submitScore();
-    loadDailyActivity();
     note("");
   } catch(e) {
     note(`${friendlyError(e, "Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.")} Тоолуур офлайнаар ажиллана.`, "bad");
@@ -2113,6 +2135,8 @@ async function saveSet(reps, seconds, kind = exercise){
     pendingSet = null;
     $("retrySave").classList.add("hidden");
     if(kind === "pushup") submitScore();
+    addDailyActivityReps(kind, reps);
+    leagueHubData = null;
     loadDailyActivity(kind);
     const total = kind === "squat" ? profile.squatTotalReps : profile.totalReps;
     const rank = kind === "squat" ? profile.squatRank : profile.rank;
@@ -3083,7 +3107,9 @@ function leaveBattle(){
   $("roundBreak").classList.add("hidden");
   $("oRounds").textContent = "";
   show("menu");
+  leagueHubData = null;
   loadProfile();
+  loadDailyActivity();
 }
 
 // ======================= лиг ба байр =======================
@@ -3092,6 +3118,8 @@ let boardMetric = "pushup";
 let activeLeagueCode = "";
 let activeLeagueName = "Бүх тоглогч";
 let boardRequest = 0;
+let leagueHubData = null;
+let leagueHubPromise = null;
 const boardNumber = new Intl.NumberFormat("mn-MN");
 
 function boardUnit(){ return boardMetric === "battle" ? "ELO" : "REP"; }
@@ -3153,26 +3181,40 @@ function showBoardHub(refresh = false){
   $("boardDetail").classList.add("hidden");
   $("boardHub").classList.remove("hidden");
   setBack("board");
-  if(refresh) loadLeagueHub();
+  if(refresh) loadLeagueHub(true);
 }
 
-async function loadLeagueHub(){
+function fetchLeagueHub(force = false){
+  if(force) leagueHubData = null;
+  if(leagueHubData) return Promise.resolve(leagueHubData);
+  if(leagueHubPromise) return leagueHubPromise;
+  leagueHubPromise = api("/leagues")
+    .then(data => (leagueHubData = data))
+    .finally(() => { leagueHubPromise = null; });
+  return leagueHubPromise;
+}
+
+function renderLeagueHub(data){
   const list = $("leagueList");
-  list.innerHTML = '<div class="boardLoading"></div><div class="boardLoading"></div>';
+  fillLeagueCard($("globalLeague"), { name:"Бүх тоглогч", ...data.global }, true);
+  list.textContent = "";
+  for(const league of data.leagues){
+    const card = document.createElement("button");
+    card.className = "leagueCard";
+    fillLeagueCard(card, league);
+    card.onclick = () => openLeagueBoard(league.code, league.name);
+    list.appendChild(card);
+  }
+}
+
+async function loadLeagueHub(force = false){
+  const list = $("leagueList");
+  if(leagueHubData) renderLeagueHub(leagueHubData);
+  else list.innerHTML = '<div class="boardLoading"></div><div class="boardLoading"></div>';
   try{
-    const data = await api("/leagues");
-    fillLeagueCard($("globalLeague"), { name:"Бүх тоглогч", ...data.global }, true);
-    list.textContent = "";
-    if(!data.leagues.length) return;
-    for(const league of data.leagues){
-      const card = document.createElement("button");
-      card.className = "leagueCard";
-      fillLeagueCard(card, league);
-      card.onclick = () => openLeagueBoard(league.code, league.name);
-      list.appendChild(card);
-    }
+    renderLeagueHub(await fetchLeagueHub(force));
   }catch(e){
-    list.textContent = friendlyError(e, "Лигүүд ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
+    if(!leagueHubData) list.textContent = friendlyError(e, "Лигүүд ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
   }
 }
 
@@ -3180,7 +3222,7 @@ function openBoard(){
   show("board");
   $("boardHub").classList.remove("hidden");
   $("boardDetail").classList.add("hidden");
-  loadLeagueHub();
+  loadLeagueHub(false);
 }
 
 function openLeagueBoard(code, name){
@@ -3342,6 +3384,7 @@ $("createLeagueForm").onsubmit = async event => {
   status.textContent = "Үүсгэж байна…";
   try{
     const league = await api("/leagues", { method:"POST", body:JSON.stringify({ name:$("leagueName").value }) });
+    leagueHubData = null;
     $("leagueName").value = "";
     status.textContent = "";
     openLeagueBoard(league.code, league.name);
@@ -3359,6 +3402,7 @@ $("joinLeagueForm").onsubmit = async event => {
   status.textContent = "Нэгдэж байна…";
   try{
     const league = await api("/leagues/join", { method:"POST", body:JSON.stringify({ code:$("leagueCode").value }) });
+    leagueHubData = null;
     $("leagueCode").value = "";
     status.textContent = "";
     openLeagueBoard(league.code, league.name);
@@ -3390,16 +3434,19 @@ document.addEventListener("visibilitychange", () => {
   if(document.hidden) lastFrame = 0;
 });
 
-scheduleModelWarmup();
 launchCfg = await usionInit();
 const directInvite = guestLaunch();
 startupInvitePending = directInvite;
+restoreDailyActivity("pushup");
+restoreDailyActivity("squat");
+renderDailyActivity();
 // Урилгын картаас орж ирвэл profile API-г хүлээлгүй waiting room-ийг шууд
 // харуулна. Энгийн нээлт л menu рүү орно — эхний frame дээр menu анивчихгүй.
 if(directInvite){
   mode = "battle";
   show("hall");
   renderConnectingHall();
+  scheduleModelWarmup();
 } else {
   show("menu");
 }
@@ -3415,7 +3462,12 @@ sdk()?.game?.onRoomAssigned?.(d => {
   if(mode !== "battle") startBattle();
 });
 
-await loadProfile();
+await Promise.all([loadProfile(), loadDailyActivity()]);
+
+if(!directInvite){
+  fetchLeagueHub().catch(() => {});
+  setTimeout(scheduleModelWarmup, 600);
+}
 
 // Найзын урилгаар нээгдсэн бол цэс дундуур гүйлгэхгүй — шууд тулаан руу.
 // Ердийн нээлтэд ЭНД ОРОХГҮЙ: өмнөх өрөө хадгалагдсаар байдаг тул зөвхөн
