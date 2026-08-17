@@ -4,11 +4,15 @@ import test from 'node:test'
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 
-test('Нүүр дээр зөвхөн өнөөдрийн push-up ring байна', () => {
+test('Нүүрийн activity өдөр, 7 хоног, сарын гурван харагдацтай', () => {
   assert.match(html, /id="dailyPushups"[^>]*aria-labelledby="dailyPushupsTitle"/)
+  assert.match(html, /class="activityRangeSwitch"[^>]*role="group"/)
+  assert.match(html, /id="activityDay"[^>]*aria-pressed="true">D</)
+  assert.match(html, /id="activityWeek"[^>]*aria-pressed="false">W</)
+  assert.match(html, /id="activityMonth"[^>]*aria-pressed="false">M</)
   assert.match(html, /id="dailyRingValue"/)
-  assert.match(html, /id="dailyCount">0</)
-  assert.doesNotMatch(html, /id="weekChart"|id="weekLabels"|Сүүлийн 7 өдөр/)
+  assert.match(html, /id="activityWeekChart"/)
+  assert.match(html, /id="activityMonthGrid"/)
 })
 
 test('өдрийн үзүүлэлт Push Up ба Суулт switch-тэй', () => {
@@ -34,8 +38,26 @@ test('Нүүр дээр profile header харагдахгүй', () => {
 
 test('өдрийн activity хэрэглэгчийн timezone-аар серверээс ачаална', () => {
   assert.match(html, /resolvedOptions\(\)\.timeZone/)
-  assert.match(html, /api\(`\/activity\?days=7&exercise=\$\{exercise\}&timeZone=\$\{encodeURIComponent\(localTimeZone\)\}`\)/)
+  assert.match(html, /api\(`\/activity\?days=\$\{days\}&end=\$\{end\}&exercise=\$\{exercise\}&timeZone=\$\{encodeURIComponent\(localTimeZone\)\}`\)/)
   assert.match(html, /loadDailyActivity\(\)/)
+})
+
+test('activity-г swipe болон суман товчоор өмнөх хугацаа руу шилжүүлнэ', () => {
+  assert.match(html, /id="activityPrev"[^>]*aria-label="Өмнөх хугацаа"/)
+  assert.match(html, /id="activityNext"[^>]*aria-label="Дараагийн хугацаа"[^>]*disabled/)
+  assert.match(html, /touch-action:pan-y/)
+  assert.match(html, /addEventListener\("pointerdown"/)
+  assert.match(html, /Math\.abs\(deltaX\) < 52/)
+  assert.match(html, /shiftActivityPeriod\(deltaX > 0 \? -1 : 1\)/)
+  assert.match(html, /if\(direction > 0 && \$\("activityNext"\)\.disabled\) return/)
+})
+
+test('7 хоног нь bar chart, сар нь өдрийн progress calendar харуулна', () => {
+  assert.match(html, /bar\.className = "activityWeekBar"/)
+  assert.match(html, /grid-template-columns:repeat\(7,1fr\)/)
+  assert.match(html, /className = "activityMonthDay"/)
+  assert.match(html, /--activity-progress/)
+  assert.match(html, /button\.onclick = \(\) => openActivityDay\(day\.date\)/)
 })
 
 test('өдрийн activity cache-ээс шууд харагдаад profile-тэй зэрэг шинэчлэгдэнэ', () => {
@@ -65,6 +87,8 @@ test('Battle Friend товч navigation-ийн дээр тод үндсэн CTA 
 
 test('activity switch нягт боловч mobile touch target-аа хадгална', () => {
   assert.match(html, /\.activitySwitch button\{min-height:44px;padding:8px 12px/)
+  assert.match(html, /\.activityRangeSwitch button\{width:52px;min-height:44px/)
+  assert.match(html, /\.activityPeriodNav button\{width:44px;height:44px/)
 })
 
 test('Push Up ба Суулт доод navigation-аас бэлтгэл дэлгэц нээнэ', () => {

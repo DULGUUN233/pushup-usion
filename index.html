@@ -36,6 +36,11 @@
     padding-bottom:calc(env(safe-area-inset-bottom) + 172px)}
   #dailyPushups{--activity:#39d98a;--activity-alt:#20b8ff;display:flex;flex-direction:column;gap:12px}
   #dailyPushups.squat{--activity:#ffb020;--activity-alt:#d96bff}
+  .activityRangeSwitch{align-self:center;display:grid;grid-template-columns:repeat(3,52px);gap:4px;padding:3px;
+    border-radius:999px;background:var(--card);border:1px solid rgba(255,255,255,.07)}
+  .activityRangeSwitch button{width:52px;min-height:44px;padding:8px;border-radius:999px;background:transparent;
+    color:var(--dim);font-size:14px;transition:color .18s ease,background .18s ease}
+  .activityRangeSwitch button[aria-pressed="true"]{background:rgba(255,255,255,.1);color:var(--fg)}
   .activitySwitch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;border-radius:14px;
     background:var(--card);border:1px solid rgba(255,255,255,.07)}
   .activitySwitch button{min-height:44px;padding:8px 12px;border-radius:11px;background:transparent;
@@ -43,11 +48,20 @@
   .activitySwitch button[aria-pressed="true"]{background:linear-gradient(135deg,var(--activity),var(--activity-alt));
     color:#04140c;box-shadow:0 5px 16px rgba(57,217,138,.24)}
   #dailyPushups.squat .activitySwitch button[aria-pressed="true"]{box-shadow:0 5px 16px rgba(255,176,32,.22)}
-  .activitySwitch button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
-  .dailyRingCard{min-height:244px;border-radius:24px;padding:18px;display:grid;place-items:center;
+  .activitySwitch button:focus-visible,.activityRangeSwitch button:focus-visible,.activityPeriodNav button:focus-visible,
+  .activityWeekDay:focus-visible,.activityMonthDay:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+  .dailyRingCard{min-height:284px;border-radius:24px;padding:14px 16px 18px;display:flex;flex-direction:column;
+    align-items:center;
     background:radial-gradient(circle at 50% 42%,rgba(57,217,138,.13),transparent 58%),var(--card);
-    border:1px solid rgba(255,255,255,.06)}
+    border:1px solid rgba(255,255,255,.06);touch-action:pan-y}
   #dailyPushups.squat .dailyRingCard{background:radial-gradient(circle at 50% 42%,rgba(255,176,32,.13),transparent 58%),var(--card)}
+  .activityPeriodNav{width:100%;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px}
+  .activityPeriodNav button{width:44px;height:44px;padding:9px;border-radius:50%;background:transparent;color:var(--dim)}
+  .activityPeriodNav button:disabled{opacity:.18}
+  .activityPeriodNav svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.2;
+    stroke-linecap:round;stroke-linejoin:round}
+  #activityPeriodLabel{text-align:center;font-size:13px;font-weight:850;color:var(--activity)}
+  .activityPanel{width:100%;min-height:218px;display:grid;place-items:center}
   .dailyRing{position:relative;width:min(58vw,214px);aspect-ratio:1}
   .dailyRing svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
   .dailyRing circle{fill:none;stroke-width:8}
@@ -62,6 +76,32 @@
   #dailyCount{font-size:58px;line-height:.98;font-weight:900;letter-spacing:-.05em;
     font-variant-numeric:tabular-nums}
   #dailyGoal{margin-top:7px;font-size:12px;color:var(--dim)}
+  .activitySummary{width:100%;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+    padding:8px 4px 12px}
+  .activitySummary strong{display:block;font-size:29px;line-height:1;font-variant-numeric:tabular-nums}
+  .activitySummary small{display:block;margin-top:5px;color:var(--dim);font-size:10px;font-weight:750}
+  .activityAverage{text-align:right;color:var(--dim);font-size:11px;font-weight:800}
+  .activityWeekChart{width:100%;height:158px;display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end}
+  .activityWeekDay{height:100%;min-width:0;padding:0 1px 4px;border-radius:11px;background:transparent;color:var(--dim);
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px}
+  .activityWeekDay:active,.activityMonthDay:active{transform:none;background:rgba(255,255,255,.05)}
+  .activityWeekValue{font-size:9px;font-weight:850;color:var(--fg);font-variant-numeric:tabular-nums}
+  .activityWeekBarTrack{width:min(28px,100%);height:106px;border-radius:999px;background:rgba(255,255,255,.07);
+    display:flex;align-items:flex-end;overflow:hidden}
+  .activityWeekBar{width:100%;min-height:5px;border-radius:inherit;background:linear-gradient(180deg,var(--activity-alt),var(--activity))}
+  .activityWeekLabel{font-size:9px;font-weight:800;text-transform:uppercase}
+  .activityMonth{width:100%}
+  .activityMonthWeekdays,.activityMonthGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .activityMonthWeekdays{margin:4px 0 8px;text-align:center;color:var(--dim);font-size:9px;font-weight:800}
+  .activityMonthDay{position:relative;min-width:0;min-height:44px;padding:3px;border-radius:50%;background:transparent;color:var(--dim);
+    display:grid;place-items:center;font-size:11px;font-weight:850}
+  .activityMonthDay::before{content:"";position:absolute;inset:4px;border-radius:50%;background:
+    conic-gradient(var(--activity) var(--activity-progress,0%),rgba(255,255,255,.08) 0)}
+  .activityMonthDay::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--card)}
+  .activityMonthDay span{position:relative;z-index:1;font-variant-numeric:tabular-nums}
+  .activityMonthDay.today span{color:var(--activity)}
+  .activityMonthDay.future{opacity:.28}
+  .activityMonthBlank{min-height:44px}
 
   .challengeSection{display:flex;flex-direction:column;gap:12px}
   .challengeHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -229,7 +269,7 @@
   @media (prefers-reduced-motion:reduce){
     .dailyRingValue{transition:none}
     .challengeProgress>span{transition:none}
-    .activitySwitch button{transition:none}
+    .activitySwitch button,.activityRangeSwitch button{transition:none}
     .leagueCard{transition:none}
     #mainNav button{transition:none}
     .boardLoading{animation:none;background:#182029}
@@ -511,22 +551,40 @@
 <!-- ================= ЦЭС ================= -->
 <section id="menu" class="screen hidden">
   <section id="dailyPushups" aria-labelledby="dailyPushupsTitle">
+    <div class="activityRangeSwitch" role="group" aria-label="Хугацааны төрөл">
+      <button id="activityDay" type="button" aria-label="Өдөр" aria-pressed="true">D</button>
+      <button id="activityWeek" type="button" aria-label="Долоо хоног" aria-pressed="false">W</button>
+      <button id="activityMonth" type="button" aria-label="Сар" aria-pressed="false">M</button>
+    </div>
     <div class="activitySwitch" role="group" aria-label="Өдрийн дасгал">
       <button id="activityPush" type="button" aria-pressed="true">Push Up</button>
       <button id="activitySquat" type="button" aria-pressed="false">Суулт</button>
     </div>
-    <div class="dailyRingCard">
-      <div class="dailyRing">
+    <div id="activityViewport" class="dailyRingCard">
+      <div class="activityPeriodNav">
+        <button id="activityPrev" type="button" aria-label="Өмнөх хугацаа"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <strong id="activityPeriodLabel">Өнөөдөр</strong>
+        <button id="activityNext" type="button" aria-label="Дараагийн хугацаа" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+      <div id="activityDayView" class="activityPanel">
+        <div class="dailyRing">
         <svg viewBox="0 0 100 100" aria-hidden="true">
           <defs><linearGradient id="dailyGradient" x1="0" y1="0" x2="1" y2="1"><stop class="dailyGradientStart"></stop><stop class="dailyGradientEnd" offset="1"></stop></linearGradient></defs>
           <circle class="dailyRingTrack" cx="50" cy="50" r="44" pathLength="100"></circle>
           <circle id="dailyRingValue" class="dailyRingValue" cx="50" cy="50" r="44" pathLength="100"></circle>
         </svg>
-        <div class="dailyRingCenter">
-          <small id="dailyPushupsTitle">ӨНӨӨДӨР · PUSH UP</small>
+          <div class="dailyRingCenter">
+          <small id="dailyPushupsTitle">PUSH UP</small>
           <strong id="dailyCount">0</strong>
           <span id="dailyGoal">50 зорилго</span>
+          </div>
         </div>
+      </div>
+      <div id="activityWeekView" class="activityPanel hidden">
+        <div style="width:100%"><div class="activitySummary"><div><strong id="activityWeekTotal">0</strong><small>НИЙТ</small></div><span id="activityWeekAverage" class="activityAverage">Дундаж 0</span></div><div id="activityWeekChart" class="activityWeekChart" role="group" aria-label="Долоо хоногийн дасгал"></div></div>
+      </div>
+      <div id="activityMonthView" class="activityPanel hidden">
+        <div class="activityMonth"><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small>НИЙТ</small></div><span id="activityMonthAverage" class="activityAverage">Өдрийн дундаж 0</span></div><div class="activityMonthWeekdays" aria-hidden="true"><span>ДА</span><span>МЯ</span><span>ЛХ</span><span>ПҮ</span><span>БА</span><span>БЯ</span><span>НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал"></div></div>
       </div>
     </div>
   </section>
@@ -915,17 +973,63 @@ const DAILY_GOALS = { pushup:50, squat:50 };
 const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const activityNumber = new Intl.NumberFormat("mn-MN");
 let activityExercise = localStorage.getItem("pushup:activityExercise") === "squat" ? "squat" : "pushup";
+let activityRange = ["day","week","month"].includes(localStorage.getItem("pushup:activityRange")) ? localStorage.getItem("pushup:activityRange") : "day";
+let activityAnchor = activityDateKey();
 const dailyActivity = { pushup:[], squat:[] };
+const activityRequests = { pushup:0, squat:0 };
+
+function activityDateKey(value = new Date()){
+  const date = value instanceof Date ? value : new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+}
+
+function activityDateFromKey(key){
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day, 12);
+}
+
+function activityShiftDate(key, days){
+  const date = activityDateFromKey(key);
+  date.setDate(date.getDate() + days);
+  return activityDateKey(date);
+}
+
+function activityDayDistance(startKey, endKey){
+  const start = activityDateFromKey(startKey);
+  const end = activityDateFromKey(endKey);
+  return Math.round((Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000);
+}
+
+function activityPeriodState(){
+  const today = activityDateKey();
+  if(activityAnchor > today) activityAnchor = today;
+  if(activityRange === "day") return { dates:[activityAnchor], requestEnd:activityAnchor, requestDays:1 };
+
+  const anchorDate = activityDateFromKey(activityAnchor);
+  if(activityRange === "week"){
+    const mondayOffset = (anchorDate.getDay() + 6) % 7;
+    const start = activityShiftDate(activityAnchor, -mondayOffset);
+    const dates = Array.from({ length:7 }, (_, index) => activityShiftDate(start, index));
+    const requestEnd = dates.at(-1) > today ? today : dates.at(-1);
+    return { dates, requestEnd, requestDays:Math.max(1, activityDayDistance(start, requestEnd) + 1) };
+  }
+
+  const first = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1, 12);
+  const count = new Date(anchorDate.getFullYear(), anchorDate.getMonth() + 1, 0).getDate();
+  const dates = Array.from({ length:count }, (_, index) => activityDateKey(new Date(first.getFullYear(), first.getMonth(), index + 1, 12)));
+  const requestEnd = dates.at(-1) > today ? today : dates.at(-1);
+  return { dates, requestEnd, requestDays:Math.max(1, activityDayDistance(dates[0], requestEnd) + 1) };
+}
 
 function activityCacheKey(exercise){
   const userId = profile?.userId ?? launchCfg?.userId ?? sdk()?.user?.getId?.() ?? devId();
-  return `pushup:activity:v1:${userId}:${exercise}:${localTimeZone}`;
+  return `pushup:activity:v2:${userId}:${exercise}:${localTimeZone}`;
 }
 
 function restoreDailyActivity(exercise){
   try{
     const cached = JSON.parse(localStorage.getItem(activityCacheKey(exercise)));
-    if(Array.isArray(cached?.days) && cached.days.length === 7) dailyActivity[exercise] = cached.days;
+    if(Array.isArray(cached?.days) && cached.days.length > 0 && cached.days.length <= 31) dailyActivity[exercise] = cached.days;
   }catch{ /* cache байхгүй эсвэл хуучирсан бол серверээс шинэчилнэ */ }
 }
 
@@ -934,46 +1038,150 @@ function cacheDailyActivity(exercise){
 }
 
 function addDailyActivityReps(exercise, reps){
-  if(dailyActivity[exercise].length !== 7) dailyActivity[exercise] = emptyActivityDays();
-  const today = dailyActivity[exercise].at(-1);
+  const todayKey = activityDateKey();
+  let today = dailyActivity[exercise].find(day => day.date === todayKey);
+  if(!today){
+    today = { date:todayKey, reps:0 };
+    dailyActivity[exercise].push(today);
+    dailyActivity[exercise].sort((a,b) => a.date.localeCompare(b.date));
+    dailyActivity[exercise] = dailyActivity[exercise].slice(-31);
+  }
   today.reps = Math.max(0, Number(today.reps) || 0) + Math.max(0, Number(reps) || 0);
   cacheDailyActivity(exercise);
   if(exercise === activityExercise) renderDailyActivity();
 }
 
-function emptyActivityDays(){
-  const now = new Date();
-  return Array.from({ length:7 }, (_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (6 - index));
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-    return { date:key, reps:0 };
-  });
+function emptyActivityDays(count = 31, endKey = activityDateKey()){
+  return Array.from({ length:count }, (_, index) => ({ date:activityShiftDate(endKey, -(count - 1 - index)), reps:0 }));
+}
+
+function activityValues(period){
+  const values = new Map(dailyActivity[activityExercise].map(day => [day.date, Math.max(0, Number(day.reps) || 0)]));
+  return period.dates.map(date => ({ date, reps:values.get(date) || 0 }));
+}
+
+function activityPeriodTitle(period){
+  const today = activityDateKey();
+  const start = activityDateFromKey(period.dates[0]);
+  const end = activityDateFromKey(period.dates.at(-1));
+  if(activityRange === "day") return period.dates[0] === today ? "Өнөөдөр" : `${start.getMonth() + 1}-р сарын ${start.getDate()}`;
+  if(activityRange === "month") return `${start.getFullYear()} оны ${start.getMonth() + 1}-р сар`;
+  if(start.getMonth() === end.getMonth()) return `${start.getMonth() + 1}-р сарын ${start.getDate()} – ${end.getDate()}`;
+  return `${start.getMonth() + 1}-р сарын ${start.getDate()} – ${end.getMonth() + 1}-р сарын ${end.getDate()}`;
+}
+
+function openActivityDay(date){
+  if(date > activityDateKey()) return;
+  activityRange = "day";
+  activityAnchor = date;
+  localStorage.setItem("pushup:activityRange", activityRange);
+  renderDailyActivity();
+  loadDailyActivity(activityExercise);
 }
 
 function renderDailyActivity(){
-  const stored = dailyActivity[activityExercise];
-  const days = stored.length === 7 ? stored : emptyActivityDays();
-  const values = days.map(day => Math.max(0, Number(day.reps) || 0));
-  const today = values[values.length - 1] || 0;
-  const progress = Math.min(100, today / DAILY_GOALS[activityExercise] * 100);
+  const period = activityPeriodState();
+  const days = activityValues(period);
+  const todayKey = activityDateKey();
   const isSquat = activityExercise === "squat";
-  const label = isSquat ? "СУУЛТ" : "PUSH UP";
+  const exerciseLabel = isSquat ? "СУУЛТ" : "PUSH UP";
   $("dailyPushups").classList.toggle("squat", isSquat);
   $("activityPush").setAttribute("aria-pressed", String(!isSquat));
   $("activitySquat").setAttribute("aria-pressed", String(isSquat));
-  $("dailyPushupsTitle").textContent = `ӨНӨӨДӨР · ${label}`;
-  $("dailyCount").textContent = activityNumber.format(today);
+  for(const [id, range] of [["activityDay","day"],["activityWeek","week"],["activityMonth","month"]]) $(id).setAttribute("aria-pressed", String(activityRange === range));
+  $("activityDayView").classList.toggle("hidden", activityRange !== "day");
+  $("activityWeekView").classList.toggle("hidden", activityRange !== "week");
+  $("activityMonthView").classList.toggle("hidden", activityRange !== "month");
+  $("activityPeriodLabel").textContent = activityPeriodTitle(period);
+  $("activityNext").disabled = period.dates.at(-1) >= todayKey;
+
+  const selected = days.find(day => day.date === activityAnchor)?.reps || 0;
+  const progress = Math.min(100, selected / DAILY_GOALS[activityExercise] * 100);
+  $("dailyPushupsTitle").textContent = exerciseLabel;
+  $("dailyCount").textContent = activityNumber.format(selected);
   $("dailyGoal").textContent = `${activityNumber.format(DAILY_GOALS[activityExercise])} зорилго`;
   $("dailyRingValue").style.strokeDasharray = `${progress} 100`;
+
+  const completedDays = days.filter(day => day.date <= todayKey);
+  const total = completedDays.reduce((sum, day) => sum + day.reps, 0);
+  const average = completedDays.length ? Math.round(total / completedDays.length) : 0;
+  $("activityWeekTotal").textContent = activityNumber.format(total);
+  $("activityWeekAverage").textContent = `Дундаж ${activityNumber.format(average)}`;
+  $("activityMonthTotal").textContent = activityNumber.format(total);
+  $("activityMonthAverage").textContent = `Өдрийн дундаж ${activityNumber.format(average)}`;
+
+  const weekChart = $("activityWeekChart");
+  weekChart.textContent = "";
+  const weekMax = Math.max(DAILY_GOALS[activityExercise], ...days.map(day => day.reps));
+  const weekLabels = ["ДА","МЯ","ЛХ","ПҮ","БА","БЯ","НЯ"];
+  days.slice(0,7).forEach((day, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "activityWeekDay";
+    button.disabled = day.date > todayKey;
+    button.setAttribute("aria-label", `${day.date}: ${day.reps} ${exerciseLabel}`);
+    button.onclick = () => openActivityDay(day.date);
+    const value = document.createElement("span");
+    value.className = "activityWeekValue";
+    value.textContent = day.reps ? activityNumber.format(day.reps) : "";
+    const track = document.createElement("span");
+    track.className = "activityWeekBarTrack";
+    const bar = document.createElement("span");
+    bar.className = "activityWeekBar";
+    bar.style.height = `${Math.max(5, day.reps / weekMax * 100)}%`;
+    track.appendChild(bar);
+    const label = document.createElement("span");
+    label.className = "activityWeekLabel";
+    label.textContent = weekLabels[index];
+    button.append(value, track, label);
+    weekChart.appendChild(button);
+  });
+
+  const monthGrid = $("activityMonthGrid");
+  monthGrid.textContent = "";
+  if(activityRange === "month"){
+    const firstOffset = (activityDateFromKey(period.dates[0]).getDay() + 6) % 7;
+    for(let index = 0; index < firstOffset; index++){
+      const blank = document.createElement("span");
+      blank.className = "activityMonthBlank";
+      monthGrid.appendChild(blank);
+    }
+    for(const day of days){
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "activityMonthDay";
+      if(day.date === todayKey) button.classList.add("today");
+      if(day.date > todayKey){ button.classList.add("future"); button.disabled = true; }
+      button.style.setProperty("--activity-progress", `${Math.min(100, day.reps / DAILY_GOALS[activityExercise] * 100)}%`);
+      button.setAttribute("aria-label", `${day.date}: ${day.reps} ${exerciseLabel}`);
+      button.onclick = () => openActivityDay(day.date);
+      const number = document.createElement("span");
+      number.textContent = String(activityDateFromKey(day.date).getDate());
+      button.appendChild(number);
+      monthGrid.appendChild(button);
+    }
+    while(monthGrid.children.length % 7){
+      const blank = document.createElement("span");
+      blank.className = "activityMonthBlank";
+      monthGrid.appendChild(blank);
+    }
+  }
 }
 
 async function loadDailyActivity(exercise = activityExercise){
   const isCurrent = exercise === activityExercise;
   if(isCurrent) $("dailyPushups").setAttribute("aria-busy", "true");
+  const period = activityPeriodState();
+  const today = activityDateKey();
+  const includesToday = period.dates.includes(today);
+  const days = includesToday ? 31 : period.requestDays;
+  const end = includesToday ? today : period.requestEnd;
+  const request = ++activityRequests[exercise];
   try{
-    const data = await api(`/activity?days=7&exercise=${exercise}&timeZone=${encodeURIComponent(localTimeZone)}`);
+    const data = await api(`/activity?days=${days}&end=${end}&exercise=${exercise}&timeZone=${encodeURIComponent(localTimeZone)}`);
+    if(request !== activityRequests[exercise]) return;
     dailyActivity[exercise] = Array.isArray(data.days) ? data.days : [];
-    cacheDailyActivity(exercise);
+    if(includesToday) cacheDailyActivity(exercise);
   }catch{ /* сүлжээ тасарсан үед хамгийн сүүлийн амжилттай утгаа хадгална */ }
   if(exercise === activityExercise){
     $("dailyPushups").removeAttribute("aria-busy");
@@ -984,6 +1192,27 @@ async function loadDailyActivity(exercise = activityExercise){
 function selectActivity(exercise){
   activityExercise = exercise === "squat" ? "squat" : "pushup";
   localStorage.setItem("pushup:activityExercise", activityExercise);
+  renderDailyActivity();
+  loadDailyActivity(activityExercise);
+}
+
+function selectActivityRange(range){
+  activityRange = ["week","month"].includes(range) ? range : "day";
+  activityAnchor = activityDateKey();
+  localStorage.setItem("pushup:activityRange", activityRange);
+  renderDailyActivity();
+  loadDailyActivity(activityExercise);
+}
+
+function shiftActivityPeriod(direction){
+  if(direction > 0 && $("activityNext").disabled) return;
+  if(activityRange === "day") activityAnchor = activityShiftDate(activityAnchor, direction);
+  else if(activityRange === "week") activityAnchor = activityShiftDate(activityAnchor, direction * 7);
+  else {
+    const date = activityDateFromKey(activityAnchor);
+    activityAnchor = activityDateKey(new Date(date.getFullYear(), date.getMonth() + direction, 1, 12));
+  }
+  if(activityAnchor > activityDateKey()) activityAnchor = activityDateKey();
   renderDailyActivity();
   loadDailyActivity(activityExercise);
 }
@@ -3470,6 +3699,25 @@ function openSolo(kind){
 $("mBattle").onclick = startBattle;
 $("activityPush").onclick = () => selectActivity("pushup");
 $("activitySquat").onclick = () => selectActivity("squat");
+$("activityDay").onclick = () => selectActivityRange("day");
+$("activityWeek").onclick = () => selectActivityRange("week");
+$("activityMonth").onclick = () => selectActivityRange("month");
+$("activityPrev").onclick = () => shiftActivityPeriod(-1);
+$("activityNext").onclick = () => shiftActivityPeriod(1);
+let activitySwipeStart = null;
+$("activityViewport").addEventListener("pointerdown", event => {
+  if(!event.isPrimary) return;
+  activitySwipeStart = { x:event.clientX, y:event.clientY };
+});
+$("activityViewport").addEventListener("pointerup", event => {
+  if(!activitySwipeStart || !event.isPrimary) return;
+  const deltaX = event.clientX - activitySwipeStart.x;
+  const deltaY = event.clientY - activitySwipeStart.y;
+  activitySwipeStart = null;
+  if(Math.abs(deltaX) < 52 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+  shiftActivityPeriod(deltaX > 0 ? -1 : 1);
+});
+$("activityViewport").addEventListener("pointercancel", () => { activitySwipeStart = null; });
 $("challengeCustomToggle").onclick = () => {
   const form = $("challengeForm");
   const open = form.classList.toggle("hidden") === false;

@@ -25,10 +25,28 @@ function dateKey(value, timeZone) {
   return `${values.year}-${values.month}-${values.day}`
 }
 
-export function dailyPushups(rows, { days = 7, timeZone = 'UTC', now = new Date() } = {}) {
+export function normalizeActivityEndDate(value, { timeZone = 'UTC', now = new Date() } = {}) {
+  const zone = normalizeTimeZone(timeZone)
+  const today = dateKey(now, zone)
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return today
+  const parsed = new Date(`${value}T12:00:00Z`)
+  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) return today
+  return value > today ? today : value
+}
+
+export function activityQueryWindow(endDate, days) {
+  const count = Math.min(31, Math.max(1, Number.parseInt(days, 10) || 7))
+  const endNoon = new Date(`${endDate}T12:00:00Z`).getTime()
+  return {
+    start: new Date(endNoon - (count + 2) * DAY_MS),
+    end: new Date(endNoon + 2 * DAY_MS),
+  }
+}
+
+export function dailyPushups(rows, { days = 7, timeZone = 'UTC', now = new Date(), endDate } = {}) {
   const count = Math.min(31, Math.max(1, Number.parseInt(days, 10) || 7))
   const zone = normalizeTimeZone(timeZone)
-  const [year, month, day] = dateKey(now, zone).split('-').map(Number)
+  const [year, month, day] = normalizeActivityEndDate(endDate, { timeZone: zone, now }).split('-').map(Number)
   const keys = Array.from({ length: count }, (_, index) =>
     new Date(Date.UTC(year, month - 1, day - (count - 1 - index))).toISOString().slice(0, 10),
   )

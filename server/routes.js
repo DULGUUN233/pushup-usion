@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { activityLookback, dailyPushups, normalizeActivityExercise, normalizeTimeZone } from './activity.js'
+import { activityQueryWindow, dailyPushups, normalizeActivityEndDate, normalizeActivityExercise, normalizeTimeZone } from './activity.js'
 import { requireUser } from './auth.js'
 import { CHALLENGE_TEMPLATES, challengeSummary, createChallenge } from './challenge.js'
 import { findOrCreateUser, leagues, rankOf, sessions, users } from './db.js'
@@ -53,15 +53,17 @@ router.get('/activity', requireUser, async (req, res) => {
   const timeZone = normalizeTimeZone(req.query.timeZone)
   const exercise = normalizeActivityExercise(req.query.exercise)
   const now = new Date()
+  const endDate = normalizeActivityEndDate(req.query.end, { timeZone, now })
+  const window = activityQueryWindow(endDate, days)
   const rows = await sessions()
     .find({
       userId: req.user.userId,
       exercise,
-      finishedAt: { $gte: new Date(now.getTime() - activityLookback(days)) },
+      finishedAt: { $gte: window.start, $lt: window.end },
     })
     .project({ _id: 0, reps: 1, finishedAt: 1 })
     .toArray()
-  res.json({ exercise, timeZone, days: dailyPushups(rows, { days, timeZone, now }) })
+  res.json({ exercise, timeZone, endDate, days: dailyPushups(rows, { days, timeZone, now, endDate }) })
 })
 
 router.get('/challenges', requireUser, async (req, res) => {
