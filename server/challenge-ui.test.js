@@ -4,6 +4,13 @@ import test from 'node:test'
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 
+test('challenge түр нууж, initial ачааллаас салгасан', () => {
+  assert.match(html, /id="challengeSection" class="challengeSection hidden"[^>]*aria-hidden="true"/)
+  assert.match(html, /const CHALLENGES_ENABLED = false;/)
+  assert.match(html, /\$\("challengeSection"\)\.classList\.toggle\("hidden", !CHALLENGES_ENABLED\)/)
+  assert.match(html, /if\(CHALLENGES_ENABLED\) startupTasks\.push\(loadChallenges\(\)\);/)
+})
+
 test('default болон custom challenge UI байна', () => {
   assert.match(html, /id="challengeTemplates"/)
   assert.match(html, /id="challengeCustomToggle"[^>]*>Өөрөө үүсгэх/)

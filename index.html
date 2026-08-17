@@ -571,11 +571,11 @@
     <div class="aiLoadingCard">
       <strong>БЭЛТГЭЖ БАЙНА...</strong>
       <div class="modelProgress" data-model-progress role="progressbar"
-           aria-label="AI model ачаалалт" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+           aria-label="Апп ачаалалт" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="modelProgressTrack" aria-hidden="true"><div class="modelProgressBar"></div></div>
         <div class="modelProgressValue" aria-hidden="true">0%</div>
       </div>
-      <span class="srOnly">Анхны нээлтэд AI model бэлтгэх тул бага зэрэг хугацаа орж болно.</span>
+      <span class="srOnly">Үндсэн мэдээллүүдийг ачаалж байна.</span>
     </div>
   </div>
 </section>
@@ -621,7 +621,7 @@
     </div>
   </section>
 
-  <section class="challengeSection" aria-labelledby="challengeTitle">
+  <section id="challengeSection" class="challengeSection hidden" aria-labelledby="challengeTitle" aria-hidden="true">
     <div class="challengeHead">
       <h2 id="challengeTitle">Challenge</h2>
       <button id="challengeCustomToggle" type="button" aria-expanded="false">Өөрөө үүсгэх</button>
@@ -1249,6 +1249,7 @@ function shiftActivityPeriod(direction){
   loadDailyActivity(activityExercise);
 }
 
+const CHALLENGES_ENABLED = false;
 let challengeState = { templates:[], active:null };
 
 function challengeExerciseLabel(exercise){
@@ -2302,6 +2303,15 @@ function setModelProgress(value){
   }
 }
 
+function setBootProgress(value){
+  const progress = document.querySelector("#boot [data-model-progress]");
+  if(!progress) return;
+  const percent = Math.max(0, Math.min(100, Math.round(value)));
+  progress.setAttribute("aria-valuenow", String(percent));
+  progress.querySelector(".modelProgressValue").textContent = `${percent}%`;
+  progress.querySelector(".modelProgressBar").style.width = `${percent}%`;
+}
+
 async function modelAssetWithProgress(modelAssetPath, onProgress){
   onProgress(5);
   const response = await fetch(modelAssetPath);
@@ -2507,7 +2517,7 @@ async function saveSet(reps, seconds, kind = exercise){
     addDailyActivityReps(kind, reps);
     leagueHubData = null;
     loadDailyActivity(kind);
-    loadChallenges();
+    if(CHALLENGES_ENABLED) loadChallenges();
     const total = kind === "squat" ? profile.squatTotalReps : profile.totalReps;
     const rank = kind === "squat" ? profile.squatRank : profile.rank;
     note(`+${reps} ${label} бүртгэгдлээ. Нийт ${total}, #${rank}`, "ok");
@@ -3480,7 +3490,7 @@ function leaveBattle(){
   leagueHubData = null;
   loadProfile();
   loadDailyActivity();
-  loadChallenges();
+  if(CHALLENGES_ENABLED) loadChallenges();
 }
 
 // ======================= лиг ба байр =======================
@@ -3828,11 +3838,14 @@ $("reset").onclick  = reset;
 $("done").onclick   = finish;
 
 renderDailyActivity();
+$("challengeSection").classList.toggle("hidden", !CHALLENGES_ENABLED);
+$("challengeSection").setAttribute("aria-hidden", String(!CHALLENGES_ENABLED));
 
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) lastFrame = 0;
 });
 
+setBootProgress(5);
 launchCfg = await usionInit();
 const directInvite = guestLaunch();
 startupInvitePending = directInvite;
@@ -3846,8 +3859,6 @@ if(directInvite){
   show("hall");
   renderConnectingHall();
   scheduleModelWarmup();
-} else {
-  show("menu");
 }
 
 // Хостын дээд мөрний share товчоор найз урихад энэ дуудагдана. Заавал
@@ -3861,10 +3872,23 @@ sdk()?.game?.onRoomAssigned?.(d => {
   if(mode !== "battle") startBattle();
 });
 
-await Promise.all([loadProfile(), loadDailyActivity(), loadChallenges()]);
+const startupTasks = [loadProfile(), loadDailyActivity()];
+if(CHALLENGES_ENABLED) startupTasks.push(loadChallenges());
+if(!directInvite) startupTasks.push(fetchLeagueHub());
+let startupDone = 0;
+setBootProgress(8);
+const startupReady = Promise.allSettled(startupTasks.map(task => Promise.resolve(task).finally(() => {
+  startupDone++;
+  setBootProgress(8 + startupDone / startupTasks.length * 92);
+})));
+await Promise.race([
+  startupReady,
+  new Promise(resolve => setTimeout(resolve, 10_000)),
+]);
+setBootProgress(100);
 
 if(!directInvite){
-  fetchLeagueHub().catch(() => {});
+  show("menu");
   setTimeout(scheduleModelWarmup, 600);
 }
 

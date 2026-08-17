@@ -29,7 +29,7 @@ test('hub-ийн лигийн карт rank-аа зүүн, мэдээллээ г
 test('лигийг нүүрэн дээр урьдчилж ачаалаад нээхэд ижил хүсэлтийг давхардуулахгүй', () => {
   assert.match(html, /let leagueHubData = null;/)
   assert.match(html, /if\(leagueHubPromise\) return leagueHubPromise;/)
-  assert.match(html, /fetchLeagueHub\(\)\.catch\(\(\) => \{\}\);/)
+  assert.match(html, /startupTasks\.push\(fetchLeagueHub\(\)\);/)
   assert.match(html, /loadLeagueHub\(false\);/)
 })
 

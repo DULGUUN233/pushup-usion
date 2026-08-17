@@ -70,7 +70,10 @@ test('өдрийн activity cache-ээс шууд харагдаад profile-т�
   assert.match(html, /function restoreDailyActivity\(exercise\)/)
   assert.match(html, /localStorage\.setItem\(activityCacheKey\(exercise\)/)
   assert.match(html, /restoreDailyActivity\("pushup"\);[\s\S]*?restoreDailyActivity\("squat"\);/)
-  assert.match(html, /await Promise\.all\(\[loadProfile\(\), loadDailyActivity\(\), loadChallenges\(\)\]\);/)
+  assert.match(html, /const startupTasks = \[loadProfile\(\), loadDailyActivity\(\)\];/)
+  assert.match(html, /if\(CHALLENGES_ENABLED\) startupTasks\.push\(loadChallenges\(\)\);/)
+  assert.match(html, /const startupReady = Promise\.allSettled\(startupTasks\.map/)
+  assert.match(html, /await Promise\.race\(\[\s*startupReady,/)
   assert.match(html, /addDailyActivityReps\(kind, reps\);/)
   const profileSource = html.match(/async function loadProfile\(\)\{[\s\S]*?\n\}/)?.[0] ?? ''
   assert.doesNotMatch(profileSource, /loadDailyActivity/)
