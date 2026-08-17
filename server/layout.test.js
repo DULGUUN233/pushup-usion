@@ -7,7 +7,7 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 test('squat battle камер зүүн/баруун бүтэн өндөртэй байрлана', () => {
   assert.match(
     html,
-    /#play\.duel\.squat-duel #oppVid,\s*#play\.duel\.squat-duel #oppCanvas\{[^}]*left:0[^}]*width:50%;height:calc\(100% - var\(--squat-head\)\)/s,
+    /#play\.duel\.squat-duel #oppVid\{[^}]*left:0[^}]*width:50%;height:calc\(100% - var\(--squat-head\)\)/s,
   )
   assert.match(
     html,
