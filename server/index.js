@@ -16,6 +16,10 @@ app.use(express.json({ limit: '64kb' }))
 app.use('/api/battle', battleRoutes)
 app.use('/api', api)
 app.get('/healthz', (_req, res) => res.json({ ok: true, authMode }))
+app.use('/assets', express.static(path.join(root, 'assets'), {
+  immutable: true,
+  maxAge: '1y',
+}))
 
 // Express 5-д '*' маршрут хүчингүй тул catch-all-ыг use()-ээр хийнэ.
 app.use((_req, res) => {

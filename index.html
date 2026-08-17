@@ -6,6 +6,7 @@
 <title>Push-up</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+<link rel="preload" as="image" href="./assets/pushup-battle-loading-v1.webp" type="image/webp" fetchpriority="high">
 <script src="https://usions.com/usion-sdk.js"></script>
 <style>
   :root{
@@ -29,7 +30,17 @@
   button:disabled{opacity:.4}
   button.primary{background:var(--accent);color:#04140c;padding:13px 22px;font-size:15px}
 
-  #boot{display:grid;place-items:center;text-align:center;color:var(--dim);font-size:14px}
+  #boot{display:grid;place-items:center;overflow:hidden;padding:
+    calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 8px);
+    background:radial-gradient(circle at 50% 42%,rgba(22,100,255,.2),transparent 46%),#02050a;
+    text-align:center;color:var(--dim);font-size:14px}
+  .bootStage{position:relative;isolation:isolate;width:min(calc(100vw - 16px),
+    calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px),640px);
+    aspect-ratio:1;flex:none;filter:drop-shadow(0 16px 40px rgba(0,71,255,.18))}
+  .bootArtwork{position:absolute;z-index:-2;inset:0;width:100%;height:100%;display:block;
+    object-fit:contain;user-select:none;-webkit-user-drag:none}
+  .bootStage::after{content:"";position:absolute;z-index:-1;inset:5%;border-radius:11%;pointer-events:none;
+    background:linear-gradient(180deg,transparent 58%,rgba(1,5,12,.16) 70%,rgba(1,5,12,.88) 94%)}
 
   /* ---------- цэс ---------- */
   #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;overflow-y:auto;
@@ -361,11 +372,28 @@
     overflow:hidden;background:rgba(255,255,255,.14)}
   .modelProgressBar{height:100%;width:0;background:var(--gold);
     transition:width .18s ease-out}
-  #boot .aiLoadingCard{background:transparent;border:0;box-shadow:none;backdrop-filter:none}
-  #boot .aiLoadingCard strong{color:var(--fg)}
+  #boot .aiLoadingCard{position:absolute;left:13%;right:13%;bottom:6.6%;width:auto;padding:0;gap:5px;
+    background:transparent;border:0;box-shadow:none;backdrop-filter:none}
+  #boot .aiLoadingRing{display:none}
+  #boot .aiLoadingCard strong{color:#fff;font-size:clamp(11px,3.2vw,19px);line-height:1.15;
+    letter-spacing:.08em;text-shadow:0 2px 8px #000,0 0 12px rgba(46,133,255,.7)}
+  #boot .modelProgress{display:flex;width:100%;flex-direction:column;align-items:center;gap:4px}
+  #boot .modelProgressTrack{height:clamp(11px,3vw,18px);margin:0;padding:3px;
+    border:1px solid rgba(112,191,255,.92);background:#07101d;
+    box-shadow:0 0 0 2px rgba(0,38,116,.9),inset 0 2px 5px rgba(0,0,0,.85),0 0 15px rgba(19,111,255,.7)}
+  #boot .modelProgressBar{position:relative;overflow:hidden;border-radius:inherit;
+    background:linear-gradient(90deg,#095cff,#20b8ff 74%,#87e8ff);
+    box-shadow:0 0 10px rgba(32,184,255,.9)}
+  #boot .modelProgressBar::after{content:"";position:absolute;inset:0;width:38%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:translateX(-160%);animation:bootProgressShine 1.15s ease-in-out infinite}
+  #boot .modelProgressValue{color:#fff;font-size:clamp(18px,5vw,30px);
+    text-shadow:0 2px 8px #000,0 0 10px rgba(42,156,255,.55)}
   @keyframes aiLoadingSpin{to{transform:rotate(360deg)}}
+  @keyframes bootProgressShine{to{transform:translateX(360%)}}
   @media (prefers-reduced-motion:reduce){
     .aiLoadingRing{animation:none;border-color:rgba(255,210,30,.65)}
+    #boot .modelProgressBar::after{display:none}
   }
 
   /* Тоолуур доод талд, шар дугуй дотор — reel дээрх загвар */
@@ -537,15 +565,18 @@
 <body>
 
 <section id="boot" class="screen" role="status" aria-live="polite" aria-atomic="true">
-  <div class="aiLoadingCard">
-    <div class="aiLoadingRing" aria-hidden="true"></div>
-    <strong>Апп бэлтгэж байна</strong>
-    <div class="modelProgress" data-model-progress role="progressbar"
-         aria-label="AI model ачаалалт" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-      <div class="modelProgressValue" aria-hidden="true">0%</div>
-      <div class="modelProgressTrack" aria-hidden="true"><div class="modelProgressBar"></div></div>
+  <div class="bootStage">
+    <img class="bootArtwork" src="./assets/pushup-battle-loading-v1.webp" width="1024" height="1024"
+         alt="" aria-hidden="true" fetchpriority="high" decoding="async">
+    <div class="aiLoadingCard">
+      <strong>БЭЛТГЭЖ БАЙНА...</strong>
+      <div class="modelProgress" data-model-progress role="progressbar"
+           aria-label="AI model ачаалалт" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="modelProgressTrack" aria-hidden="true"><div class="modelProgressBar"></div></div>
+        <div class="modelProgressValue" aria-hidden="true">0%</div>
+      </div>
+      <span class="srOnly">Анхны нээлтэд AI model бэлтгэх тул бага зэрэг хугацаа орж болно.</span>
     </div>
-    <span>Анхны нээлтэд AI model бэлтгэх тул бага зэрэг хугацаа орж болно.</span>
   </div>
 </section>
 
