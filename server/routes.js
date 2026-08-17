@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { requireUser } from './auth.js'
-import { findOrCreateUser, rankOf, sessions, users } from './db.js'
+import { findOrCreateUser, leagues, rankOf, sessions, users } from './db.js'
+import { gapToNext, makeLeagueCode, METRICS, normalizeMetric, rankUsers } from './league-rank.js'
 
 /**
  * Нэг сетэд хүлээн зөвшөөрөх дээд тоо. v1-д клиентийн тоонд итгэдэг тул
@@ -8,6 +9,8 @@ import { findOrCreateUser, rankOf, sessions, users } from './db.js'
  * орохоос сэргийлнэ. Жинхэнэ шалгалт landmark баталгаажуулалт орох үед.
  */
 const MAX_REPS = 1000
+const MAX_LEAGUES_PER_USER = 20
+const MAX_LEAGUE_MEMBERS = 100
 
 const router = Router()
 
@@ -112,31 +115,146 @@ router.get('/ice', requireUser, async (_req, res) => {
   }
 })
 
-router.get('/leaderboard', async (req, res) => {
-  const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100)
-  const exercise = req.query.exercise === 'squat' ? 'squat' : 'pushup'
-  const fields = exerciseFields(exercise)
-  const top = await users()
-    .find(
-      { [fields.total]: { $gt: 0 } },
-      { projection: { name: 1, avatar: 1, [fields.total]: 1, [fields.best]: 1, rating: 1 } },
-    )
-    .sort({ [fields.total]: -1 })
-    .limit(limit)
-    .toArray()
-
-  res.json(
-    top.map((u, i) => ({
-      rank: i + 1,
-      userId: u._id,
-      name: u.name,
-      avatar: u.avatar ?? null,
-      totalReps: u[fields.total] ?? 0,
-      bestSet: u[fields.best] ?? 0,
-      rating: u.rating,
-      exercise,
-    })),
+function leagueSummary(league, rankedByMetric, userId) {
+  const ranks = Object.fromEntries(
+    Object.entries(rankedByMetric).map(([metric, rows]) => [
+      metric,
+      rows.find((row) => row.userId === userId)?.rank ?? null,
+    ]),
   )
+  return {
+    id: String(league._id),
+    name: league.name,
+    code: league.code,
+    memberCount: league.memberIds.length,
+    owner: league.ownerId === userId,
+    ranks,
+  }
+}
+
+router.post('/leagues', requireUser, async (req, res) => {
+  const name = String(req.body?.name ?? '').trim().replace(/\s+/g, ' ')
+  if (name.length < 2 || name.length > 30) {
+    return res.status(400).json({ error: 'Лигийн нэр 2–30 тэмдэгт байна.' })
+  }
+  await findOrCreateUser(req.user)
+  const joined = await leagues().countDocuments({ memberIds: req.user.userId })
+  if (joined >= MAX_LEAGUES_PER_USER) {
+    return res.status(409).json({ error: `Нэг хэрэглэгч ${MAX_LEAGUES_PER_USER} хүртэл лигт оролцоно.` })
+  }
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const code = makeLeagueCode()
+    try {
+      const result = await leagues().insertOne({
+        name,
+        code,
+        ownerId: req.user.userId,
+        memberIds: [req.user.userId],
+        createdAt: new Date(),
+      })
+      return res.status(201).json({ id: String(result.insertedId), name, code, memberCount: 1, owner: true })
+    } catch (error) {
+      if (error?.code !== 11000) throw error
+    }
+  }
+  return res.status(503).json({ error: 'Лигийн код үүсгэж чадсангүй. Дахин оролдоно уу.' })
+})
+
+router.post('/leagues/join', requireUser, async (req, res) => {
+  const code = String(req.body?.code ?? '').trim().toUpperCase()
+  if (!/^[A-HJ-NP-Z2-9]{6}$/.test(code)) {
+    return res.status(400).json({ error: '6 тэмдэгт лигийн кодоо шалгана уу.' })
+  }
+  await findOrCreateUser(req.user)
+  const league = await leagues().findOne({ code })
+  if (!league) return res.status(404).json({ error: 'Ийм кодтой лиг олдсонгүй.' })
+  if (league.memberIds.includes(req.user.userId)) {
+    return res.json({ id: String(league._id), name: league.name, code, memberCount: league.memberIds.length, owner: league.ownerId === req.user.userId })
+  }
+  const joined = await leagues().countDocuments({ memberIds: req.user.userId })
+  if (joined >= MAX_LEAGUES_PER_USER) {
+    return res.status(409).json({ error: `Нэг хэрэглэгч ${MAX_LEAGUES_PER_USER} хүртэл лигт оролцоно.` })
+  }
+  if (league.memberIds.length >= MAX_LEAGUE_MEMBERS) {
+    return res.status(409).json({ error: 'Энэ лигийн 100 гишүүний хязгаар дүүрсэн байна.' })
+  }
+  const result = await leagues().findOneAndUpdate(
+    { _id: league._id, memberIds: { $ne: req.user.userId }, $expr: { $lt: [{ $size: '$memberIds' }, MAX_LEAGUE_MEMBERS] } },
+    { $addToSet: { memberIds: req.user.userId } },
+    { returnDocument: 'after' },
+  )
+  if (!result) return res.status(409).json({ error: 'Лигт нэгдэж чадсангүй. Дахин оролдоно уу.' })
+  res.json({ id: String(result._id), name: result.name, code, memberCount: result.memberIds.length, owner: false })
+})
+
+router.get('/leagues', requireUser, async (req, res) => {
+  const me = await findOrCreateUser(req.user)
+  const mine = await leagues().find({ memberIds: req.user.userId }).sort({ createdAt: -1 }).toArray()
+  const memberIds = [...new Set(mine.flatMap((league) => league.memberIds))]
+  const members = memberIds.length
+    ? await users().find({ _id: { $in: memberIds } }).toArray()
+    : []
+  const byId = new Map(members.map((user) => [user._id, user]))
+  const summaries = mine.map((league) => {
+    const leagueUsers = league.memberIds.map((id) => byId.get(id)).filter(Boolean)
+    const ranked = Object.fromEntries(Object.keys(METRICS).map((metric) => [metric, rankUsers(leagueUsers, metric)]))
+    return leagueSummary(league, ranked, req.user.userId)
+  })
+  const battleRank = (await users().countDocuments({ battles: { $gt: 0 }, rating: { $gt: me.rating ?? 1000 } })) + 1
+  res.json({
+    leagues: summaries,
+    global: {
+      memberCount: await users().countDocuments({}),
+      ranks: {
+        pushup: await rankOf(me.totalReps ?? 0),
+        squat: await rankOf(me.squatTotalReps ?? 0, 'squat'),
+        battle: me.battles > 0 ? battleRank : null,
+      },
+    },
+  })
+})
+
+router.get('/leaderboard', requireUser, async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100)
+  const metric = normalizeMetric(req.query.metric ?? req.query.exercise)
+  const field = METRICS[metric].score
+  const me = await findOrCreateUser(req.user)
+  const code = String(req.query.league ?? '').trim().toUpperCase()
+
+  if (code) {
+    const league = await leagues().findOne({ code })
+    if (!league || !league.memberIds.includes(req.user.userId)) {
+      return res.status(404).json({ error: 'Энэ лиг олдсонгүй эсвэл та гишүүн биш байна.' })
+    }
+    const leagueUsers = await users().find({ _id: { $in: league.memberIds } }).toArray()
+    const rows = rankUsers(leagueUsers, metric)
+    const mine = rows.find((row) => row.userId === req.user.userId) ?? null
+    return res.json({
+      metric,
+      league: { name: league.name, code: league.code, memberCount: league.memberIds.length, owner: league.ownerId === req.user.userId },
+      totalPlayers: rows.length,
+      players: rows.slice(0, limit),
+      me: mine ? { ...mine, gapToNext: gapToNext(rows, req.user.userId) } : null,
+    })
+  }
+
+  const filter = metric === 'battle' ? { battles: { $gt: 0 } } : { [field]: { $gt: 0 } }
+  const rawTop = await users().find(filter).sort({ [field]: -1, [METRICS[metric].best]: -1 }).limit(limit).toArray()
+  const top = rankUsers(rawTop, metric)
+  const ownScore = me[field] ?? 0
+  const ownRank = (await users().countDocuments({ ...filter, [field]: { $gt: ownScore } })) + 1
+  const ownRow = { ...rankUsers([me], metric)[0], rank: ownRank }
+  const next = await users().find({ ...filter, [field]: { $gt: ownScore } }).sort({ [field]: 1 }).limit(1).next()
+  res.json({
+    metric,
+    league: null,
+    totalPlayers: await users().countDocuments(filter),
+    players: top,
+    me: metric === 'battle' && !me.battles
+      ? null
+      : { ...ownRow, gapToNext: next ? (next[field] ?? 0) - ownScore + 1 : null },
+  })
 })
 
 export default router

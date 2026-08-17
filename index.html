@@ -51,19 +51,81 @@
   #note.bad{color:var(--bad)}
   #note.ok{color:var(--accent)}
 
-  /* ---------- тэргүүлэгчид ---------- */
-  #board h2{margin:0 0 14px;font-size:20px}
-  #boardTabs{display:flex;gap:8px;max-width:460px;margin:0 auto 12px}
-  #boardTabs button{flex:1;border-radius:12px}
+  /* ---------- лиг ба байр ---------- */
+  #board{background:
+    radial-gradient(circle at 80% -10%,rgba(57,217,138,.13),transparent 34%),var(--bg)}
+  .boardShell{width:min(100%,520px);margin:0 auto}
+  .boardHead{margin:0 0 18px}
+  .boardHead h2{margin:0;font-size:26px;letter-spacing:-.035em}
+  .boardHead p{margin:6px 0 0;color:var(--dim);font-size:13px;line-height:1.5}
+  .leagueCard{width:100%;min-height:88px;border-radius:20px;padding:16px;text-align:left;
+    display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid rgba(255,255,255,.07)}
+  .leagueCard.global{background:linear-gradient(135deg,#213526,#15251e);border-color:rgba(57,217,138,.28)}
+  .leagueMark{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;flex:none;
+    background:rgba(57,217,138,.13);color:var(--accent)}
+  .leagueMark svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2}
+  .leagueMeta{flex:1;min-width:0}
+  .leagueMeta strong{display:block;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .leagueMeta small{display:block;margin-top:5px;color:var(--dim);font-size:12px}
+  .leagueRank{font-size:21px;font-weight:900;color:var(--fg);font-variant-numeric:tabular-nums}
+  .leagueRank small{display:block;font-size:10px;font-weight:700;color:var(--dim);text-align:right}
+  .boardActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}
+  .boardActions button{min-height:48px;border-radius:15px}
+  .leagueForm{padding:14px;margin:0 0 12px;border-radius:18px;background:var(--card);
+    border:1px solid rgba(255,255,255,.08)}
+  .leagueForm label{display:block;font-size:12px;font-weight:800;margin-bottom:8px}
+  .leagueFormRow{display:flex;gap:8px}
+  .leagueForm input{min-width:0;flex:1;height:48px;border:1px solid rgba(255,255,255,.12);
+    border-radius:13px;padding:0 13px;background:#0e141b;color:var(--fg);font:inherit;font-size:16px;outline:none}
+  .leagueForm input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(57,217,138,.12)}
+  .leagueForm button{min-width:86px;border-radius:13px;background:var(--accent);color:#04140c}
+  .formStatus{min-height:18px;margin:8px 2px 0;font-size:12px;color:var(--dim)}
+  .formStatus.bad{color:var(--bad)}
+  .leagueTitleRow{display:flex;align-items:center;justify-content:space-between;margin:21px 2px 10px}
+  .leagueTitleRow h3{margin:0;font-size:14px}
+  .leagueTitleRow span{font-size:11px;color:var(--dim)}
+  #leagueList{display:flex;flex-direction:column;gap:8px}
+  .emptyLeague{padding:24px 18px;text-align:center;border:1px dashed rgba(255,255,255,.13);
+    border-radius:18px;color:var(--dim);font-size:13px;line-height:1.55}
+  .boardFooter{margin-top:16px;width:100%;min-height:46px}
+  .detailTop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .detailTop>button{width:44px;height:44px;padding:0;display:grid;place-items:center;flex:none}
+  .detailTop div{min-width:0}
+  .detailTop h2{margin:0;font-size:21px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .detailTop p{margin:3px 0 0;color:var(--dim);font-size:12px}
+  #boardTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:5px;
+    border-radius:15px;background:rgba(255,255,255,.06);margin-bottom:15px}
+  #boardTabs button{min-height:40px;padding:8px 5px;border-radius:11px;background:transparent}
   #boardTabs button.active{background:var(--gold);color:#231a00}
-  #rows{display:flex;flex-direction:column;gap:2px;max-width:460px;margin:0 auto}
-  .row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;
-    background:var(--card)}
+  #podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;align-items:end;gap:7px;min-height:190px;margin:5px 0 13px}
+  .podiumPlace{text-align:center;min-width:0}
+  .podiumPlace.first{order:2}.podiumPlace.second{order:1}.podiumPlace.third{order:3}
+  .rankAvatar{width:47px;height:47px;border-radius:50%;object-fit:cover;margin:0 auto 7px;
+    display:grid;place-items:center;background:#263140;color:#fff;font-weight:900;border:2px solid rgba(255,255,255,.16)}
+  .podiumPlace.first .rankAvatar{width:61px;height:61px;border-color:var(--gold)}
+  .podiumName{font-size:12px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .podiumScore{font-size:11px;color:var(--dim);margin-top:3px}
+  .podiumStep{height:55px;margin-top:9px;padding-top:10px;border-radius:13px 13px 5px 5px;
+    background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.05));font-size:21px;font-weight:900}
+  .podiumPlace.first .podiumStep{height:78px;background:linear-gradient(180deg,rgba(255,210,30,.28),rgba(255,210,30,.07));color:var(--gold)}
+  .podiumPlace.second .podiumStep{height:65px}
+  #rows{display:flex;flex-direction:column;gap:6px}
+  .row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:15px;background:var(--card)}
   .row.me{background:#1c2b22;outline:1px solid rgba(57,217,138,.4)}
-  .row .pos{width:26px;font-weight:800;color:var(--dim);font-variant-numeric:tabular-nums}
-  .row .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .row .tot{font-weight:800;font-variant-numeric:tabular-nums}
-  .row .tot small{font-size:11px;font-weight:600;color:var(--dim);margin-left:4px}
+  .row .rankAvatar{width:38px;height:38px;margin:0;border-width:1px;font-size:13px}
+  .row .pos{width:28px;font-weight:900;color:var(--dim);font-variant-numeric:tabular-nums}
+  .row .nm{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .tot{font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
+  .row .tot small{display:block;font-size:9px;font-weight:700;color:var(--dim);text-transform:uppercase}
+  #myRankCard{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 6px);z-index:2;margin-top:10px;
+    padding:13px 14px;border-radius:17px;background:rgba(25,43,34,.94);border:1px solid rgba(57,217,138,.45);
+    backdrop-filter:blur(16px);display:flex;align-items:center;gap:10px}
+  #myRankCard .mineMain{flex:1;font-size:13px;font-weight:800}
+  #myRankCard .mineMain small{display:block;color:var(--dim);font-weight:600;margin-top:3px}
+  #myRankCard .mineRank{font-size:22px;font-weight:900;color:var(--accent)}
+  .boardLoading{height:78px;border-radius:18px;margin:8px 0;background:linear-gradient(90deg,#131a22 25%,#202a35 50%,#131a22 75%);
+    background-size:200% 100%;animation:boardShimmer 1.2s infinite}
+  @keyframes boardShimmer{to{background-position:-200% 0}}
 
   /* ---------- хүлээлгийн өрөө ---------- */
   #hall{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto}
@@ -357,21 +419,60 @@
   <button class="mode go" id="mPush">Push Up<small>Чөлөөтэй тоол — нийт дүнд нэмэгдэнэ</small></button>
   <button class="mode go" id="mSquat">Squat · Суулт<small>Хажуу/45°-аас бүтэн суултыг тоолно</small></button>
   <button class="mode duel" id="mBattle">Battle<small>Push-up · Squat · Хосолсон, 1v1, ELO</small></button>
-  <button id="mBoard">Тэргүүлэгчид</button>
+  <button id="mBoard">Лиг ба байр</button>
 
   <div id="note" role="status" aria-live="polite" aria-atomic="true"></div>
   <button id="retrySave" class="hidden">Дахин хадгалах</button>
 </section>
 
-<!-- ================= ТЭРГҮҮЛЭГЧИД ================= -->
+<!-- ================= ЛИГ БА БАЙР ================= -->
 <section id="board" class="screen hidden">
-  <h2>Тэргүүлэгчид</h2>
-  <div id="boardTabs">
-    <button id="boardPush" class="active">Push-up</button>
-    <button id="boardSquat">Squat</button>
+  <div class="boardShell">
+    <div id="boardHub">
+      <header class="boardHead">
+        <h2>Лиг ба байр</h2>
+        <p>Найзуудтайгаа нэг лигт нэгдэж, гурван төрлөөр өрсөлдөөрэй.</p>
+      </header>
+      <button id="globalLeague" class="leagueCard global"></button>
+      <div class="boardActions">
+        <button id="showCreateLeague">+ Лиг үүсгэх</button>
+        <button id="showJoinLeague">Кодоор нэгдэх</button>
+      </div>
+      <form id="createLeagueForm" class="leagueForm hidden">
+        <label for="leagueName">Лигийн нэр</label>
+        <div class="leagueFormRow">
+          <input id="leagueName" maxlength="30" autocomplete="off" placeholder="Жишээ: Office Crew">
+          <button type="submit">Үүсгэх</button>
+        </div>
+        <div id="createLeagueStatus" class="formStatus" role="status"></div>
+      </form>
+      <form id="joinLeagueForm" class="leagueForm hidden">
+        <label for="leagueCode">6 тэмдэгт код</label>
+        <div class="leagueFormRow">
+          <input id="leagueCode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="AB23CD">
+          <button type="submit">Нэгдэх</button>
+        </div>
+        <div id="joinLeagueStatus" class="formStatus" role="status"></div>
+      </form>
+      <div class="leagueTitleRow"><h3>Миний лигүүд</h3><span id="leagueCount"></span></div>
+      <div id="leagueList"><div class="boardLoading"></div><div class="boardLoading"></div></div>
+      <button id="bBack" class="boardFooter">← Цэс рүү буцах</button>
+    </div>
+    <div id="boardDetail" class="hidden">
+      <div class="detailTop">
+        <button id="detailBack" aria-label="Лигүүд рүү буцах">←</button>
+        <div><h2 id="detailName">Бүх тоглогч</h2><p id="detailMeta"></p></div>
+      </div>
+      <div id="boardTabs">
+        <button id="boardPush" class="active">Push-up</button>
+        <button id="boardSquat">Squat</button>
+        <button id="boardBattle">Battle ELO</button>
+      </div>
+      <div id="podium"></div>
+      <div id="rows"></div>
+      <div id="myRankCard" class="hidden"></div>
+    </div>
   </div>
-  <div id="rows"></div>
-  <div style="max-width:460px;margin:16px auto 0"><button id="bBack">← Буцах</button></div>
 </section>
 
 <!-- ================= ХҮЛЭЭЛГИЙН ӨРӨӨ ================= -->
@@ -707,6 +808,10 @@ function setBack(id){
   // Өрөөгөө үлдээхгүйн тулд `leaveBattle` дуудна: урилга үхэж, найз хоосон
   // өрөө рүү орохгүй.
   if(id === "hall") return void u.claimBackButton(() => leaveBattle());
+  if(id === "board") return void u.claimBackButton(() => {
+    if(!$('boardDetail').classList.contains('hidden')) showBoardHub(true);
+    else show('menu');
+  });
 
   // Дахин авахгүй: `show` нь очих дэлгэцийн төлөвийг өөрөө тавина. Энд
   // дахин авбал цэсэн дээрх суллалтыг дарж, аппыг хаах боломжгүй болно.
@@ -2775,32 +2880,205 @@ function leaveBattle(){
   loadProfile();
 }
 
-// ======================= тэргүүлэгчид =======================
+// ======================= лиг ба байр =======================
 
-async function loadBoard(kind){
-  $("boardPush").classList.toggle("active", kind === "pushup");
-  $("boardSquat").classList.toggle("active", kind === "squat");
-  show("board");
-  const rows = $("rows");
-  rows.textContent = "Ачаалж байна…";
+let boardMetric = "pushup";
+let activeLeagueCode = "";
+let activeLeagueName = "Бүх тоглогч";
+let boardRequest = 0;
+const boardNumber = new Intl.NumberFormat("mn-MN");
+
+function boardUnit(){ return boardMetric === "battle" ? "ELO" : "REP"; }
+
+function makeRankAvatar(user){
+  let el;
+  if(user?.avatar){
+    el = document.createElement("img");
+    el.src = user.avatar;
+    el.alt = "";
+  }else{
+    el = document.createElement("div");
+    el.textContent = String(user?.name || user?.userId || "?").trim().charAt(0).toUpperCase();
+  }
+  el.className = "rankAvatar";
+  return el;
+}
+
+function leagueIcon(){
+  const el = document.createElement("div");
+  el.className = "leagueMark";
+  el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v3a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1a4 4 0 0 0 4 4m9-5h3v1a4 4 0 0 1-4 4"/></svg>';
+  return el;
+}
+
+function fillLeagueCard(button, league, global = false){
+  button.textContent = "";
+  button.appendChild(leagueIcon());
+  const meta = document.createElement("div");
+  meta.className = "leagueMeta";
+  const title = document.createElement("strong");
+  title.textContent = league.name;
+  const sub = document.createElement("small");
+  sub.textContent = global
+    ? `${boardNumber.format(league.memberCount || 0)} тоглогч · Нээлттэй жагсаалт`
+    : `${league.memberCount} гишүүн · ${league.code}${league.owner ? " · Эзэн" : ""}`;
+  meta.append(title, sub);
+  const rank = document.createElement("div");
+  rank.className = "leagueRank";
+  const rankValue = league.ranks?.pushup;
+  rank.append(document.createTextNode(rankValue ? `#${rankValue}` : "–"));
+  const rankLabel = document.createElement("small");
+  rankLabel.textContent = "PUSH-UP";
+  rank.appendChild(rankLabel);
+  button.append(meta, rank);
+}
+
+function showBoardHub(refresh = false){
+  activeLeagueCode = "";
+  $("boardDetail").classList.add("hidden");
+  $("boardHub").classList.remove("hidden");
+  setBack("board");
+  if(refresh) loadLeagueHub();
+}
+
+async function loadLeagueHub(){
+  const list = $("leagueList");
+  list.innerHTML = '<div class="boardLoading"></div><div class="boardLoading"></div>';
   try{
-    const list = await api(`/leaderboard?limit=50&exercise=${kind}`);
-    rows.textContent = "";
-    if(!list.length){ rows.textContent = "Хараахан хэн ч бүртгүүлээгүй байна."; return; }
-    for(const r of list){
-      const el = document.createElement("div");
-      el.className = "row" + (profile && r.userId === profile.userId ? " me" : "");
-      el.innerHTML = `<div class="pos">${r.rank}</div><div class="nm"></div>`
-        + `<div class="tot">${r.totalReps}<small>нийт</small></div>`;
-      el.querySelector(".nm").textContent = r.name || r.userId;
-      rows.appendChild(el);
+    const data = await api("/leagues");
+    fillLeagueCard($("globalLeague"), { name:"Бүх тоглогч", ...data.global }, true);
+    list.textContent = "";
+    $("leagueCount").textContent = `${data.leagues.length}/${20}`;
+    if(!data.leagues.length){
+      const empty = document.createElement("div");
+      empty.className = "emptyLeague";
+      empty.textContent = "Одоогоор лиг алга. Найзууддаа кодоо өгч өөрийн өрсөлдөөнийг эхлүүлээрэй.";
+      list.appendChild(empty);
+      return;
+    }
+    for(const league of data.leagues){
+      const card = document.createElement("button");
+      card.className = "leagueCard";
+      fillLeagueCard(card, league);
+      card.onclick = () => openLeagueBoard(league.code, league.name);
+      list.appendChild(card);
     }
   }catch(e){
-    rows.textContent = friendlyError(e, "Жагсаалт ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
+    list.textContent = friendlyError(e, "Лигүүд ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
   }
 }
 
-const openBoard = () => loadBoard("pushup");
+function openBoard(){
+  show("board");
+  $("boardHub").classList.remove("hidden");
+  $("boardDetail").classList.add("hidden");
+  loadLeagueHub();
+}
+
+function openLeagueBoard(code, name){
+  activeLeagueCode = code || "";
+  activeLeagueName = name || "Бүх тоглогч";
+  $("boardHub").classList.add("hidden");
+  $("boardDetail").classList.remove("hidden");
+  $("detailName").textContent = activeLeagueName;
+  setBack("board");
+  loadBoard(boardMetric);
+}
+
+function renderPodium(players){
+  const podium = $("podium");
+  podium.textContent = "";
+  const classes = ["first", "second", "third"];
+  for(const [index, player] of players.slice(0, 3).entries()){
+    const place = document.createElement("div");
+    place.className = `podiumPlace ${classes[index]}`;
+    place.appendChild(makeRankAvatar(player));
+    const name = document.createElement("div");
+    name.className = "podiumName";
+    name.textContent = player.name || player.userId;
+    const score = document.createElement("div");
+    score.className = "podiumScore";
+    score.textContent = `${boardNumber.format(player.score)} ${boardUnit()}`;
+    const step = document.createElement("div");
+    step.className = "podiumStep";
+    step.textContent = `#${player.rank}`;
+    place.append(name, score, step);
+    podium.appendChild(place);
+  }
+}
+
+function renderRankRow(player){
+  const row = document.createElement("div");
+  row.className = "row" + (profile && player.userId === profile.userId ? " me" : "");
+  const pos = document.createElement("div");
+  pos.className = "pos";
+  pos.textContent = `#${player.rank}`;
+  const name = document.createElement("div");
+  name.className = "nm";
+  name.textContent = player.name || player.userId;
+  const total = document.createElement("div");
+  total.className = "tot";
+  total.append(document.createTextNode(boardNumber.format(player.score)));
+  const unit = document.createElement("small");
+  unit.textContent = boardUnit();
+  total.appendChild(unit);
+  row.append(pos, makeRankAvatar(player), name, total);
+  return row;
+}
+
+function renderMyRank(me){
+  const card = $("myRankCard");
+  card.textContent = "";
+  if(!me){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  const copy = document.createElement("div");
+  copy.className = "mineMain";
+  copy.append(document.createTextNode(`Таны оноо · ${boardNumber.format(me.score)} ${boardUnit()}`));
+  const gap = document.createElement("small");
+  gap.textContent = me.rank === 1
+    ? "Та тэргүүлж байна"
+    : me.gapToNext
+      ? `Дараагийн байрыг давахад ${boardNumber.format(me.gapToNext)} ${boardUnit()}`
+      : "Өөрийн байраа ахиулаарай";
+  copy.appendChild(gap);
+  const rank = document.createElement("div");
+  rank.className = "mineRank";
+  rank.textContent = `#${me.rank}`;
+  card.append(copy, rank);
+}
+
+async function loadBoard(metric){
+  boardMetric = metric;
+  $("boardPush").classList.toggle("active", metric === "pushup");
+  $("boardSquat").classList.toggle("active", metric === "squat");
+  $("boardBattle").classList.toggle("active", metric === "battle");
+  const request = ++boardRequest;
+  $("podium").innerHTML = '<div class="boardLoading" style="grid-column:1/-1"></div>';
+  $("rows").innerHTML = '<div class="boardLoading"></div><div class="boardLoading"></div>';
+  $("myRankCard").classList.add("hidden");
+  try{
+    const league = activeLeagueCode ? `&league=${encodeURIComponent(activeLeagueCode)}` : "";
+    const data = await api(`/leaderboard?limit=50&metric=${metric}${league}`);
+    if(request !== boardRequest) return;
+    $("detailName").textContent = data.league?.name || "Бүх тоглогч";
+    $("detailMeta").textContent = `${boardNumber.format(data.totalPlayers)} тоглогч${data.league ? ` · Код ${data.league.code}` : " · Дэлхийн жагсаалт"}`;
+    renderPodium(data.players);
+    const rows = $("rows");
+    rows.textContent = "";
+    for(const player of data.players.slice(3)) rows.appendChild(renderRankRow(player));
+    if(!data.players.length){
+      const empty = document.createElement("div");
+      empty.className = "emptyLeague";
+      empty.textContent = metric === "battle" ? "Battle тоглосны дараа ELO байр энд нээгдэнэ." : "Одоогоор бүртгэгдсэн оноо алга.";
+      rows.appendChild(empty);
+    }
+    renderMyRank(data.me);
+  }catch(e){
+    if(request !== boardRequest) return;
+    $("podium").textContent = "";
+    $("rows").textContent = friendlyError(e, "Жагсаалт ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
+  }
+}
 
 // ======================= холболт =======================
 
@@ -2832,6 +3110,58 @@ $("mBattle").onclick = startBattle;
 $("mBoard").onclick  = openBoard;
 $("boardPush").onclick = () => loadBoard("pushup");
 $("boardSquat").onclick = () => loadBoard("squat");
+$("boardBattle").onclick = () => loadBoard("battle");
+$("globalLeague").onclick = () => openLeagueBoard("", "Бүх тоглогч");
+$("detailBack").onclick = () => showBoardHub(true);
+$("showCreateLeague").onclick = () => {
+  $("joinLeagueForm").classList.add("hidden");
+  $("createLeagueForm").classList.toggle("hidden");
+  if(!$("createLeagueForm").classList.contains("hidden")) $("leagueName").focus();
+};
+$("showJoinLeague").onclick = () => {
+  $("createLeagueForm").classList.add("hidden");
+  $("joinLeagueForm").classList.toggle("hidden");
+  if(!$("joinLeagueForm").classList.contains("hidden")) $("leagueCode").focus();
+};
+$("leagueCode").oninput = () => {
+  $("leagueCode").value = $("leagueCode").value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, "").slice(0, 6);
+};
+$("createLeagueForm").onsubmit = async event => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector("button[type=submit]");
+  const status = $("createLeagueStatus");
+  button.disabled = true;
+  status.className = "formStatus";
+  status.textContent = "Үүсгэж байна…";
+  try{
+    const league = await api("/leagues", { method:"POST", body:JSON.stringify({ name:$("leagueName").value }) });
+    $("leagueName").value = "";
+    status.textContent = "";
+    $("createLeagueForm").classList.add("hidden");
+    openLeagueBoard(league.code, league.name);
+  }catch(e){
+    status.className = "formStatus bad";
+    status.textContent = friendlyError(e, e.message || "Лиг үүсгэж чадсангүй. Дахин оролдоно уу.");
+  }finally{ button.disabled = false; }
+};
+$("joinLeagueForm").onsubmit = async event => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector("button[type=submit]");
+  const status = $("joinLeagueStatus");
+  button.disabled = true;
+  status.className = "formStatus";
+  status.textContent = "Нэгдэж байна…";
+  try{
+    const league = await api("/leagues/join", { method:"POST", body:JSON.stringify({ code:$("leagueCode").value }) });
+    $("leagueCode").value = "";
+    status.textContent = "";
+    $("joinLeagueForm").classList.add("hidden");
+    openLeagueBoard(league.code, league.name);
+  }catch(e){
+    status.className = "formStatus bad";
+    status.textContent = friendlyError(e, e.message || "Лигт нэгдэж чадсангүй. Кодоо шалгана уу.");
+  }finally{ button.disabled = false; }
+};
 $("retrySave").onclick = () => pendingSet && saveSet(pendingSet.reps, pendingSet.seconds, pendingSet.exercise);
 $("bBack").onclick   = () => show("menu");
 $("oBack").onclick   = leaveBattle;
