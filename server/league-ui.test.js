@@ -14,6 +14,8 @@ test('inline app JavaScript syntax хүчинтэй', () => {
 test('лиг hub нь үүсгэх, кодоор нэгдэх хоёр урсгалтай', () => {
   assert.match(html, /id="createLeagueForm" class="leagueForm"/)
   assert.match(html, /id="joinLeagueForm" class="leagueForm"/)
+  assert.match(html, /<label class="srOnly" for="leagueName">Лигийн нэр<\/label>/)
+  assert.match(html, /<label class="srOnly" for="leagueCode">6 тэмдэгт лигийн код<\/label>/)
   assert.match(html, /api\("\/leagues"[^]*method:"POST"/)
   assert.match(html, /api\("\/leagues\/join"[^]*method:"POST"/)
 })
@@ -29,13 +31,45 @@ test('лиг UI reduced motion ба keyboard focus-ийг дэмжинэ', () =>
   assert.match(html, /#board button:focus-visible/)
 })
 
+test('Нүүр, Push Up, Суулт, Жагсаалт гэсэн дөрвөн item доод navigation-д байна', () => {
+  assert.match(html, /<nav id="mainNav"[^>]*aria-label="Үндсэн цэс"/)
+  assert.match(html, /id="navHome"[^>]*aria-label="Нүүр"/)
+  assert.match(html, /id="navPush"[^>]*aria-label="Push Up"/)
+  assert.match(html, /id="navSquat"[^>]*aria-label="Суулт"/)
+  assert.match(html, /id="navBoard"[^>]*aria-label="Жагсаалт"/)
+  assert.match(html, /grid-template-columns:repeat\(4,1fr\)/)
+  assert.match(html, /id === "menu" \|\| id === "board"/)
+  assert.doesNotMatch(html, /id="mBoard"|id="bBack"/)
+})
+
+test('hub дээр давхардсан тайлбар, хоосон лигийн урт message харагдахгүй', () => {
+  assert.doesNotMatch(html, /Найзуудтайгаа нэг лигт нэгдэж/)
+  assert.doesNotMatch(html, /Одоогоор лиг алга/)
+  assert.doesNotMatch(html, /Нээлттэй жагсаалт/)
+  assert.doesNotMatch(html, /id="leagueCount"/)
+})
+
 test('лиг дотор гурван төрлийн байрлал байна', () => {
   assert.match(html, /id="boardPush"[^>]*>Push-up/)
   assert.match(html, /id="boardSquat"[^>]*>Squat/)
   assert.match(html, /id="boardBattle"[^>]*>Battle ELO/)
 })
 
-test('өөрийн байр ба дараагийн байрны зөрүү харагдана', () => {
+test('өөрийн мөр зөвхөн нэр, оноог харуулна', () => {
   assert.match(html, /id="myRankCard"/)
-  assert.match(html, /Дараагийн байрыг давахад/)
+  assert.match(html, /className = "mineMain"/)
+  assert.match(html, /className = "mineScore"/)
+  assert.doesNotMatch(html, /Дараагийн байрыг давахад|Таны оноо|mineRank/)
+  assert.match(html, /#myRankCard\{[^}]*border:0/s)
+})
+
+test('leaderboard top-3 нь титэм, medal badge-тай бөгөөд platform шатгүй', () => {
+  assert.match(html, /classList\.add\("podiumCrown"\)/)
+  assert.match(html, /className = "podiumBadge"/)
+  assert.doesNotMatch(html, /podiumStep/)
+})
+
+test('дөрөвдүгээр байрнаас эхлэх row rank-аа тэмдэггүй цэвэр тоогоор харуулна', () => {
+  assert.match(html, /pos\.textContent = player\.rank/)
+  assert.doesNotMatch(html, /pos\.textContent = `#\$\{player\.rank\}`/)
 })

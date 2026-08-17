@@ -17,6 +17,7 @@ export async function connect() {
   await leagues().createIndex({ code: 1 }, { unique: true })
   await leagues().createIndex({ memberIds: 1 })
   await sessions().createIndex({ userId: 1, finishedAt: -1 })
+  await sessions().createIndex({ userId: 1, exercise: 1, finishedAt: -1 })
   // Өрөө бүрийн хамгийн сүүлийн тулааныг олоход
   await battles().createIndex({ roomKey: 1, seq: -1 })
   // Хүчингүй болсон урилгыг Mongo өөрөө устгана — цэвэрлэх код бичих шаардлагагүй

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { activityLookback, dailyPushups, normalizeActivityExercise, normalizeTimeZone } from './activity.js'
 import { requireUser } from './auth.js'
 import { findOrCreateUser, leagues, rankOf, sessions, users } from './db.js'
 import { gapToNext, makeLeagueCode, METRICS, normalizeMetric, rankUsers } from './league-rank.js'
@@ -44,6 +45,22 @@ router.get('/me', requireUser, async (req, res) => {
     rankOf(user.squatTotalReps ?? 0, 'squat'),
   ])
   res.json(publicUser(user, rank, squatRank))
+})
+
+router.get('/activity', requireUser, async (req, res) => {
+  const days = Math.min(31, Math.max(1, Number.parseInt(req.query.days, 10) || 7))
+  const timeZone = normalizeTimeZone(req.query.timeZone)
+  const exercise = normalizeActivityExercise(req.query.exercise)
+  const now = new Date()
+  const rows = await sessions()
+    .find({
+      userId: req.user.userId,
+      exercise,
+      finishedAt: { $gte: new Date(now.getTime() - activityLookback(days)) },
+    })
+    .project({ _id: 0, reps: 1, finishedAt: 1 })
+    .toArray()
+  res.json({ exercise, timeZone, days: dailyPushups(rows, { days, timeZone, now }) })
 })
 
 /** Дуусгасан сетийг бүртгэнэ. Нийт тоо болон хамгийн сайн сет шинэчлэгдэнэ. */

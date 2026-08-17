@@ -19,6 +19,9 @@
   .screen{position:fixed;inset:0;overflow-y:auto;
     padding:calc(env(safe-area-inset-top) + 20px) 18px calc(env(safe-area-inset-bottom) + 20px)}
   .hidden{display:none!important}
+  .srOnly{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;
+    margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;
+    white-space:nowrap!important;border:0!important}
 
   button{border:0;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;
     background:rgba(255,255,255,.13);color:rgba(255,255,255,.85);backdrop-filter:blur(10px)}
@@ -29,34 +32,93 @@
   #boot{display:grid;place-items:center;text-align:center;color:var(--dim);font-size:14px}
 
   /* ---------- цэс ---------- */
-  #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto}
+  #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 172px)}
   #who{display:flex;align-items:center;gap:12px}
   #who img{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--card)}
   #who .nm{font-weight:700}
-  #who .sub{font-size:12px;color:var(--dim)}
 
-  #card{background:var(--card);border-radius:18px;padding:16px;display:flex;gap:8px}
-  #card div{flex:1;text-align:center}
-  #card b{display:block;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;
-    letter-spacing:-.02em}
-  #card span{font-size:11px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+  #dailyPushups{--activity:#39d98a;--activity-alt:#20b8ff;display:flex;flex-direction:column;gap:12px}
+  #dailyPushups.squat{--activity:#ffb020;--activity-alt:#d96bff}
+  .activitySwitch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;
+    background:var(--card);border:1px solid rgba(255,255,255,.07)}
+  .activitySwitch button{min-height:48px;padding:10px 12px;border-radius:12px;background:transparent;
+    color:var(--dim);font-size:14px;transition:color .18s ease,background .18s ease,box-shadow .18s ease}
+  .activitySwitch button[aria-pressed="true"]{background:linear-gradient(135deg,var(--activity),var(--activity-alt));
+    color:#04140c;box-shadow:0 5px 16px rgba(57,217,138,.24)}
+  #dailyPushups.squat .activitySwitch button[aria-pressed="true"]{box-shadow:0 5px 16px rgba(255,176,32,.22)}
+  .activitySwitch button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+  .dailyRingCard{min-height:244px;border-radius:24px;padding:18px;display:grid;place-items:center;
+    background:radial-gradient(circle at 50% 42%,rgba(57,217,138,.13),transparent 58%),var(--card);
+    border:1px solid rgba(255,255,255,.06)}
+  #dailyPushups.squat .dailyRingCard{background:radial-gradient(circle at 50% 42%,rgba(255,176,32,.13),transparent 58%),var(--card)}
+  .dailyRing{position:relative;width:min(58vw,214px);aspect-ratio:1}
+  .dailyRing svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+  .dailyRing circle{fill:none;stroke-width:8}
+  .dailyRingTrack{stroke:rgba(255,255,255,.09)}
+  .dailyGradientStart{stop-color:var(--activity)}
+  .dailyGradientEnd{stop-color:var(--activity-alt)}
+  .dailyRingValue{stroke:url(#dailyGradient);stroke-linecap:round;stroke-dasharray:0 100;
+    transition:stroke-dasharray .45s ease-out;filter:drop-shadow(0 0 6px var(--activity))}
+  .dailyRingCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center}
+  .dailyRingCenter small{font-size:11px;font-weight:850;letter-spacing:.09em;color:var(--activity)}
+  #dailyCount{font-size:58px;line-height:.98;font-weight:900;letter-spacing:-.05em;
+    font-variant-numeric:tabular-nums}
+  #dailyGoal{margin-top:7px;font-size:12px;color:var(--dim)}
+  .weekCard{border-radius:20px;padding:14px 14px 12px;background:var(--card);
+    border:1px solid rgba(255,255,255,.06)}
+  .weekCardTitle{margin:0 0 4px;font-size:11px;font-weight:850;letter-spacing:.09em;
+    text-transform:uppercase;color:#a5b1bf}
+  #weekChart{display:block;width:100%;height:74px;overflow:visible}
+  .weekGrid{stroke:rgba(255,255,255,.09);stroke-width:1;stroke-dasharray:2 3}
+  .weekArea{fill:rgba(57,217,138,.11)}
+  #dailyPushups.squat .weekArea{fill:rgba(255,176,32,.11)}
+  .weekLine{fill:none;stroke:var(--activity);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+  .weekDot{fill:var(--fg);stroke:var(--activity);stroke-width:1.6}
+  #weekLabels{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:3px}
+  .weekDay{text-align:center;min-width:0}
+  .weekDay b{display:block;font-size:11px;font-weight:850;font-variant-numeric:tabular-nums}
+  .weekDay small{display:block;margin-top:2px;font-size:9px;font-weight:750;color:var(--dim);
+    overflow:hidden;text-overflow:clip;white-space:nowrap;text-transform:uppercase}
 
   .mode{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;
     padding:16px 18px;border-radius:16px;width:100%;font-size:17px}
   .mode small{font-size:12px;font-weight:500;opacity:.75}
-  .mode.go{background:var(--gold);color:#231a00}
   .mode.duel{background:#2a1e3d;color:#e6dcff}
+  #mBattle{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 80px);z-index:29;
+    width:min(calc(100% - 36px),460px);min-height:64px;transform:translateX(-50%);
+    align-items:center;justify-content:center;text-align:center;border:1px solid rgba(255,255,255,.2);
+    background:linear-gradient(135deg,#39d98a 0%,#20b8ff 100%);color:#04140c;
+    box-shadow:0 12px 30px rgba(32,184,255,.22),0 5px 16px rgba(57,217,138,.2);
+    font-size:18px;font-weight:900;transition:filter .18s ease,box-shadow .18s ease}
+  #mBattle small{font-size:12px;font-weight:700;opacity:.72}
+  #mBattle:focus-visible{outline:3px solid #fff;outline-offset:3px}
+  #mBattle:active{transform:translateX(-50%) scale(.98);filter:brightness(.9);
+    box-shadow:0 6px 18px rgba(32,184,255,.16)}
+
+  #mainNav{position:fixed;left:50%;bottom:0;z-index:30;transform:translateX(-50%);
+    width:min(100%,560px);display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+    padding:8px 8px calc(env(safe-area-inset-bottom) + 8px);background:rgba(11,15,20,.96);
+    border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+  #mainNav button{min-width:0;min-height:52px;padding:6px 2px;border-radius:13px;background:transparent;
+    color:var(--dim);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;font-size:10px;white-space:nowrap;transition:color .18s ease,background .18s ease}
+  #mainNav button:active{transform:none;background:rgba(255,255,255,.06)}
+  #mainNav button.active{color:var(--accent)}
+  #mainNav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
 
   #note{font-size:12px;line-height:1.6;color:var(--dim);min-height:18px}
   #note.bad{color:var(--bad)}
   #note.ok{color:var(--accent)}
 
   /* ---------- лиг ба байр ---------- */
-  #board{padding-left:20px;padding-right:20px;background:#10151b}
+  #board{padding-left:20px;padding-right:20px;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 92px);background:#10151b}
   .boardShell{width:min(100%,520px);margin:0 auto}
   .boardHead{margin:8px 4px 28px}
   .boardHead h2{margin:0;font-size:34px;line-height:1.08;letter-spacing:-.045em}
-  .boardHead p{margin:10px 0 0;color:#9aa6b5;font-size:14px;line-height:1.5}
   .leagueCard{width:100%;min-height:94px;border-radius:20px;padding:14px 15px;text-align:left;
     display:flex;align-items:center;gap:14px;background:#1a2029;border:1px solid rgba(255,255,255,.07);
     box-shadow:0 2px 6px rgba(0,0,0,.18);transition:background .18s ease,border-color .18s ease}
@@ -94,7 +156,6 @@
   #leagueList{display:flex;flex-direction:column;gap:10px}
   .emptyLeague{padding:24px 18px;text-align:center;border:1px dashed rgba(255,255,255,.13);
     border-radius:18px;color:var(--dim);font-size:13px;line-height:1.55}
-  .boardFooter{margin-top:16px;width:100%;min-height:46px}
   .detailTop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   .detailTop>button{width:44px;height:44px;padding:0;display:grid;place-items:center;flex:none}
   .detailTop div{min-width:0}
@@ -104,32 +165,41 @@
     border-radius:15px;background:rgba(255,255,255,.06);margin-bottom:15px}
   #boardTabs button{min-height:40px;padding:8px 5px;border-radius:11px;background:transparent}
   #boardTabs button.active{background:var(--gold);color:#231a00}
-  #podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;align-items:end;gap:7px;min-height:190px;margin:5px 0 13px}
-  .podiumPlace{text-align:center;min-width:0}
+  #podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;align-items:end;gap:8px;min-height:178px;margin:8px 0 18px}
+  .podiumPlace{position:relative;text-align:center;min-width:0;display:flex;flex-direction:column;align-items:center}
   .podiumPlace.first{order:2}.podiumPlace.second{order:1}.podiumPlace.third{order:3}
+  .podiumAvatarWrap{position:relative;width:58px;height:58px;margin:0 auto 10px}
+  .podiumPlace.first .podiumAvatarWrap{width:76px;height:76px;margin-bottom:11px}
   .rankAvatar{width:47px;height:47px;border-radius:50%;object-fit:cover;margin:0 auto 7px;
     display:grid;place-items:center;background:#263140;color:#fff;font-weight:900;border:2px solid rgba(255,255,255,.16)}
-  .podiumPlace.first .rankAvatar{width:61px;height:61px;border-color:var(--gold)}
-  .podiumName{font-size:12px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .podiumScore{font-size:11px;color:var(--dim);margin-top:3px}
-  .podiumStep{height:55px;margin-top:9px;padding-top:10px;border-radius:13px 13px 5px 5px;
-    background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.05));font-size:21px;font-weight:900}
-  .podiumPlace.first .podiumStep{height:78px;background:linear-gradient(180deg,rgba(255,210,30,.28),rgba(255,210,30,.07));color:var(--gold)}
-  .podiumPlace.second .podiumStep{height:65px}
-  #rows{display:flex;flex-direction:column;gap:6px}
-  .row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:15px;background:var(--card)}
+  .podiumAvatarWrap .rankAvatar{width:100%;height:100%;margin:0;border-width:2px}
+  .podiumPlace.first .rankAvatar{border:3px solid var(--gold);box-shadow:0 0 0 2px rgba(255,210,30,.14)}
+  .podiumPlace.second .rankAvatar{border-color:#c7d0dc}
+  .podiumPlace.third .rankAvatar{border-color:#d69058}
+  .podiumCrown{position:absolute;left:50%;top:-31px;width:28px;height:28px;transform:translateX(-50%);
+    fill:var(--gold);stroke:#8c6800;stroke-width:1.2;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+  .podiumBadge{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);width:22px;height:22px;
+    border-radius:50%;display:grid;place-items:center;color:#10151b;font-size:11px;font-weight:900;
+    border:2px solid #10151b;background:#c7d0dc;font-variant-numeric:tabular-nums}
+  .podiumPlace.first .podiumBadge{background:var(--gold)}
+  .podiumPlace.third .podiumBadge{background:#d69058}
+  .podiumName{width:100%;font-size:12px;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .podiumScore{font-size:10px;font-weight:700;color:#8f9baa;margin-top:4px;font-variant-numeric:tabular-nums}
+  #rows{display:flex;flex-direction:column;gap:7px}
+  .row{min-height:60px;display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:13px;
+    background:#1a2029;border:1px solid rgba(255,255,255,.055);box-shadow:0 2px 4px rgba(0,0,0,.15)}
   .row.me{background:#1c2b22;outline:1px solid rgba(57,217,138,.4)}
-  .row .rankAvatar{width:38px;height:38px;margin:0;border-width:1px;font-size:13px}
-  .row .pos{width:28px;font-weight:900;color:var(--dim);font-variant-numeric:tabular-nums}
+  .row .rankAvatar{width:36px;height:36px;margin:0;border-width:1px;font-size:13px}
+  .row .pos{width:28px;text-align:center;font-weight:900;color:#7f8a99;font-variant-numeric:tabular-nums}
   .row .nm{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .row .tot{font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
-  .row .tot small{display:block;font-size:9px;font-weight:700;color:var(--dim);text-transform:uppercase}
+  .row .tot{font-size:18px;font-weight:900;line-height:1;text-align:right;font-variant-numeric:tabular-nums}
+  .row .tot small{display:block;margin-top:4px;font-size:9px;line-height:1;font-weight:700;color:#7f8a99;text-transform:uppercase}
   #myRankCard{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 6px);z-index:2;margin-top:10px;
-    padding:13px 14px;border-radius:17px;background:rgba(25,43,34,.94);border:1px solid rgba(57,217,138,.45);
-    backdrop-filter:blur(16px);display:flex;align-items:center;gap:10px}
-  #myRankCard .mineMain{flex:1;font-size:13px;font-weight:800}
-  #myRankCard .mineMain small{display:block;color:var(--dim);font-weight:600;margin-top:3px}
-  #myRankCard .mineRank{font-size:22px;font-weight:900;color:var(--accent)}
+    min-height:60px;padding:13px 14px;border-radius:13px;background:rgba(26,32,41,.96);
+    border:0;box-shadow:none;backdrop-filter:blur(16px);display:flex;align-items:center;gap:10px}
+  #myRankCard .mineMain{flex:1;min-width:0;font-size:14px;font-weight:800;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #myRankCard .mineScore{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
   .boardLoading{height:78px;border-radius:18px;margin:8px 0;background:linear-gradient(90deg,#131a22 25%,#202a35 50%,#131a22 75%);
     background-size:200% 100%;animation:boardShimmer 1.2s infinite}
   @keyframes boardShimmer{to{background-position:-200% 0}}
@@ -141,7 +211,10 @@
     .leagueRankBlock{width:58px;height:58px}
   }
   @media (prefers-reduced-motion:reduce){
+    .dailyRingValue{transition:none}
+    .activitySwitch button{transition:none}
     .leagueCard{transition:none}
+    #mainNav button{transition:none}
     .boardLoading{animation:none;background:#182029}
   }
 
@@ -424,20 +497,42 @@
     <img id="avatar" alt="">
     <div>
       <div class="nm" id="nm">…</div>
-      <div class="sub" id="sub">ачаалж байна</div>
     </div>
   </div>
 
-  <div id="card">
-    <div><b id="cTotal">–</b><span>нийт</span></div>
-    <div><b id="cRank">–</b><span>байр</span></div>
-    <div><b id="cElo">–</b><span>elo</span></div>
-  </div>
+  <section id="dailyPushups" aria-labelledby="dailyPushupsTitle">
+    <div class="activitySwitch" role="group" aria-label="Өдрийн дасгал">
+      <button id="activityPush" type="button" aria-pressed="true">Push Up</button>
+      <button id="activitySquat" type="button" aria-pressed="false">Суулт</button>
+    </div>
+    <div class="dailyRingCard">
+      <div class="dailyRing">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <defs><linearGradient id="dailyGradient" x1="0" y1="0" x2="1" y2="1"><stop class="dailyGradientStart"></stop><stop class="dailyGradientEnd" offset="1"></stop></linearGradient></defs>
+          <circle class="dailyRingTrack" cx="50" cy="50" r="44" pathLength="100"></circle>
+          <circle id="dailyRingValue" class="dailyRingValue" cx="50" cy="50" r="44" pathLength="100"></circle>
+        </svg>
+        <div class="dailyRingCenter">
+          <small id="dailyPushupsTitle">ӨНӨӨДӨР · PUSH UP</small>
+          <strong id="dailyCount">0</strong>
+          <span id="dailyGoal">50 зорилго</span>
+        </div>
+      </div>
+    </div>
+    <div class="weekCard">
+      <div class="weekCardTitle" id="weekCardTitle">Сүүлийн 7 өдөр · Push Up</div>
+      <svg id="weekChart" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
+        <line class="weekGrid" x1="5" y1="48" x2="95" y2="48"></line>
+        <path id="weekArea" class="weekArea" d=""></path>
+        <polyline id="weekLine" class="weekLine" points=""></polyline>
+        <g id="weekDots"></g>
+      </svg>
+      <div id="weekLabels"></div>
+      <p id="dailyA11y" class="srOnly"></p>
+    </div>
+  </section>
 
-  <button class="mode go" id="mPush">Push Up<small>Чөлөөтэй тоол — нийт дүнд нэмэгдэнэ</small></button>
-  <button class="mode go" id="mSquat">Squat · Суулт<small>Хажуу/45°-аас бүтэн суултыг тоолно</small></button>
-  <button class="mode duel" id="mBattle">Battle<small>Push-up · Squat · Хосолсон, 1v1, ELO</small></button>
-  <button id="mBoard">Лиг ба байр</button>
+  <button class="mode duel" id="mBattle">Battle Friend<small>Найзтайгаа өрсөлдөх</small></button>
 
   <div id="note" role="status" aria-live="polite" aria-atomic="true"></div>
   <button id="retrySave" class="hidden">Дахин хадгалах</button>
@@ -449,11 +544,10 @@
     <div id="boardHub">
       <header class="boardHead">
         <h2>Лиг ба байр</h2>
-        <p>Найзуудтайгаа нэг лигт нэгдэж, гурван төрлөөр өрсөлдөөрэй.</p>
       </header>
       <form id="createLeagueForm" class="leagueForm">
         <span class="leagueFormTitle">Шинэ лиг үүсгэх</span>
-        <label for="leagueName">Лигийн нэр</label>
+        <label class="srOnly" for="leagueName">Лигийн нэр</label>
         <div class="leagueFormRow">
           <input id="leagueName" maxlength="30" autocomplete="off" placeholder="Жишээ: Office Crew">
           <button type="submit">Үүсгэх</button>
@@ -462,17 +556,16 @@
       </form>
       <form id="joinLeagueForm" class="leagueForm">
         <span class="leagueFormTitle">Лигт нэгдэх</span>
-        <label for="leagueCode">6 тэмдэгт лигийн код</label>
+        <label class="srOnly" for="leagueCode">6 тэмдэгт лигийн код</label>
         <div class="leagueFormRow">
           <input id="leagueCode" maxlength="6" inputmode="text" autocomplete="off" autocapitalize="characters" placeholder="AB23CD">
           <button type="submit">Нэгдэх</button>
         </div>
         <div id="joinLeagueStatus" class="formStatus" role="status"></div>
       </form>
-      <div class="leagueTitleRow"><h3>Лигүүд</h3><span id="leagueCount"></span></div>
+      <div class="leagueTitleRow"><h3>Лигүүд</h3></div>
       <button id="globalLeague" class="leagueCard global" aria-label="Бүх тоглогчийн жагсаалт"></button>
       <div id="leagueList"><div class="boardLoading"></div><div class="boardLoading"></div></div>
-      <button id="bBack" class="boardFooter">← Цэс рүү буцах</button>
     </div>
     <div id="boardDetail" class="hidden">
       <div class="detailTop">
@@ -490,6 +583,25 @@
     </div>
   </div>
 </section>
+
+<nav id="mainNav" class="hidden" aria-label="Үндсэн цэс">
+  <button id="navHome" type="button" aria-label="Нүүр">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>
+    <span>Нүүр</span>
+  </button>
+  <button id="navPush" type="button" aria-label="Push Up">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="12" r="2"></circle><path d="M6 12h3l2-3 2 6 2-3h3"></path><circle cx="20" cy="12" r="2"></circle></svg>
+    <span>Push Up</span>
+  </button>
+  <button id="navSquat" type="button" aria-label="Суулт">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"></circle><path d="M12 7v5m0-3-4 3m4-3 4 3m-4 0-4 5m4-5 4 5M5 17h3m8 0h3"></path></svg>
+    <span>Суулт</span>
+  </button>
+  <button id="navBoard" type="button" aria-label="Жагсаалт">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v4a5 5 0 0 1-10 0Z"></path><path d="M7 6H4v1a4 4 0 0 0 4 4"></path><path d="M17 6h3v1a4 4 0 0 1-4 4"></path></svg>
+    <span>Жагсаалт</span>
+  </button>
+</nav>
 
 <!-- ================= ХҮЛЭЭЛГИЙН ӨРӨӨ ================= -->
 <section id="hall" class="screen hidden">
@@ -763,10 +875,6 @@ function note(text, kind){
 function renderProfile(){
   if(!profile) return;
   $("nm").textContent = profile.name || "Тоглогч";
-  $("sub").textContent = `${profile.wins}W · ${profile.losses}L · PU ${profile.bestSet} · SQ ${profile.squatBestSet ?? 0}`;
-  $("cTotal").textContent = profile.totalReps;
-  $("cRank").textContent = profile.totalReps > 0 ? "#" + profile.rank : "–";
-  $("cElo").textContent = profile.rating;
 }
 
 /**
@@ -781,6 +889,97 @@ function renderProfile(){
  * манай сервер дээр эзэмшигдсэн хэвээр — энэ нь зөвхөн нийгмийн гогцоо.
  */
 let submitted = -1;
+const DAILY_GOALS = { pushup:50, squat:50 };
+const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+const activityNumber = new Intl.NumberFormat("mn-MN");
+const activityWeekdays = ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"];
+let activityExercise = localStorage.getItem("pushup:activityExercise") === "squat" ? "squat" : "pushup";
+const dailyActivity = { pushup:[], squat:[] };
+
+function emptyActivityDays(){
+  const now = new Date();
+  return Array.from({ length:7 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (6 - index));
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return { date:key, reps:0 };
+  });
+}
+
+function renderDailyActivity(){
+  const stored = dailyActivity[activityExercise];
+  const days = stored.length === 7 ? stored : emptyActivityDays();
+  const values = days.map(day => Math.max(0, Number(day.reps) || 0));
+  const today = values[values.length - 1] || 0;
+  const progress = Math.min(100, today / DAILY_GOALS[activityExercise] * 100);
+  const isSquat = activityExercise === "squat";
+  const label = isSquat ? "СУУЛТ" : "PUSH UP";
+  $("dailyPushups").classList.toggle("squat", isSquat);
+  $("activityPush").setAttribute("aria-pressed", String(!isSquat));
+  $("activitySquat").setAttribute("aria-pressed", String(isSquat));
+  $("dailyPushupsTitle").textContent = `ӨНӨӨДӨР · ${label}`;
+  $("weekCardTitle").textContent = `Сүүлийн 7 өдөр · ${isSquat ? "Суулт" : "Push Up"}`;
+  $("dailyCount").textContent = activityNumber.format(today);
+  $("dailyGoal").textContent = `${activityNumber.format(DAILY_GOALS[activityExercise])} зорилго`;
+  $("dailyRingValue").style.strokeDasharray = `${progress} 100`;
+
+  const max = Math.max(1, ...values);
+  const points = values.map((value, index) => {
+    const x = 6 + index * (88 / 6);
+    const y = 50 - value / max * 38;
+    return { x, y };
+  });
+  $("weekLine").setAttribute("points", points.map(point => `${point.x},${point.y}`).join(" "));
+  $("weekArea").setAttribute("d", `M ${points[0].x},52 L ${points.map(point => `${point.x},${point.y}`).join(" L ")} L ${points.at(-1).x},52 Z`);
+  const dots = $("weekDots");
+  dots.textContent = "";
+  for(const point of points){
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.classList.add("weekDot");
+    dot.setAttribute("cx", point.x);
+    dot.setAttribute("cy", point.y);
+    dot.setAttribute("r", "2.2");
+    dots.appendChild(dot);
+  }
+
+  const labels = $("weekLabels");
+  labels.textContent = "";
+  for(const [index, day] of days.entries()){
+    const item = document.createElement("div");
+    item.className = "weekDay";
+    const value = document.createElement("b");
+    value.textContent = activityNumber.format(values[index]);
+    const label = document.createElement("small");
+    const date = new Date(`${day.date}T12:00:00Z`);
+    label.textContent = index === days.length - 1
+      ? "Өнөө"
+      : activityWeekdays[date.getUTCDay()];
+    item.append(value, label);
+    labels.appendChild(item);
+  }
+  $("dailyA11y").textContent = days.map((day, index) => `${day.date}: ${values[index]} ${label}`).join(", ");
+}
+
+async function loadDailyActivity(exercise = activityExercise){
+  const isCurrent = exercise === activityExercise;
+  if(isCurrent) $("dailyPushups").setAttribute("aria-busy", "true");
+  try{
+    const data = await api(`/activity?days=7&exercise=${exercise}&timeZone=${encodeURIComponent(localTimeZone)}`);
+    dailyActivity[exercise] = Array.isArray(data.days) ? data.days : [];
+  }catch{
+    dailyActivity[exercise] = [];
+  }
+  if(exercise === activityExercise){
+    $("dailyPushups").removeAttribute("aria-busy");
+    renderDailyActivity();
+  }
+}
+
+function selectActivity(exercise){
+  activityExercise = exercise === "squat" ? "squat" : "pushup";
+  localStorage.setItem("pushup:activityExercise", activityExercise);
+  renderDailyActivity();
+  loadDailyActivity(activityExercise);
+}
 
 function submitScore(){
   const total = profile?.totalReps ?? 0;
@@ -794,9 +993,9 @@ async function loadProfile(){
     profile = await api("/me");
     renderProfile();
     submitScore();
+    loadDailyActivity();
     note("");
   } catch(e) {
-    $("sub").textContent = "офлайн";
     note(`${friendlyError(e, "Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.")} Тоолуур офлайнаар ажиллана.`, "bad");
   }
 }
@@ -839,6 +1038,14 @@ function setBack(id){
 
 function show(id){
   for(const s of document.querySelectorAll(".screen")) s.classList.toggle("hidden", s.id !== id);
+  const hasMainNav = id === "menu" || id === "board";
+  $("mainNav").classList.toggle("hidden", !hasMainNav);
+  for(const [buttonId, active] of [["navHome", id === "menu"], ["navPush", false], ["navSquat", false], ["navBoard", id === "board"]]){
+    const button = $(buttonId);
+    button.classList.toggle("active", active);
+    if(active) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+  }
   setBack(id);
 }
 
@@ -1924,6 +2131,7 @@ async function saveSet(reps, seconds, kind = exercise){
     $("retrySave").classList.add("hidden");
     renderProfile();
     if(kind === "pushup") submitScore();
+    loadDailyActivity(kind);
     const total = kind === "squat" ? profile.squatTotalReps : profile.totalReps;
     const rank = kind === "squat" ? profile.squatRank : profile.rank;
     note(`+${reps} ${label} бүртгэгдлээ. Нийт ${total}, #${rank}`, "ok");
@@ -2933,10 +3141,9 @@ function fillLeagueCard(button, league, global = false){
   meta.className = "leagueMeta";
   const title = document.createElement("strong");
   title.textContent = league.name;
-  const sub = document.createElement("small");
-  if(global){
-    sub.textContent = `${boardNumber.format(league.memberCount || 0)} тоглогч · Нээлттэй жагсаалт`;
-  }else{
+  meta.appendChild(title);
+  if(!global){
+    const sub = document.createElement("small");
     const code = document.createElement("span");
     code.className = "leagueCode";
     code.textContent = league.code;
@@ -2947,8 +3154,8 @@ function fillLeagueCard(button, league, global = false){
       owner.textContent = " · Эзэн";
       sub.appendChild(owner);
     }
+    meta.appendChild(sub);
   }
-  meta.append(title, sub);
   const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   chevron.setAttribute("viewBox", "0 0 24 24");
   chevron.setAttribute("aria-hidden", "true");
@@ -2974,14 +3181,7 @@ async function loadLeagueHub(){
     const data = await api("/leagues");
     fillLeagueCard($("globalLeague"), { name:"Бүх тоглогч", ...data.global }, true);
     list.textContent = "";
-    $("leagueCount").textContent = `${data.leagues.length}/${20}`;
-    if(!data.leagues.length){
-      const empty = document.createElement("div");
-      empty.className = "emptyLeague";
-      empty.textContent = "Одоогоор лиг алга. Найзууддаа кодоо өгч өөрийн өрсөлдөөнийг эхлүүлээрэй.";
-      list.appendChild(empty);
-      return;
-    }
+    if(!data.leagues.length) return;
     for(const league of data.leagues){
       const card = document.createElement("button");
       card.className = "leagueCard";
@@ -3018,17 +3218,30 @@ function renderPodium(players){
   for(const [index, player] of players.slice(0, 3).entries()){
     const place = document.createElement("div");
     place.className = `podiumPlace ${classes[index]}`;
-    place.appendChild(makeRankAvatar(player));
+    const avatarWrap = document.createElement("div");
+    avatarWrap.className = "podiumAvatarWrap";
+    if(index === 0){
+      const crown = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      crown.setAttribute("viewBox", "0 0 24 24");
+      crown.setAttribute("aria-hidden", "true");
+      crown.classList.add("podiumCrown");
+      const crownPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      crownPath.setAttribute("d", "M3 7l4.2 3L12 4l4.8 6L21 7l-2 11H5L3 7Zm3 13h12");
+      crown.appendChild(crownPath);
+      avatarWrap.appendChild(crown);
+    }
+    avatarWrap.appendChild(makeRankAvatar(player));
+    const badge = document.createElement("span");
+    badge.className = "podiumBadge";
+    badge.textContent = player.rank;
+    avatarWrap.appendChild(badge);
     const name = document.createElement("div");
     name.className = "podiumName";
     name.textContent = player.name || player.userId;
     const score = document.createElement("div");
     score.className = "podiumScore";
     score.textContent = `${boardNumber.format(player.score)} ${boardUnit()}`;
-    const step = document.createElement("div");
-    step.className = "podiumStep";
-    step.textContent = `#${player.rank}`;
-    place.append(name, score, step);
+    place.append(avatarWrap, name, score);
     podium.appendChild(place);
   }
 }
@@ -3038,7 +3251,7 @@ function renderRankRow(player){
   row.className = "row" + (profile && player.userId === profile.userId ? " me" : "");
   const pos = document.createElement("div");
   pos.className = "pos";
-  pos.textContent = `#${player.rank}`;
+  pos.textContent = player.rank;
   const name = document.createElement("div");
   name.className = "nm";
   name.textContent = player.name || player.userId;
@@ -3057,20 +3270,13 @@ function renderMyRank(me){
   card.textContent = "";
   if(!me){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
-  const copy = document.createElement("div");
-  copy.className = "mineMain";
-  copy.append(document.createTextNode(`Таны оноо · ${boardNumber.format(me.score)} ${boardUnit()}`));
-  const gap = document.createElement("small");
-  gap.textContent = me.rank === 1
-    ? "Та тэргүүлж байна"
-    : me.gapToNext
-      ? `Дараагийн байрыг давахад ${boardNumber.format(me.gapToNext)} ${boardUnit()}`
-      : "Өөрийн байраа ахиулаарай";
-  copy.appendChild(gap);
-  const rank = document.createElement("div");
-  rank.className = "mineRank";
-  rank.textContent = `#${me.rank}`;
-  card.append(copy, rank);
+  const name = document.createElement("div");
+  name.className = "mineMain";
+  name.textContent = me.name || profile?.name || me.userId;
+  const score = document.createElement("div");
+  score.className = "mineScore";
+  score.textContent = boardNumber.format(me.score);
+  card.append(name, score);
 }
 
 async function loadBoard(metric){
@@ -3130,10 +3336,13 @@ function openSolo(kind){
   $("start").classList.remove("hidden");
 }
 
-$("mPush").onclick   = () => openSolo("pushup");
-$("mSquat").onclick  = () => openSolo("squat");
 $("mBattle").onclick = startBattle;
-$("mBoard").onclick  = openBoard;
+$("activityPush").onclick = () => selectActivity("pushup");
+$("activitySquat").onclick = () => selectActivity("squat");
+$("navHome").onclick = () => show("menu");
+$("navPush").onclick = () => openSolo("pushup");
+$("navSquat").onclick = () => openSolo("squat");
+$("navBoard").onclick = openBoard;
 $("boardPush").onclick = () => loadBoard("pushup");
 $("boardSquat").onclick = () => loadBoard("squat");
 $("boardBattle").onclick = () => loadBoard("battle");
@@ -3177,7 +3386,6 @@ $("joinLeagueForm").onsubmit = async event => {
   }finally{ button.disabled = false; }
 };
 $("retrySave").onclick = () => pendingSet && saveSet(pendingSet.reps, pendingSet.seconds, pendingSet.exercise);
-$("bBack").onclick   = () => show("menu");
 $("oBack").onclick   = leaveBattle;
 $("seekCancel").onclick = leaveBattle;
 $("quit").onclick    = leaveBattle;
@@ -3193,6 +3401,8 @@ $("pBack").onclick   = () => { if(mode === "battle") leaveBattle(); else { stopC
 $("go").onclick      = startSolo;
 $("reset").onclick  = reset;
 $("done").onclick   = finish;
+
+renderDailyActivity();
 
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) lastFrame = 0;
