@@ -34,10 +34,6 @@
   /* ---------- цэс ---------- */
   #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;
     padding-bottom:calc(env(safe-area-inset-bottom) + 172px)}
-  #who{display:flex;align-items:center;gap:12px}
-  #who img{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--card)}
-  #who .nm{font-weight:700}
-
   #dailyPushups{--activity:#39d98a;--activity-alt:#20b8ff;display:flex;flex-direction:column;gap:12px}
   #dailyPushups.squat{--activity:#ffb020;--activity-alt:#d96bff}
   .activitySwitch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;
@@ -493,13 +489,6 @@
 
 <!-- ================= ЦЭС ================= -->
 <section id="menu" class="screen hidden">
-  <div id="who">
-    <img id="avatar" alt="">
-    <div>
-      <div class="nm" id="nm">…</div>
-    </div>
-  </div>
-
   <section id="dailyPushups" aria-labelledby="dailyPushupsTitle">
     <div class="activitySwitch" role="group" aria-label="Өдрийн дасгал">
       <button id="activityPush" type="button" aria-pressed="true">Push Up</button>
@@ -872,11 +861,6 @@ function note(text, kind){
   el.className = kind || "";
 }
 
-function renderProfile(){
-  if(!profile) return;
-  $("nm").textContent = profile.name || "Тоглогч";
-}
-
 /**
  * Нийт тоог платформын leaderboard руу бичнэ.
  *
@@ -991,7 +975,6 @@ function submitScore(){
 async function loadProfile(){
   try {
     profile = await api("/me");
-    renderProfile();
     submitScore();
     loadDailyActivity();
     note("");
@@ -2129,7 +2112,6 @@ async function saveSet(reps, seconds, kind = exercise){
     });
     pendingSet = null;
     $("retrySave").classList.add("hidden");
-    renderProfile();
     if(kind === "pushup") submitScore();
     loadDailyActivity(kind);
     const total = kind === "squat" ? profile.squatTotalReps : profile.totalReps;
@@ -3412,8 +3394,6 @@ scheduleModelWarmup();
 launchCfg = await usionInit();
 const directInvite = guestLaunch();
 startupInvitePending = directInvite;
-if(launchCfg?.userAvatar) $("avatar").src = launchCfg.userAvatar;
-
 // Урилгын картаас орж ирвэл profile API-г хүлээлгүй waiting room-ийг шууд
 // харуулна. Энгийн нээлт л menu рүү орно — эхний frame дээр menu анивчихгүй.
 if(directInvite){

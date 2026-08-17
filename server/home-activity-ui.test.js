@@ -28,6 +28,11 @@ test('профайлын нэрийн доор W, L, PU, SQ тоонууд ха�
   assert.doesNotMatch(html, /id="sub"|profile\.wins\}W|profile\.losses\}L/)
 })
 
+test('Нүүр дээр profile header харагдахгүй', () => {
+  assert.doesNotMatch(html, /id="who"|id="avatar"|id="nm"/)
+  assert.doesNotMatch(html, /function renderProfile\(/)
+})
+
 test('өдрийн activity хэрэглэгчийн timezone-аар серверээс ачаална', () => {
   assert.match(html, /resolvedOptions\(\)\.timeZone/)
   assert.match(html, /api\(`\/activity\?days=7&exercise=\$\{exercise\}&timeZone=\$\{encodeURIComponent\(localTimeZone\)\}`\)/)
