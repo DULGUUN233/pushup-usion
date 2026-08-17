@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { activityLookback, dailyPushups, normalizeActivityExercise, normalizeTimeZone } from './activity.js'
 import { requireUser } from './auth.js'
+import { CHALLENGE_TEMPLATES, challengeSummary, createChallenge } from './challenge.js'
 import { findOrCreateUser, leagues, rankOf, sessions, users } from './db.js'
 import { gapToNext, makeLeagueCode, METRICS, normalizeMetric, rankUsers } from './league-rank.js'
 
@@ -61,6 +62,40 @@ router.get('/activity', requireUser, async (req, res) => {
     .project({ _id: 0, reps: 1, finishedAt: 1 })
     .toArray()
   res.json({ exercise, timeZone, days: dailyPushups(rows, { days, timeZone, now }) })
+})
+
+router.get('/challenges', requireUser, async (req, res) => {
+  const user = await findOrCreateUser(req.user)
+  const rows = user.challenge
+    ? await sessions().find({ userId: req.user.userId, finishedAt: { $gte: new Date(user.challenge.startedAt) } }).project({ _id: 0, exercise: 1, reps: 1, finishedAt: 1 }).toArray()
+    : []
+  res.json({ templates: CHALLENGE_TEMPLATES, active: challengeSummary(user.challenge, rows) })
+})
+
+router.post('/challenges/start', requireUser, async (req, res) => {
+  const user = await findOrCreateUser(req.user)
+  const rows = user.challenge
+    ? await sessions().find({ userId: req.user.userId, finishedAt: { $gte: new Date(user.challenge.startedAt) } }).project({ _id: 0, exercise: 1, reps: 1, finishedAt: 1 }).toArray()
+    : []
+  const current = challengeSummary(user.challenge, rows)
+  if (current?.status === 'active') {
+    return res.status(409).json({ error: 'Эхлээд одоогийн challenge-аа дуусгах эсвэл зогсооно уу.' })
+  }
+
+  let challenge
+  try {
+    challenge = createChallenge(req.body)
+  } catch (error) {
+    return res.status(400).json({ error: error.message })
+  }
+  await users().updateOne({ _id: req.user.userId }, { $set: { challenge } })
+  res.status(201).json(challengeSummary(challenge))
+})
+
+router.delete('/challenges/current', requireUser, async (req, res) => {
+  await findOrCreateUser(req.user)
+  await users().updateOne({ _id: req.user.userId }, { $unset: { challenge: '' } })
+  res.status(204).end()
 })
 
 /** Дуусгасан сетийг бүртгэнэ. Нийт тоо болон хамгийн сайн сет шинэчлэгдэнэ. */

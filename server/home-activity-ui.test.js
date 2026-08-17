@@ -4,12 +4,11 @@ import test from 'node:test'
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 
-test('Нүүр дээр өнөөдрийн push-up ring ба 7 өдрийн график байна', () => {
+test('Нүүр дээр зөвхөн өнөөдрийн push-up ring байна', () => {
   assert.match(html, /id="dailyPushups"[^>]*aria-labelledby="dailyPushupsTitle"/)
   assert.match(html, /id="dailyRingValue"/)
   assert.match(html, /id="dailyCount">0</)
-  assert.match(html, /id="weekChart"/)
-  assert.match(html, /id="weekLabels"/)
+  assert.doesNotMatch(html, /id="weekChart"|id="weekLabels"|Сүүлийн 7 өдөр/)
 })
 
 test('өдрийн үзүүлэлт Push Up ба Суулт switch-тэй', () => {
@@ -36,7 +35,6 @@ test('Нүүр дээр profile header харагдахгүй', () => {
 test('өдрийн activity хэрэглэгчийн timezone-аар серверээс ачаална', () => {
   assert.match(html, /resolvedOptions\(\)\.timeZone/)
   assert.match(html, /api\(`\/activity\?days=7&exercise=\$\{exercise\}&timeZone=\$\{encodeURIComponent\(localTimeZone\)\}`\)/)
-  assert.match(html, /activityWeekdays = \["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"\]/)
   assert.match(html, /loadDailyActivity\(\)/)
 })
 
@@ -44,7 +42,7 @@ test('өдрийн activity cache-ээс шууд харагдаад profile-т�
   assert.match(html, /function restoreDailyActivity\(exercise\)/)
   assert.match(html, /localStorage\.setItem\(activityCacheKey\(exercise\)/)
   assert.match(html, /restoreDailyActivity\("pushup"\);[\s\S]*?restoreDailyActivity\("squat"\);/)
-  assert.match(html, /await Promise\.all\(\[loadProfile\(\), loadDailyActivity\(\)\]\);/)
+  assert.match(html, /await Promise\.all\(\[loadProfile\(\), loadDailyActivity\(\), loadChallenges\(\)\]\);/)
   assert.match(html, /addDailyActivityReps\(kind, reps\);/)
   const profileSource = html.match(/async function loadProfile\(\)\{[\s\S]*?\n\}/)?.[0] ?? ''
   assert.doesNotMatch(profileSource, /loadDailyActivity/)

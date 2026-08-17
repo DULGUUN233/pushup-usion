@@ -75,7 +75,7 @@ test('AI эх үүсвэрүүдтэй урьдчилан холбогдож, cr
   assert.match(html, /<link rel="preconnect" href="https:\/\/cdn\.jsdelivr\.net" crossorigin>/)
   assert.match(html, /<link rel="preconnect" href="https:\/\/storage\.googleapis\.com" crossorigin>/)
   const usionAt = html.indexOf('launchCfg = await usionInit();')
-  const criticalAt = html.indexOf('await Promise.all([loadProfile(), loadDailyActivity()]);')
+  const criticalAt = html.indexOf('await Promise.all([loadProfile(), loadDailyActivity(), loadChallenges()]);')
   const normalWarmupAt = html.indexOf('setTimeout(scheduleModelWarmup, 600);')
   assert.ok(usionAt > 0 && usionAt < criticalAt && criticalAt < normalWarmupAt)
   assert.match(html, /if\(directInvite\)\{[\s\S]*?scheduleModelWarmup\(\);/)
