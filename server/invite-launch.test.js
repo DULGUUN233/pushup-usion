@@ -5,7 +5,7 @@ import test from 'node:test'
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 
 test('урилгын launch дээр menu flash хийхгүй', () => {
-  assert.match(html, /<section id="boot" class="screen">/)
+  assert.match(html, /<section id="boot" class="screen"[^>]*>/)
   assert.match(html, /<section id="menu" class="screen hidden">/)
 })
 

@@ -133,6 +133,24 @@
     display:flex;align-items:center;text-align:center;
     text-shadow:0 1px 6px rgba(0,0,0,.9);letter-spacing:.01em}
 
+  #aiLoading{position:absolute;inset:0;z-index:10;pointer-events:none;
+    display:grid;place-items:center;padding:24px}
+  .aiLoadingCard{display:flex;flex-direction:column;align-items:center;gap:8px;
+    width:min(300px,calc(100vw - 48px));padding:18px 20px;border-radius:18px;
+    background:rgba(9,14,24,.86);border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 12px 36px rgba(0,0,0,.5);backdrop-filter:blur(12px);text-align:center}
+  .aiLoadingRing{width:34px;height:34px;border-radius:50%;
+    border:3px solid rgba(255,255,255,.18);border-top-color:var(--gold);
+    animation:aiLoadingSpin .8s linear infinite}
+  .aiLoadingCard strong{font-size:16px}
+  .aiLoadingCard span{font-size:12px;line-height:1.5;color:rgba(255,255,255,.72)}
+  #boot .aiLoadingCard{background:transparent;border:0;box-shadow:none;backdrop-filter:none}
+  #boot .aiLoadingCard strong{color:var(--fg)}
+  @keyframes aiLoadingSpin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){
+    .aiLoadingRing{animation:none;border-color:rgba(255,210,30,.65)}
+  }
+
   /* Тоолуур доод талд, шар дугуй дотор — reel дээрх загвар */
   #counter{width:clamp(92px,26vw,128px);aspect-ratio:1;border-radius:50%;
     background:var(--gold);border:5px solid rgba(0,0,0,.35);
@@ -304,8 +322,12 @@
 </head>
 <body>
 
-<section id="boot" class="screen">
-  <div>Холбогдож байна…</div>
+<section id="boot" class="screen" role="status" aria-live="polite" aria-atomic="true">
+  <div class="aiLoadingCard">
+    <div class="aiLoadingRing" aria-hidden="true"></div>
+    <strong>Апп бэлтгэж байна</strong>
+    <span>Анхны нээлтэд AI model бэлтгэх тул бага зэрэг хугацаа орж болно.</span>
+  </div>
 </section>
 
 <!-- ================= ЦЭС ================= -->
@@ -376,6 +398,13 @@
   <canvas id="canvas"></canvas>
   <div id="deepGlow"></div>
   <div id="oppNote" class="hidden"></div>
+  <div id="aiLoading" class="hidden" role="status" aria-live="polite" aria-atomic="true">
+    <div class="aiLoadingCard">
+      <div class="aiLoadingRing" aria-hidden="true"></div>
+      <strong>AI танилт бэлтгэж байна</strong>
+      <span>Анхны ачаалалт арай удаан байж болно. Дараагийн нээлт ихэвчлэн хурдан.</span>
+    </div>
+  </div>
 
   <div id="hud">
     <div id="duelBar" class="hidden">
@@ -731,6 +760,7 @@ const SQUAT_FRAME_MARGIN = 0.02;
 // ---- төлөв ----
 let landmarker = null, visionFileset = null, modelLoadPromise = null, running = false, stream = null;
 let modelVariant = "heavy", switchingToLite = false, lowFpsSince = 0;
+let aiLoadingTimer = null;
 let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
 let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
 let loSeen = null, hiSeen = null, badFrames = 0, dipMin = 999;
@@ -1586,6 +1616,20 @@ function scheduleModelWarmup(){
     setTimeout(warm, 250);
 }
 
+function beginAiLoading(){
+  clearTimeout(aiLoadingTimer);
+  if(landmarker) return;
+  aiLoadingTimer = setTimeout(() => {
+    if(!landmarker) $("aiLoading").classList.remove("hidden");
+  }, 300);
+}
+
+function endAiLoading(){
+  clearTimeout(aiLoadingTimer);
+  aiLoadingTimer = null;
+  $("aiLoading").classList.add("hidden");
+}
+
 function maybeSwitchToLite(now){
   // Heavy модель үндсэн сонголт. Android хөтөч 5 секунд дараалан 12 fps
   // хүрэхгүй бол тооллын тасралтгүй ажиллагааг хамгаалж fallback руу шилжинэ.
@@ -1646,12 +1690,15 @@ async function startEngine(onCameraReady){
   // Permission хүсэлтийг хэрэглэгчийн даралтын дараа шууд гаргана. Heavy model
   // камераас хамааралгүй тул зэрэг ачаалж, эхний нээлтийн хүлээлтийг багасгана.
   // Аль нэг нь бүтэлгүйтвэл нээгдсэн байж болох камерыг заавал хаана.
+  beginAiLoading();
   try{
     const cameraReady = openCamera().then(() => onCameraReady?.());
     await Promise.all([cameraReady, ensureExerciseModel()]);
   }catch(e){
     stopCamera();
     throw e;
+  }finally{
+    endAiLoading();
   }
   fpsEma = 0;
   lastFrame = 0;

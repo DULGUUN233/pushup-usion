@@ -21,6 +21,8 @@ test('camera permission хүсэлт model ачааллаас өмнө, зэрэ
     const openCamera = () => { events.push("camera"); return cameraReady; };
     const ensureExerciseModel = () => { events.push("model"); return modelReady; };
     const stopCamera = () => events.push("stop");
+    const beginAiLoading = () => events.push("loading-start");
+    const endAiLoading = () => events.push("loading-end");
     const reset = () => events.push("reset");
     const loop = () => events.push("loop");
     let fpsEma = 1, lastFrame = 1, lowFpsSince = 1, running = false;
@@ -38,10 +40,11 @@ test('camera permission хүсэлт model ачааллаас өмнө, зэрэ
   `)
 
   const result = await run()
-  assert.deepEqual(result.started, ['audio', 'camera', 'model'])
-  assert.deepEqual(result.afterCamera, ['audio', 'camera', 'model', 'preview'])
+  assert.deepEqual(result.started, ['audio', 'loading-start', 'camera', 'model'])
+  assert.deepEqual(result.afterCamera, ['audio', 'loading-start', 'camera', 'model', 'preview'])
   assert.equal(result.running, true)
   assert.deepEqual(result.events.slice(-2), ['reset', 'loop'])
+  assert.equal(result.events.filter(event => event === 'loading-end').length, 1)
 })
 
 test('Heavy model урьдчилан болон camera start-аас зэрэг хүсэгдсэн ч нэг л удаа ачаална', async () => {
@@ -76,6 +79,14 @@ test('AI эх үүсвэрүүдтэй урьдчилан холбогдож, me
   assert.ok(warmupAt > 0 && warmupAt < usionAt && usionAt < profileAt)
 })
 
+test('cold start loading төлөв нь хүртээмжтэй, богино warm start дээр анивчихгүй', () => {
+  assert.match(html, /id="boot" class="screen" role="status" aria-live="polite" aria-atomic="true"/)
+  assert.match(html, /Анхны нээлтэд AI model бэлтгэх тул бага зэрэг хугацаа орж болно\./)
+  assert.match(html, /id="aiLoading" class="hidden" role="status" aria-live="polite" aria-atomic="true"/)
+  assert.match(html, /aiLoadingTimer = setTimeout\([\s\S]*?\}, 300\)/)
+  assert.match(html, /@media \(prefers-reduced-motion:reduce\)[\s\S]*?\.aiLoadingRing\{animation:none/)
+})
+
 test('model эсвэл camera алдаа өгвөл нээгдсэн stream-ийг хаана', async () => {
   const run = new Function(`
     let stopped = 0;
@@ -84,6 +95,8 @@ test('model эсвэл camera алдаа өгвөл нээгдсэн stream-ий
     const openCamera = async () => {};
     const ensureExerciseModel = async () => { throw new Error("model"); };
     const stopCamera = () => stopped++;
+    const beginAiLoading = () => {};
+    const endAiLoading = () => {};
     const reset = () => {};
     const loop = () => {};
     let fpsEma = 0, lastFrame = 0, lowFpsSince = 0, running = false;
