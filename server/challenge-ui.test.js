@@ -23,4 +23,10 @@ test('challenge API болон нэг өдөр тасрах дүрмийг UI т
 test('challenge controls mobile touch target-тай', () => {
   assert.match(html, /\.challengeHead button\{min-height:44px/)
   assert.match(html, /\.challengeActions button,\.challengeStart\{width:100%;min-height:44px/)
+  assert.match(html, /#mBattle\{[^}]*min-height:52px/)
+})
+
+test('challenge layout солигдоход focus болон хуучин scroll үлдэхгүй', () => {
+  assert.match(html, /function resetChallengeView\(\)\{\s*document\.activeElement\?\.blur\?\.\(\);\s*requestAnimationFrame\(\(\) => \{ \$\("menu"\)\.scrollTop = 0; \}\);\s*\}/)
+  assert.equal((html.match(/resetChallengeView\(\);/g) || []).length, 2)
 })

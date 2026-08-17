@@ -103,12 +103,12 @@
   .mode small{font-size:12px;font-weight:500;opacity:.75}
   .mode.duel{background:#2a1e3d;color:#e6dcff}
   #mBattle{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 80px);z-index:29;
-    width:min(calc(100% - 36px),460px);min-height:56px;padding:10px 16px;transform:translateX(-50%);
+    width:min(calc(100% - 36px),460px);min-height:52px;padding:6px 16px;transform:translateX(-50%);
     align-items:center;justify-content:center;text-align:center;border:1px solid rgba(255,255,255,.2);
     background:linear-gradient(135deg,#39d98a 0%,#20b8ff 100%);color:#04140c;
     box-shadow:0 12px 30px rgba(32,184,255,.22),0 5px 16px rgba(57,217,138,.2);
-    font-size:16px;font-weight:900;transition:filter .18s ease,box-shadow .18s ease}
-  #mBattle small{font-size:11px;font-weight:700;opacity:.72}
+    font-size:15px;font-weight:900;transition:filter .18s ease,box-shadow .18s ease}
+  #mBattle small{font-size:10px;font-weight:700;opacity:.72}
   #mBattle:focus-visible{outline:3px solid #fff;outline-offset:3px}
   #mBattle:active{transform:translateX(-50%) scale(.98);filter:brightness(.9);
     box-shadow:0 6px 18px rgba(32,184,255,.16)}
@@ -1069,6 +1069,11 @@ async function loadChallenges(){
   }
 }
 
+function resetChallengeView(){
+  document.activeElement?.blur?.();
+  requestAnimationFrame(() => { $("menu").scrollTop = 0; });
+}
+
 async function startChallenge(payload, button){
   button.disabled = true;
   try{
@@ -1078,6 +1083,7 @@ async function startChallenge(payload, button){
     $("challengeStatus").className = "";
     $("challengeStatus").textContent = "Challenge эхэллээ.";
     renderChallenges();
+    resetChallengeView();
   }catch(e){
     $("challengeStatus").className = "bad";
     $("challengeStatus").textContent = friendlyError(e, e.message || "Challenge эхлүүлж чадсангүй.");
@@ -3480,6 +3486,7 @@ $("challengeStop").onclick = async () => {
     await api("/challenges/current", { method:"DELETE" });
     challengeState.active = null;
     renderChallenges();
+    resetChallengeView();
   }catch(e){
     $("challengeStatus").className = "bad";
     $("challengeStatus").textContent = friendlyError(e, "Challenge-аа зогсоож чадсангүй.");

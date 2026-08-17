@@ -59,7 +59,7 @@ test('Нүүр дээр daily summary-ийн дараа зөвхөн Battle Frie
 test('Battle Friend товч navigation-ийн дээр тод үндсэн CTA байна', () => {
   assert.match(html, /#mBattle\{position:fixed;left:50%;bottom:calc\(env\(safe-area-inset-bottom\) \+ 80px\)/)
   assert.match(html, /background:linear-gradient\(135deg,#39d98a 0%,#20b8ff 100%\)/)
-  assert.match(html, /#mBattle\{[^}]*min-height:56px;[^}]*padding:10px 16px/s)
+  assert.match(html, /#mBattle\{[^}]*min-height:52px;[^}]*padding:6px 16px/s)
   assert.match(html, /#menu\{[^}]*padding-bottom:calc\(env\(safe-area-inset-bottom\) \+ 172px\)/)
 })
 
