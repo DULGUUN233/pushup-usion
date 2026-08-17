@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Push-up</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
 <script src="https://usions.com/usion-sdk.js"></script>
 <style>
   :root{
@@ -727,7 +729,7 @@ const SQUAT_CONFIRM_FRAMES = 3;
 const SQUAT_FRAME_MARGIN = 0.02;
 
 // ---- төлөв ----
-let landmarker = null, visionFileset = null, running = false, stream = null;
+let landmarker = null, visionFileset = null, modelLoadPromise = null, running = false, stream = null;
 let modelVariant = "heavy", switchingToLite = false, lowFpsSince = 0;
 let phase = "up", count = 0, repStart = 0, repMinAngle = 180, bestDepth = null;
 let smooth = null, lastVideoTime = -1, t0 = 0, fpsEma = 0, lastFrame = 0;
@@ -1562,6 +1564,28 @@ async function createLandmarker(modelAssetPath){
   });
 }
 
+async function loadInitialPoseModel(){
+  if(landmarker) return landmarker;
+  if(!modelLoadPromise){
+    modelLoadPromise = createLandmarker(HEAVY_MODEL)
+      .then(model => {
+        landmarker = model;
+        modelVariant = "heavy";
+        return model;
+      })
+      .finally(() => { modelLoadPromise = null; });
+  }
+  return modelLoadPromise;
+}
+
+function scheduleModelWarmup(){
+  const warm = () => loadInitialPoseModel().catch(() => {});
+  if("requestIdleCallback" in window)
+    window.requestIdleCallback(warm, { timeout: 1000 });
+  else
+    setTimeout(warm, 250);
+}
+
 function maybeSwitchToLite(now){
   // Heavy модель үндсэн сонголт. Android хөтөч 5 секунд дараалан 12 fps
   // хүрэхгүй бол тооллын тасралтгүй ажиллагааг хамгаалж fallback руу шилжинэ.
@@ -1600,8 +1624,7 @@ async function switchToLite(){
 async function ensureExerciseModel(){
   const needsLowerBody = exercise === "squat" || (mode === "battle" && duel?.battleType === "combined");
   if(!landmarker){
-    landmarker = await createLandmarker(HEAVY_MODEL);
-    modelVariant = "heavy";
+    await loadInitialPoseModel();
   } else if(needsLowerBody && modelVariant === "lite"){
     // Combined бол камер асаахаас өмнө, бусад тохиолдолд завсарлагаар
     // доод биеийн цэгийг Lite-ээс Full руу ахиулна.
@@ -1613,7 +1636,7 @@ async function ensureExerciseModel(){
   }
 }
 
-async function startEngine(){
+async function startEngine(onCameraReady){
   // Дуу нээх ЦОРЫН ГАНЦ боломж бол хэрэглэгчийн дарлага. Энэ функц товч
   // дарснаас л дуудагддаг тул audio-г яг энд асаана.
   try{ ac(); }catch{ /* дуугүй ажиллана */ }
@@ -1624,7 +1647,8 @@ async function startEngine(){
   // камераас хамааралгүй тул зэрэг ачаалж, эхний нээлтийн хүлээлтийг багасгана.
   // Аль нэг нь бүтэлгүйтвэл нээгдсэн байж болох камерыг заавал хаана.
   try{
-    await Promise.all([openCamera(), ensureExerciseModel()]);
+    const cameraReady = openCamera().then(() => onCameraReady?.());
+    await Promise.all([cameraReady, ensureExerciseModel()]);
   }catch(e){
     stopCamera();
     throw e;
@@ -1642,9 +1666,13 @@ async function startSolo(){
   try{
     $("go").disabled = true;
     $("go").textContent = "Ачаалж байна…";
-    await startEngine();
+    await startEngine(() => {
+      $("start").classList.add("hidden");
+      setMsg("AI танилт бэлтгэж байна…", "var(--dim)");
+    });
     $("start").classList.add("hidden");
   }catch(e){
+    $("start").classList.remove("hidden");
     err.classList.remove("hidden");
     err.textContent = friendlyError(e, "Камер ассангүй. Дахин оролдоно уу.");
     $("go").disabled = false;
@@ -2377,7 +2405,9 @@ async function armForBattle(){
   $("seek").classList.remove("hidden");
   $("seekTitle").textContent = "Камер бэлдэж байна…";
   try{
-    await startEngine();
+    await startEngine(() => {
+      $("seekTitle").textContent = "AI танилт бэлтгэж байна…";
+    });
     hallSend({ type: "armed" });
     $("seekTitle").textContent = "Өрсөлдөгчөө хүлээж байна…";
   }catch(e){
@@ -2785,6 +2815,7 @@ document.addEventListener("visibilitychange", () => {
   if(document.hidden) lastFrame = 0;
 });
 
+scheduleModelWarmup();
 launchCfg = await usionInit();
 const directInvite = guestLaunch();
 startupInvitePending = directInvite;
