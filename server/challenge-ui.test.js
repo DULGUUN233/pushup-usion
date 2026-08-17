@@ -42,13 +42,16 @@ test('challenge controls mobile touch target-тай', () => {
   assert.match(html, /#mBattle\{[^}]*min-height:52px/)
 })
 
-test('default challenge card-ууд хажуу тийш swipe хийгдэнэ', () => {
+test('active болон default challenge card-ууд нэг мөрөнд хажуу тийш swipe хийгдэнэ', () => {
   assert.match(html, /#challengeTemplates\{display:flex;[^}]*overflow-x:auto;[^}]*scroll-snap-type:x mandatory/)
   assert.match(html, /#challengeTemplates \.challengeCard\{flex:0 0 calc\(100% - 42px\);scroll-snap-align:start\}/)
   assert.match(html, /#challengeTemplates::-webkit-scrollbar\{display:none\}/)
+  assert.match(html, /<div id="challengeTemplates">\s*<article id="activeChallenge"/)
+  assert.match(html, /templates\.querySelectorAll\("\.challengeTemplate"\)\.forEach\(card => card\.remove\(\)\)/)
+  assert.match(html, /card\.className = "challengeCard challengeTemplate"/)
 })
 
 test('challenge layout солигдоход focus болон хуучин scroll үлдэхгүй', () => {
-  assert.match(html, /function resetChallengeView\(\)\{\s*document\.activeElement\?\.blur\?\.\(\);\s*requestAnimationFrame\(\(\) => \{ \$\("menu"\)\.scrollTop = 0; \}\);\s*\}/)
+  assert.match(html, /function resetChallengeView\(\)\{\s*document\.activeElement\?\.blur\?\.\(\);\s*requestAnimationFrame\(\(\) => \{\s*\$\("menu"\)\.scrollTop = 0;\s*\$\("challengeTemplates"\)\.scrollLeft = 0;\s*\}\);\s*\}/)
   assert.equal((html.match(/resetChallengeView\(\);/g) || []).length, 2)
 })

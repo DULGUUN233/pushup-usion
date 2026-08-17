@@ -593,14 +593,15 @@
       <h2 id="challengeTitle">Challenge</h2>
       <button id="challengeCustomToggle" type="button" aria-expanded="false">Өөрөө үүсгэх</button>
     </div>
-    <article id="activeChallenge" class="challengeCard active hidden" aria-live="polite">
-      <div class="challengeTop"><h3 id="activeChallengeTitle"></h3><span id="activeChallengeBadge" class="challengeBadge"></span></div>
-      <div class="challengeProgress" role="progressbar" aria-label="Challenge ахиц" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="activeChallengeBar"></span></div>
-      <div class="challengeNumbers"><span id="activeChallengeProgress"></span><span id="activeChallengeDays"></span></div>
-      <div id="challengeDayDots" class="challengeDays"></div>
-      <div class="challengeActions"><button id="challengeStop" type="button">Зогсоох</button></div>
-    </article>
-    <div id="challengeTemplates"></div>
+    <div id="challengeTemplates">
+      <article id="activeChallenge" class="challengeCard active hidden" aria-live="polite">
+        <div class="challengeTop"><h3 id="activeChallengeTitle"></h3><span id="activeChallengeBadge" class="challengeBadge"></span></div>
+        <div class="challengeProgress" role="progressbar" aria-label="Challenge ахиц" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="activeChallengeBar"></span></div>
+        <div class="challengeNumbers"><span id="activeChallengeProgress"></span><span id="activeChallengeDays"></span></div>
+        <div id="challengeDayDots" class="challengeDays"></div>
+        <div class="challengeActions"><button id="challengeStop" type="button">Зогсоох</button></div>
+      </article>
+    </div>
     <form id="challengeForm" class="challengeForm hidden">
       <label>Төрөл
         <select id="challengeExercise"><option value="pushup">Push Up</option><option value="squat">Суулт</option><option value="combined">Хосолсон</option></select>
@@ -1262,10 +1263,10 @@ function renderChallenges(){
     }
   }
 
-  templates.textContent = "";
+  templates.querySelectorAll(".challengeTemplate").forEach(card => card.remove());
   for(const item of challengeState.templates){
     const card = document.createElement("article");
-    card.className = "challengeCard";
+    card.className = "challengeCard challengeTemplate";
     const top = document.createElement("div");
     top.className = "challengeTop";
     const title = document.createElement("h3");
@@ -1301,7 +1302,10 @@ async function loadChallenges(){
 
 function resetChallengeView(){
   document.activeElement?.blur?.();
-  requestAnimationFrame(() => { $("menu").scrollTop = 0; });
+  requestAnimationFrame(() => {
+    $("menu").scrollTop = 0;
+    $("challengeTemplates").scrollLeft = 0;
+  });
 }
 
 async function startChallenge(payload, button){
