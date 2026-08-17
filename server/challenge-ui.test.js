@@ -13,11 +13,26 @@ test('default болон custom challenge UI байна', () => {
   assert.match(html, /id="challengeDays"[^>]*min="1" max="365"/)
 })
 
-test('challenge API болон нэг өдөр тасрах дүрмийг UI тайлбарлана', () => {
+test('challenge API байна, active card дээр илүү meta мөр харагдахгүй', () => {
   assert.match(html, /api\("\/challenges"\)/)
   assert.match(html, /api\("\/challenges\/start"/)
   assert.match(html, /api\("\/challenges\/current", \{ method:"DELETE" \}\)/)
-  assert.match(html, /Нэг өдөр тасарвал дуусна/)
+  assert.doesNotMatch(html, /id="activeChallengeMeta"/)
+  assert.doesNotMatch(html, /Нэг өдөр тасарвал дуусна/)
+})
+
+test('active challenge үед бусад challenge харагдаж, дэлгэц scroll хэвээр байна', () => {
+  assert.match(html, /const challengeRunning = active\?\.status === "active"/)
+  assert.match(html, /templates\.classList\.remove\("hidden"\)/)
+  assert.match(html, /customToggle\.disabled = challengeRunning/)
+  assert.match(html, /button\.disabled = challengeRunning/)
+  assert.match(html, /#menu\{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;\s*padding-bottom:/)
+})
+
+test('богино challenge хоногийн цэг, урт challenge progress bar харуулна', () => {
+  assert.match(html, /const usesDayDots = Number\.isInteger\(active\.days\) && active\.days > 0 && active\.days <= 14/)
+  assert.match(html, /progressBar\.classList\.toggle\("hidden", usesDayDots\)/)
+  assert.match(html, /dots\.classList\.toggle\("hidden", !usesDayDots\)/)
 })
 
 test('challenge controls mobile touch target-тай', () => {

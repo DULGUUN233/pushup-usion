@@ -538,7 +538,6 @@
     </div>
     <article id="activeChallenge" class="challengeCard active hidden" aria-live="polite">
       <div class="challengeTop"><h3 id="activeChallengeTitle"></h3><span id="activeChallengeBadge" class="challengeBadge"></span></div>
-      <p id="activeChallengeMeta" class="challengeMeta"></p>
       <div class="challengeProgress" role="progressbar" aria-label="Challenge ахиц" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="activeChallengeBar"></span></div>
       <div class="challengeNumbers"><span id="activeChallengeProgress"></span><span id="activeChallengeDays"></span></div>
       <div id="challengeDayDots" class="challengeDays"></div>
@@ -1002,25 +1001,28 @@ function renderChallenges(){
   const activeCard = $("activeChallenge");
   const templates = $("challengeTemplates");
   const customToggle = $("challengeCustomToggle");
+  const challengeRunning = active?.status === "active";
   activeCard.classList.toggle("hidden", !active);
-  customToggle.classList.toggle("hidden", active?.status === "active");
-  templates.classList.toggle("hidden", active?.status === "active");
+  customToggle.disabled = challengeRunning;
+  templates.classList.remove("hidden");
   if(active){
     const statusText = active.status === "completed"
       ? "Амжилттай"
       : active.status === "failed" ? "Амжилтгүй" : `Өдөр ${active.currentDay}/${active.days}`;
     $("activeChallengeTitle").textContent = active.title;
     $("activeChallengeBadge").textContent = statusText;
-    $("activeChallengeMeta").textContent = `${challengeExerciseLabel(active.exercise)} · Өдөр бүр ${activityNumber.format(active.dailyTarget)} · Нэг өдөр тасарвал дуусна`;
     $("activeChallengeProgress").textContent = `${activityNumber.format(active.progress)} / ${activityNumber.format(active.target)}`;
     $("activeChallengeDays").textContent = active.status === "active" ? `${active.remainingDays} өдөр үлдсэн` : "";
     $("activeChallengeBar").style.width = `${active.percent}%`;
-    activeCard.querySelector('[role="progressbar"]').setAttribute("aria-valuenow", active.percent);
+    const progressBar = activeCard.querySelector('[role="progressbar"]');
+    const usesDayDots = Number.isInteger(active.days) && active.days > 0 && active.days <= 14;
+    progressBar.classList.toggle("hidden", usesDayDots);
+    progressBar.setAttribute("aria-valuenow", active.percent);
     $("challengeStop").textContent = active.status === "active" ? "Зогсоох" : "Хаах";
     const dots = $("challengeDayDots");
     dots.textContent = "";
-    dots.classList.toggle("hidden", active.days > 14);
-    if(active.days <= 14){
+    dots.classList.toggle("hidden", !usesDayDots);
+    if(usesDayDots){
       active.daily.forEach((reps, index) => {
         const dot = document.createElement("span");
         dot.className = "challengeDay";
@@ -1052,6 +1054,7 @@ function renderChallenges(){
     button.className = "challengeStart";
     button.type = "button";
     button.textContent = "Эхлүүлэх";
+    button.disabled = challengeRunning;
     button.onclick = () => startChallenge({ templateId:item.id }, button);
     card.append(top, meta, button);
     templates.appendChild(card);
