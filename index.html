@@ -32,8 +32,10 @@
   #boot{display:grid;place-items:center;text-align:center;color:var(--dim);font-size:14px}
 
   /* ---------- цэс ---------- */
-  #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;
-    padding-bottom:calc(env(safe-area-inset-bottom) + 172px)}
+  #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;overflow-y:auto;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 172px);scroll-padding-bottom:calc(env(safe-area-inset-bottom) + 172px);
+    overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+  #menu>*{flex-shrink:0}
   #dailyPushups{--activity:#39d98a;--activity-alt:#20b8ff;display:flex;flex-direction:column;gap:12px}
   #dailyPushups.squat{--activity:#ffb020;--activity-alt:#d96bff}
   .activityRangeSwitch{align-self:center;display:grid;grid-template-columns:repeat(3,52px);gap:4px;padding:3px;

@@ -27,7 +27,7 @@ test('active challenge үед бусад challenge харагдаж, дэлгэ�
   assert.match(html, /templates\.classList\.remove\("hidden"\)/)
   assert.match(html, /customToggle\.disabled = challengeRunning/)
   assert.match(html, /button\.disabled = challengeRunning/)
-  assert.match(html, /#menu\{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;\s*padding-bottom:/)
+  assert.match(html, /#menu\{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;[^}]*padding-bottom:/)
 })
 
 test('богино challenge хоногийн цэг, урт challenge progress bar харуулна', () => {

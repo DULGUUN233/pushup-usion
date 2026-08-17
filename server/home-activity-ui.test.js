@@ -91,6 +91,12 @@ test('Battle Friend товч navigation-ийн дээр тод үндсэн CTA 
   assert.match(html, /#menu\{[^}]*padding-bottom:calc\(env\(safe-area-inset-bottom\) \+ 172px\)/)
 })
 
+test('Нүүрийн урт content fixed CTA болон navigation-ийн цаагуур scroll хийнэ', () => {
+  assert.match(html, /#menu\{[^}]*overflow-y:auto;[^}]*scroll-padding-bottom:calc\(env\(safe-area-inset-bottom\) \+ 172px\)/)
+  assert.match(html, /#menu>\*\{flex-shrink:0\}/)
+  assert.match(html, /#menu\{[^}]*-webkit-overflow-scrolling:touch/)
+})
+
 test('activity switch нягт боловч mobile touch target-аа хадгална', () => {
   assert.match(html, /\.activitySwitch\{position:relative;isolation:isolate;align-self:center;width:156px;height:44px/)
   assert.match(html, /\.activitySwitch button\{min-width:0;height:44px/)
