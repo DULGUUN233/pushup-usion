@@ -52,39 +52,46 @@
   #note.ok{color:var(--accent)}
 
   /* ---------- лиг ба байр ---------- */
-  #board{background:
-    radial-gradient(circle at 80% -10%,rgba(57,217,138,.13),transparent 34%),var(--bg)}
+  #board{padding-left:20px;padding-right:20px;background:#10151b}
   .boardShell{width:min(100%,520px);margin:0 auto}
-  .boardHead{margin:0 0 18px}
-  .boardHead h2{margin:0;font-size:26px;letter-spacing:-.035em}
-  .boardHead p{margin:6px 0 0;color:var(--dim);font-size:13px;line-height:1.5}
-  .leagueCard{width:100%;min-height:88px;border-radius:20px;padding:16px;text-align:left;
-    display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid rgba(255,255,255,.07)}
-  .leagueCard.global{background:linear-gradient(135deg,#213526,#15251e);border-color:rgba(57,217,138,.28)}
-  .leagueMark{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;flex:none;
-    background:rgba(57,217,138,.13);color:var(--accent)}
-  .leagueMark svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2}
+  .boardHead{margin:8px 4px 28px}
+  .boardHead h2{margin:0;font-size:34px;line-height:1.08;letter-spacing:-.045em}
+  .boardHead p{margin:10px 0 0;color:#9aa6b5;font-size:14px;line-height:1.5}
+  .leagueCard{width:100%;min-height:94px;border-radius:20px;padding:14px 15px;text-align:left;
+    display:flex;align-items:center;gap:14px;background:#1a2029;border:1px solid rgba(255,255,255,.07);
+    box-shadow:0 2px 6px rgba(0,0,0,.18);transition:background .18s ease,border-color .18s ease}
+  .leagueCard:active{transform:none;background:#202832;border-color:rgba(255,255,255,.13)}
+  .leagueCard.global{margin-bottom:10px;background:#19261f;border-color:rgba(57,217,138,.22)}
+  .leagueRankBlock{width:64px;height:64px;border-radius:17px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;flex:none;background:linear-gradient(145deg,#24b971,#147d4b);
+    color:#fff;font-size:23px;font-weight:900;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px rgba(255,255,255,.18)}
+  .leagueRankBlock small{font-size:9px;line-height:1;font-weight:800;letter-spacing:.08em;opacity:.72;text-transform:uppercase}
+  .leagueCard.global .leagueRankBlock{background:linear-gradient(145deg,#e7bd19,#a47e00);color:#171300}
   .leagueMeta{flex:1;min-width:0}
-  .leagueMeta strong{display:block;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .leagueMeta small{display:block;margin-top:5px;color:var(--dim);font-size:12px}
-  .leagueRank{font-size:21px;font-weight:900;color:var(--fg);font-variant-numeric:tabular-nums}
-  .leagueRank small{display:block;font-size:10px;font-weight:700;color:var(--dim);text-align:right}
-  .boardActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}
-  .boardActions button{min-height:48px;border-radius:15px}
-  .leagueForm{padding:14px;margin:0 0 12px;border-radius:18px;background:var(--card);
-    border:1px solid rgba(255,255,255,.08)}
-  .leagueForm label{display:block;font-size:12px;font-weight:800;margin-bottom:8px}
-  .leagueFormRow{display:flex;gap:8px}
+  .leagueMeta strong{display:block;font-size:17px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .leagueMeta small{display:block;margin-top:7px;color:#9aa6b5;font-size:12px;line-height:1.3}
+  .leagueCode{display:inline-block;margin-right:7px;padding:4px 7px;border-radius:7px;
+    background:rgba(57,217,138,.12);color:#8ee9b9;font-weight:800;letter-spacing:.13em;font-variant-numeric:tabular-nums}
+  .leagueOwner{color:var(--gold);font-weight:700}
+  .leagueChevron{width:22px;height:22px;flex:none;color:#758294;stroke:currentColor;fill:none;stroke-width:2.2}
+  .leagueForm{padding:20px;margin:0 0 16px;border-radius:21px;background:#1a2029;
+    border:1px solid rgba(255,255,255,.07);box-shadow:0 2px 6px rgba(0,0,0,.18)}
+  .leagueFormTitle{display:block;margin:0 0 15px;font-size:17px;font-weight:850}
+  .leagueForm label{display:block;font-size:12px;font-weight:800;margin-bottom:8px;color:#a9b4c1}
+  .leagueFormRow{display:flex;gap:10px}
   .leagueForm input{min-width:0;flex:1;height:48px;border:1px solid rgba(255,255,255,.12);
-    border-radius:13px;padding:0 13px;background:#0e141b;color:var(--fg);font:inherit;font-size:16px;outline:none}
+    border-radius:14px;padding:0 14px;background:#171c24;color:var(--fg);font:inherit;font-size:16px;outline:none}
+  #leagueCode{text-transform:uppercase;letter-spacing:.16em;font-weight:800}
   .leagueForm input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(57,217,138,.12)}
-  .leagueForm button{min-width:86px;border-radius:13px;background:var(--accent);color:#04140c}
+  .leagueForm button{min-width:96px;min-height:48px;border-radius:14px;background:var(--accent);color:#04140c;font-size:14px}
+  .leagueForm button:active{transform:none;filter:brightness(.9)}
+  #board button:focus-visible{outline:3px solid rgba(57,217,138,.52);outline-offset:2px}
   .formStatus{min-height:18px;margin:8px 2px 0;font-size:12px;color:var(--dim)}
   .formStatus.bad{color:var(--bad)}
-  .leagueTitleRow{display:flex;align-items:center;justify-content:space-between;margin:21px 2px 10px}
-  .leagueTitleRow h3{margin:0;font-size:14px}
+  .leagueTitleRow{display:flex;align-items:center;justify-content:space-between;margin:30px 4px 12px}
+  .leagueTitleRow h3{margin:0;font-size:12px;color:#9aa6b5;letter-spacing:.1em;text-transform:uppercase}
   .leagueTitleRow span{font-size:11px;color:var(--dim)}
-  #leagueList{display:flex;flex-direction:column;gap:8px}
+  #leagueList{display:flex;flex-direction:column;gap:10px}
   .emptyLeague{padding:24px 18px;text-align:center;border:1px dashed rgba(255,255,255,.13);
     border-radius:18px;color:var(--dim);font-size:13px;line-height:1.55}
   .boardFooter{margin-top:16px;width:100%;min-height:46px}
@@ -126,6 +133,17 @@
   .boardLoading{height:78px;border-radius:18px;margin:8px 0;background:linear-gradient(90deg,#131a22 25%,#202a35 50%,#131a22 75%);
     background-size:200% 100%;animation:boardShimmer 1.2s infinite}
   @keyframes boardShimmer{to{background-position:-200% 0}}
+  @media (max-width:360px){
+    #board{padding-left:14px;padding-right:14px}
+    .boardHead h2{font-size:30px}
+    .leagueForm{padding:16px}
+    .leagueForm button{min-width:84px;padding-left:12px;padding-right:12px}
+    .leagueRankBlock{width:58px;height:58px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .leagueCard{transition:none}
+    .boardLoading{animation:none;background:#182029}
+  }
 
   /* ---------- хүлээлгийн өрөө ---------- */
   #hall{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto}
@@ -433,12 +451,8 @@
         <h2>Лиг ба байр</h2>
         <p>Найзуудтайгаа нэг лигт нэгдэж, гурван төрлөөр өрсөлдөөрэй.</p>
       </header>
-      <button id="globalLeague" class="leagueCard global"></button>
-      <div class="boardActions">
-        <button id="showCreateLeague">+ Лиг үүсгэх</button>
-        <button id="showJoinLeague">Кодоор нэгдэх</button>
-      </div>
-      <form id="createLeagueForm" class="leagueForm hidden">
+      <form id="createLeagueForm" class="leagueForm">
+        <span class="leagueFormTitle">Шинэ лиг үүсгэх</span>
         <label for="leagueName">Лигийн нэр</label>
         <div class="leagueFormRow">
           <input id="leagueName" maxlength="30" autocomplete="off" placeholder="Жишээ: Office Crew">
@@ -446,15 +460,17 @@
         </div>
         <div id="createLeagueStatus" class="formStatus" role="status"></div>
       </form>
-      <form id="joinLeagueForm" class="leagueForm hidden">
-        <label for="leagueCode">6 тэмдэгт код</label>
+      <form id="joinLeagueForm" class="leagueForm">
+        <span class="leagueFormTitle">Лигт нэгдэх</span>
+        <label for="leagueCode">6 тэмдэгт лигийн код</label>
         <div class="leagueFormRow">
-          <input id="leagueCode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="AB23CD">
+          <input id="leagueCode" maxlength="6" inputmode="text" autocomplete="off" autocapitalize="characters" placeholder="AB23CD">
           <button type="submit">Нэгдэх</button>
         </div>
         <div id="joinLeagueStatus" class="formStatus" role="status"></div>
       </form>
-      <div class="leagueTitleRow"><h3>Миний лигүүд</h3><span id="leagueCount"></span></div>
+      <div class="leagueTitleRow"><h3>Лигүүд</h3><span id="leagueCount"></span></div>
+      <button id="globalLeague" class="leagueCard global" aria-label="Бүх тоглогчийн жагсаалт"></button>
       <div id="leagueList"><div class="boardLoading"></div><div class="boardLoading"></div></div>
       <button id="bBack" class="boardFooter">← Цэс рүү буцах</button>
     </div>
@@ -2904,33 +2920,43 @@ function makeRankAvatar(user){
   return el;
 }
 
-function leagueIcon(){
-  const el = document.createElement("div");
-  el.className = "leagueMark";
-  el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v3a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1a4 4 0 0 0 4 4m9-5h3v1a4 4 0 0 1-4 4"/></svg>';
-  return el;
-}
-
 function fillLeagueCard(button, league, global = false){
   button.textContent = "";
-  button.appendChild(leagueIcon());
+  const rankValue = league.ranks?.pushup;
+  const rank = document.createElement("div");
+  rank.className = "leagueRankBlock";
+  rank.append(document.createTextNode(rankValue ? `#${rankValue}` : "–"));
+  const rankLabel = document.createElement("small");
+  rankLabel.textContent = "байр";
+  rank.appendChild(rankLabel);
   const meta = document.createElement("div");
   meta.className = "leagueMeta";
   const title = document.createElement("strong");
   title.textContent = league.name;
   const sub = document.createElement("small");
-  sub.textContent = global
-    ? `${boardNumber.format(league.memberCount || 0)} тоглогч · Нээлттэй жагсаалт`
-    : `${league.memberCount} гишүүн · ${league.code}${league.owner ? " · Эзэн" : ""}`;
+  if(global){
+    sub.textContent = `${boardNumber.format(league.memberCount || 0)} тоглогч · Нээлттэй жагсаалт`;
+  }else{
+    const code = document.createElement("span");
+    code.className = "leagueCode";
+    code.textContent = league.code;
+    sub.append(code, document.createTextNode(`${league.memberCount} гишүүн`));
+    if(league.owner){
+      const owner = document.createElement("span");
+      owner.className = "leagueOwner";
+      owner.textContent = " · Эзэн";
+      sub.appendChild(owner);
+    }
+  }
   meta.append(title, sub);
-  const rank = document.createElement("div");
-  rank.className = "leagueRank";
-  const rankValue = league.ranks?.pushup;
-  rank.append(document.createTextNode(rankValue ? `#${rankValue}` : "–"));
-  const rankLabel = document.createElement("small");
-  rankLabel.textContent = "PUSH-UP";
-  rank.appendChild(rankLabel);
-  button.append(meta, rank);
+  const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  chevron.setAttribute("viewBox", "0 0 24 24");
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.classList.add("leagueChevron");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", "m9 18 6-6-6-6");
+  chevron.appendChild(path);
+  button.append(rank, meta, chevron);
 }
 
 function showBoardHub(refresh = false){
@@ -3113,16 +3139,6 @@ $("boardSquat").onclick = () => loadBoard("squat");
 $("boardBattle").onclick = () => loadBoard("battle");
 $("globalLeague").onclick = () => openLeagueBoard("", "Бүх тоглогч");
 $("detailBack").onclick = () => showBoardHub(true);
-$("showCreateLeague").onclick = () => {
-  $("joinLeagueForm").classList.add("hidden");
-  $("createLeagueForm").classList.toggle("hidden");
-  if(!$("createLeagueForm").classList.contains("hidden")) $("leagueName").focus();
-};
-$("showJoinLeague").onclick = () => {
-  $("createLeagueForm").classList.add("hidden");
-  $("joinLeagueForm").classList.toggle("hidden");
-  if(!$("joinLeagueForm").classList.contains("hidden")) $("leagueCode").focus();
-};
 $("leagueCode").oninput = () => {
   $("leagueCode").value = $("leagueCode").value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, "").slice(0, 6);
 };
@@ -3137,7 +3153,6 @@ $("createLeagueForm").onsubmit = async event => {
     const league = await api("/leagues", { method:"POST", body:JSON.stringify({ name:$("leagueName").value }) });
     $("leagueName").value = "";
     status.textContent = "";
-    $("createLeagueForm").classList.add("hidden");
     openLeagueBoard(league.code, league.name);
   }catch(e){
     status.className = "formStatus bad";
@@ -3155,7 +3170,6 @@ $("joinLeagueForm").onsubmit = async event => {
     const league = await api("/leagues/join", { method:"POST", body:JSON.stringify({ code:$("leagueCode").value }) });
     $("leagueCode").value = "";
     status.textContent = "";
-    $("joinLeagueForm").classList.add("hidden");
     openLeagueBoard(league.code, league.name);
   }catch(e){
     status.className = "formStatus bad";
