@@ -56,6 +56,7 @@ test('Heavy model урьдчилан болон camera start-аас зэрэг �
       created++;
       return new Promise(resolve => { resolveModel = resolve; });
     };
+    const setModelProgress = () => {};
     let landmarker = null, modelLoadPromise = null, modelVariant = "heavy";
     ${sourceOf('loadInitialPoseModel')}
     const first = loadInitialPoseModel();
@@ -83,8 +84,44 @@ test('cold start loading төлөв нь хүртээмжтэй, богино wa
   assert.match(html, /id="boot" class="screen" role="status" aria-live="polite" aria-atomic="true"/)
   assert.match(html, /Анхны нээлтэд AI model бэлтгэх тул бага зэрэг хугацаа орж болно\./)
   assert.match(html, /id="aiLoading" class="hidden" role="status" aria-live="polite" aria-atomic="true"/)
+  assert.equal((html.match(/data-model-progress role="progressbar"/g) ?? []).length, 2)
+  assert.match(html, /aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"/)
+  assert.match(html, /modelProgressBar[\s\S]*?transition:width \.18s ease-out/)
   assert.match(html, /aiLoadingTimer = setTimeout\([\s\S]*?\}, 300\)/)
   assert.match(html, /@media \(prefers-reduced-motion:reduce\)[\s\S]*?\.aiLoadingRing\{animation:none/)
+})
+
+test('Heavy model-ийн stream бодит byte-аар progress тооцно', async () => {
+  const run = new Function(`
+    const updates = [];
+    const chunks = [new Uint8Array([1, 2]), new Uint8Array([3, 4])];
+    const fetch = async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: name => name === "content-length" ? "4" : null },
+      body: new ReadableStream({
+        start(controller){
+          for(const chunk of chunks) controller.enqueue(chunk);
+          controller.close();
+        }
+      })
+    });
+    ${sourceOf('modelAssetWithProgress')}
+    return modelAssetWithProgress("model.task", value => updates.push(Math.round(value)))
+      .then(async reader => {
+        let bytes = 0;
+        while(true){
+          const { done, value } = await reader.read();
+          if(done) break;
+          bytes += value.byteLength;
+        }
+        return { updates, bytes };
+      });
+  `)
+
+  const result = await run()
+  assert.equal(result.bytes, 4)
+  assert.deepEqual(result.updates, [5, 48, 90, 92])
 })
 
 test('model эсвэл camera алдаа өгвөл нээгдсэн stream-ийг хаана', async () => {
