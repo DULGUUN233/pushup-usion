@@ -7,8 +7,8 @@ const start = new Date('2026-08-17T00:00:00.000Z')
 test('default weekly challenge зөв baseline, хугацаатай үүснэ', () => {
   const challenge = createChallenge({ templateId: 'weekly-pushup' }, start)
   assert.equal(challenge.exercise, 'pushup')
-  assert.equal(challenge.dailyTarget, 50)
-  assert.equal(challenge.target, 350)
+  assert.equal(challenge.dailyTarget, 20)
+  assert.equal(challenge.target, 140)
   assert.equal(challenge.endsAt.toISOString(), '2026-08-24T00:00:00.000Z')
 })
 

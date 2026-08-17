@@ -62,12 +62,9 @@ test('лиг дотор гурван төрлийн байрлал байна', 
   assert.match(html, /id="boardBattle"[^>]*>Battle ELO/)
 })
 
-test('өөрийн мөр зөвхөн нэр, оноог харуулна', () => {
-  assert.match(html, /id="myRankCard"/)
-  assert.match(html, /className = "mineMain"/)
-  assert.match(html, /className = "mineScore"/)
-  assert.doesNotMatch(html, /Дараагийн байрыг давахад|Таны оноо|mineRank/)
-  assert.match(html, /#myRankCard\{[^}]*border:0/s)
+test('өөрийн байр зөвхөн үндсэн жагсаалтад байвал харагдана', () => {
+  assert.doesNotMatch(html, /id="myRankCard"|renderMyRank|mineMain|mineScore/)
+  assert.match(html, /for\(const player of data\.players\.slice\(3\)\) rows\.appendChild\(renderRankRow\(player\)\)/)
 })
 
 test('leaderboard top-3 нь титэм, medal badge-тай бөгөөд platform шатгүй', () => {

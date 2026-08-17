@@ -1,8 +1,8 @@
 const DAY_MS = 24 * 60 * 60 * 1000
 
 export const CHALLENGE_TEMPLATES = Object.freeze([
-  Object.freeze({ id: 'weekly-pushup', title: '7 хоногийн Push Up', exercise: 'pushup', dailyTarget: 50, days: 7 }),
-  Object.freeze({ id: 'monthly-combined', title: '30 хоногийн Хосолсон', exercise: 'combined', dailyTarget: 50, days: 30 }),
+  Object.freeze({ id: 'weekly-pushup', title: '7 хоногийн Push Up', exercise: 'pushup', dailyTarget: 20, days: 7 }),
+  Object.freeze({ id: 'monthly-combined', title: '30 хоногийн Хосолсон', exercise: 'combined', dailyTarget: 20, days: 30 }),
 ])
 
 const EXERCISES = new Set(['pushup', 'squat', 'combined'])

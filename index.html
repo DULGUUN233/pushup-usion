@@ -41,13 +41,14 @@
   .activityRangeSwitch button{width:52px;min-height:44px;padding:8px;border-radius:999px;background:transparent;
     color:var(--dim);font-size:14px;transition:color .18s ease,background .18s ease}
   .activityRangeSwitch button[aria-pressed="true"]{background:rgba(255,255,255,.1);color:var(--fg)}
-  .activitySwitch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;border-radius:14px;
-    background:var(--card);border:1px solid rgba(255,255,255,.07)}
-  .activitySwitch button{min-height:44px;padding:8px 12px;border-radius:11px;background:transparent;
-    color:var(--dim);font-size:13px;transition:color .18s ease,background .18s ease,box-shadow .18s ease}
+  .activitySwitch{position:relative;isolation:isolate;align-self:center;width:156px;height:44px;
+    display:grid;grid-template-columns:1fr 1fr;gap:2px}
+  .activitySwitch::before{content:"";position:absolute;z-index:-1;inset:5px 0;border-radius:999px;
+    background:rgba(5,10,15,.28);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+  .activitySwitch button{min-width:0;height:44px;padding:0 7px;border-radius:999px;background:transparent;
+    color:var(--dim);font-size:11px;transition:color .18s ease,background .18s ease}
   .activitySwitch button[aria-pressed="true"]{background:linear-gradient(135deg,var(--activity),var(--activity-alt));
-    color:#04140c;box-shadow:0 5px 16px rgba(57,217,138,.24)}
-  #dailyPushups.squat .activitySwitch button[aria-pressed="true"]{box-shadow:0 5px 16px rgba(255,176,32,.22)}
+    background-position:center;background-size:calc(100% - 4px) 34px;background-repeat:no-repeat;color:#04140c}
   .activitySwitch button:focus-visible,.activityRangeSwitch button:focus-visible,.activityPeriodNav button:focus-visible,
   .activityWeekDay:focus-visible,.activityMonthDay:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
   .dailyRingCard{min-height:284px;border-radius:24px;padding:14px 16px 18px;display:flex;flex-direction:column;
@@ -80,7 +81,8 @@
     padding:8px 4px 12px}
   .activitySummary strong{display:block;font-size:29px;line-height:1;font-variant-numeric:tabular-nums}
   .activitySummary small{display:block;margin-top:5px;color:var(--dim);font-size:10px;font-weight:750}
-  .activityAverage{text-align:right;color:var(--dim);font-size:11px;font-weight:800}
+  .activitySummaryEnd{text-align:right}
+  .activitySummary .activityAverage{color:var(--fg);font-size:29px;font-weight:900}
   .activityWeekChart{width:100%;height:158px;display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end}
   .activityWeekDay{height:100%;min-width:0;padding:0 1px 4px;border-radius:11px;background:transparent;color:var(--dim);
     display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px}
@@ -128,7 +130,10 @@
   .challengeActions button,.challengeStart{width:100%;min-height:44px}
   .challengeStart{margin-top:13px;background:rgba(255,255,255,.1);color:var(--fg)}
   #challengeStop{background:transparent;color:var(--dim);border:1px solid rgba(255,255,255,.12)}
-  #challengeTemplates{display:grid;gap:10px}
+  #challengeTemplates{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scroll-padding-inline:0;
+    scroll-snap-type:x mandatory;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #challengeTemplates::-webkit-scrollbar{display:none}
+  #challengeTemplates .challengeCard{flex:0 0 calc(100% - 42px);scroll-snap-align:start}
   .challengeForm{display:grid;gap:12px;padding:16px;border-radius:20px;background:var(--card);
     border:1px solid rgba(255,255,255,.07)}
   .challengeForm label{display:grid;gap:6px;color:var(--dim);font-size:11px;font-weight:750}
@@ -250,12 +255,6 @@
   .row .nm{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .row .tot{font-size:18px;font-weight:900;line-height:1;text-align:right;font-variant-numeric:tabular-nums}
   .row .tot small{display:block;margin-top:4px;font-size:9px;line-height:1;font-weight:700;color:#7f8a99;text-transform:uppercase}
-  #myRankCard{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 6px);z-index:2;margin-top:10px;
-    min-height:60px;padding:13px 14px;border-radius:13px;background:rgba(26,32,41,.96);
-    border:0;box-shadow:none;backdrop-filter:blur(16px);display:flex;align-items:center;gap:10px}
-  #myRankCard .mineMain{flex:1;min-width:0;font-size:14px;font-weight:800;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #myRankCard .mineScore{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
   .boardLoading{height:78px;border-radius:18px;margin:8px 0;background:linear-gradient(90deg,#131a22 25%,#202a35 50%,#131a22 75%);
     background-size:200% 100%;animation:boardShimmer 1.2s infinite}
   @keyframes boardShimmer{to{background-position:-200% 0}}
@@ -556,11 +555,11 @@
       <button id="activityWeek" type="button" aria-label="Долоо хоног" aria-pressed="false">W</button>
       <button id="activityMonth" type="button" aria-label="Сар" aria-pressed="false">M</button>
     </div>
-    <div class="activitySwitch" role="group" aria-label="Өдрийн дасгал">
-      <button id="activityPush" type="button" aria-pressed="true">Push Up</button>
-      <button id="activitySquat" type="button" aria-pressed="false">Суулт</button>
-    </div>
     <div id="activityViewport" class="dailyRingCard">
+      <div class="activitySwitch" role="group" aria-label="Статистикийн дасгал">
+        <button id="activityPush" type="button" aria-pressed="true">Суниалт</button>
+        <button id="activitySquat" type="button" aria-pressed="false">Суулт</button>
+      </div>
       <div class="activityPeriodNav">
         <button id="activityPrev" type="button" aria-label="Өмнөх хугацаа"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
         <strong id="activityPeriodLabel">Өнөөдөр</strong>
@@ -581,10 +580,10 @@
         </div>
       </div>
       <div id="activityWeekView" class="activityPanel hidden">
-        <div style="width:100%"><div class="activitySummary"><div><strong id="activityWeekTotal">0</strong><small>НИЙТ</small></div><span id="activityWeekAverage" class="activityAverage">Дундаж 0</span></div><div id="activityWeekChart" class="activityWeekChart" role="group" aria-label="Долоо хоногийн дасгал"></div></div>
+        <div style="width:100%"><div class="activitySummary"><div><strong id="activityWeekTotal">0</strong><small>НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityWeekAverage" class="activityAverage">0</strong><small>ӨДРИЙН ДУНДАЖ</small></div></div><div id="activityWeekChart" class="activityWeekChart" role="group" aria-label="Долоо хоногийн дасгал"></div></div>
       </div>
       <div id="activityMonthView" class="activityPanel hidden">
-        <div class="activityMonth"><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small>НИЙТ</small></div><span id="activityMonthAverage" class="activityAverage">Өдрийн дундаж 0</span></div><div class="activityMonthWeekdays" aria-hidden="true"><span>ДА</span><span>МЯ</span><span>ЛХ</span><span>ПҮ</span><span>БА</span><span>БЯ</span><span>НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал"></div></div>
+        <div class="activityMonth"><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small>НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityMonthAverage" class="activityAverage">0</strong><small>ӨДРИЙН ДУНДАЖ</small></div></div><div class="activityMonthWeekdays" aria-hidden="true"><span>ДА</span><span>МЯ</span><span>ЛХ</span><span>ПҮ</span><span>БА</span><span>БЯ</span><span>НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал"></div></div>
       </div>
     </div>
   </section>
@@ -607,7 +606,7 @@
         <select id="challengeExercise"><option value="pushup">Push Up</option><option value="squat">Суулт</option><option value="combined">Хосолсон</option></select>
       </label>
       <label>Өдрийн зорилго
-        <input id="challengeDailyTarget" type="number" min="1" max="1000" value="50" inputmode="numeric" required>
+        <input id="challengeDailyTarget" type="number" min="1" max="1000" value="20" inputmode="numeric" required>
       </label>
       <label>Хэдэн өдөр
         <input id="challengeDays" type="number" min="1" max="365" value="7" inputmode="numeric" required>
@@ -664,7 +663,6 @@
       </div>
       <div id="podium"></div>
       <div id="rows"></div>
-      <div id="myRankCard" class="hidden"></div>
     </div>
   </div>
 </section>
@@ -969,7 +967,7 @@ function note(text, kind){
  * манай сервер дээр эзэмшигдсэн хэвээр — энэ нь зөвхөн нийгмийн гогцоо.
  */
 let submitted = -1;
-const DAILY_GOALS = { pushup:50, squat:50 };
+const DAILY_GOALS = { pushup:20, squat:20 };
 const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const activityNumber = new Intl.NumberFormat("mn-MN");
 let activityExercise = localStorage.getItem("pushup:activityExercise") === "squat" ? "squat" : "pushup";
@@ -1106,9 +1104,9 @@ function renderDailyActivity(){
   const total = completedDays.reduce((sum, day) => sum + day.reps, 0);
   const average = completedDays.length ? Math.round(total / completedDays.length) : 0;
   $("activityWeekTotal").textContent = activityNumber.format(total);
-  $("activityWeekAverage").textContent = `Дундаж ${activityNumber.format(average)}`;
+  $("activityWeekAverage").textContent = activityNumber.format(average);
   $("activityMonthTotal").textContent = activityNumber.format(total);
-  $("activityMonthAverage").textContent = `Өдрийн дундаж ${activityNumber.format(average)}`;
+  $("activityMonthAverage").textContent = activityNumber.format(average);
 
   const weekChart = $("activityWeekChart");
   weekChart.textContent = "";
@@ -3625,20 +3623,6 @@ function renderRankRow(player){
   return row;
 }
 
-function renderMyRank(me){
-  const card = $("myRankCard");
-  card.textContent = "";
-  if(!me){ card.classList.add("hidden"); return; }
-  card.classList.remove("hidden");
-  const name = document.createElement("div");
-  name.className = "mineMain";
-  name.textContent = me.name || profile?.name || me.userId;
-  const score = document.createElement("div");
-  score.className = "mineScore";
-  score.textContent = boardNumber.format(me.score);
-  card.append(name, score);
-}
-
 async function loadBoard(metric){
   boardMetric = metric;
   $("boardPush").classList.toggle("active", metric === "pushup");
@@ -3647,7 +3631,6 @@ async function loadBoard(metric){
   const request = ++boardRequest;
   $("podium").innerHTML = '<div class="boardLoading" style="grid-column:1/-1"></div>';
   $("rows").innerHTML = '<div class="boardLoading"></div><div class="boardLoading"></div>';
-  $("myRankCard").classList.add("hidden");
   try{
     const league = activeLeagueCode ? `&league=${encodeURIComponent(activeLeagueCode)}` : "";
     const data = await api(`/leaderboard?limit=50&metric=${metric}${league}`);
@@ -3664,7 +3647,6 @@ async function loadBoard(metric){
       empty.textContent = metric === "battle" ? "Battle тоглосны дараа ELO байр энд нээгдэнэ." : "Одоогоор бүртгэгдсэн оноо алга.";
       rows.appendChild(empty);
     }
-    renderMyRank(data.me);
   }catch(e){
     if(request !== boardRequest) return;
     $("podium").textContent = "";

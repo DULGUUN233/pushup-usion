@@ -15,12 +15,14 @@ test('Нүүрийн activity өдөр, 7 хоног, сарын гурван х
   assert.match(html, /id="activityMonthGrid"/)
 })
 
-test('өдрийн үзүүлэлт Push Up ба Суулт switch-тэй', () => {
+test('activity үзүүлэлт Суниалт ба Суулт compact switch-тэй', () => {
   assert.match(html, /class="activitySwitch"[^>]*role="group"/)
-  assert.match(html, /id="activityPush"[^>]*aria-pressed="true">Push Up/)
+  assert.match(html, /id="activityPush"[^>]*aria-pressed="true">Суниалт/)
   assert.match(html, /id="activitySquat"[^>]*aria-pressed="false">Суулт/)
   assert.match(html, /\$\("activityPush"\)\.onclick = \(\) => selectActivity\("pushup"\)/)
   assert.match(html, /\$\("activitySquat"\)\.onclick = \(\) => selectActivity\("squat"\)/)
+  const cardHeader = html.match(/<div id="activityViewport"[\s\S]*?<div class="activityPeriodNav">/)?.[0] ?? ''
+  assert.match(cardHeader, /class="activitySwitch"/)
 })
 
 test('Нүүрийн давхардсан нийт, байр, ELO карт харагдахгүй', () => {
@@ -58,6 +60,10 @@ test('7 хоног нь bar chart, сар нь өдрийн progress calendar х
   assert.match(html, /className = "activityMonthDay"/)
   assert.match(html, /--activity-progress/)
   assert.match(html, /button\.onclick = \(\) => openActivityDay\(day\.date\)/)
+  assert.match(html, /const DAILY_GOALS = \{ pushup:20, squat:20 \}/)
+  assert.match(html, /Math\.min\(100, day\.reps \/ DAILY_GOALS\[activityExercise\] \* 100\)/)
+  assert.match(html, /id="activityMonthAverage" class="activityAverage">0<\/strong><small>ӨДРИЙН ДУНДАЖ/)
+  assert.match(html, /\.activitySummary \.activityAverage\{color:var\(--fg\);font-size:29px;font-weight:900\}/)
 })
 
 test('өдрийн activity cache-ээс шууд харагдаад profile-тэй зэрэг шинэчлэгдэнэ', () => {
@@ -86,7 +92,9 @@ test('Battle Friend товч navigation-ийн дээр тод үндсэн CTA 
 })
 
 test('activity switch нягт боловч mobile touch target-аа хадгална', () => {
-  assert.match(html, /\.activitySwitch button\{min-height:44px;padding:8px 12px/)
+  assert.match(html, /\.activitySwitch\{position:relative;isolation:isolate;align-self:center;width:156px;height:44px/)
+  assert.match(html, /\.activitySwitch button\{min-width:0;height:44px/)
+  assert.match(html, /background-size:calc\(100% - 4px\) 34px/)
   assert.match(html, /\.activityRangeSwitch button\{width:52px;min-height:44px/)
   assert.match(html, /\.activityPeriodNav button\{width:44px;height:44px/)
 })

@@ -10,6 +10,7 @@ test('default болон custom challenge UI байна', () => {
   assert.match(html, /id="challengeExercise"/)
   assert.match(html, /<option value="pushup">Push Up<\/option><option value="squat">Суулт<\/option><option value="combined">Хосолсон<\/option>/)
   assert.match(html, /id="challengeDailyTarget"[^>]*min="1" max="1000"/)
+  assert.match(html, /id="challengeDailyTarget"[^>]*value="20"/)
   assert.match(html, /id="challengeDays"[^>]*min="1" max="365"/)
 })
 
@@ -39,6 +40,12 @@ test('challenge controls mobile touch target-тай', () => {
   assert.match(html, /\.challengeHead button\{min-height:44px/)
   assert.match(html, /\.challengeActions button,\.challengeStart\{width:100%;min-height:44px/)
   assert.match(html, /#mBattle\{[^}]*min-height:52px/)
+})
+
+test('default challenge card-ууд хажуу тийш swipe хийгдэнэ', () => {
+  assert.match(html, /#challengeTemplates\{display:flex;[^}]*overflow-x:auto;[^}]*scroll-snap-type:x mandatory/)
+  assert.match(html, /#challengeTemplates \.challengeCard\{flex:0 0 calc\(100% - 42px\);scroll-snap-align:start\}/)
+  assert.match(html, /#challengeTemplates::-webkit-scrollbar\{display:none\}/)
 })
 
 test('challenge layout солигдоход focus болон хуучин scroll үлдэхгүй', () => {
