@@ -25,15 +25,17 @@ test('тохой нугарахад шувуу доош, тэнийхэд дээ
   assert.ok(source, 'pushGameTargetY source олдсонгүй')
   const target = new Function(`${source}\nreturn pushGameTargetY`)()
   assert.ok(target(70) > target(170))
-  assert.ok(target(70) <= 0.76 && target(170) >= 0.24)
+  assert.ok(target(70) <= 0.78 && target(170) >= 0.22)
   assert.equal(target(155, 155, 0.43), 0.43)
   assert.ok(target(95, 155, 0.43) > 0.7)
+  assert.equal(target(166, 170, 0.3), 0.3)
+  assert.equal(target(98, 170, 0.3), target(80, 170, 0.3))
 })
 
 test('шувуу эхлэхдээ нүдний түвшинд таарч, adaptive dead-zone чичиргээг дарна', () => {
   assert.match(html, /updatePushGameControl\(raw, now, mean\(lm, \[0,2,5\]\)\)/)
   assert.match(html, /if\(deg < 155 \|\| !Number\.isFinite\(eyeY\)\) return/)
-  assert.match(html, /pushGameState\.anchorY = Math\.max\(\.14, Math\.min\(\.86, eyeY\)\)/)
+  assert.match(html, /pushGameState\.anchorY = Math\.max\(\.22, Math\.min\(\.5, eyeY\)\)/)
   const source = html.match(/function pushGameStableY\(current, next\)\{[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'pushGameStableY source олдсонгүй')
   const stableY = new Function(`${source}\nreturn pushGameStableY`)()
@@ -50,12 +52,13 @@ test('Flappy source-ийн local bird, pipe asset-уудыг preload хийгэ�
   assert.doesNotMatch(html, /Math\.sin\(now \/ 105\)/)
 })
 
-test('дараагийн нүх хүрч болох өндөртэй бөгөөд төвтэй таарсныг хөдөлгөөн түгжихгүй харуулдаг', () => {
-  const source = html.match(/function pushGameGapY\(height, gap, previous, startY, random = Math\.random\(\)\)\{[\s\S]*?\n\}/)?.[0]
-  assert.ok(source, 'pushGameGapY source олдсонгүй')
-  const gapY = new Function(`${source}\nreturn pushGameGapY`)()
-  assert.ok(Math.abs(gapY(800, 240, 400, 400, 0) - 400) <= 125)
-  assert.ok(Math.abs(gapY(800, 240, 400, 400, 1) - 400) <= 125)
+test('саад push-up-ийн дээд, доод lane-аар ээлжилж байрлана', () => {
+  const source = html.match(/function pushGameObstacleY\(height, gap, lane, upY, downY\)\{[\s\S]*?\n\}/)?.[0]
+  assert.ok(source, 'pushGameObstacleY source олдсонгүй')
+  const obstacleY = new Function(`${source}\nreturn pushGameObstacleY`)()
+  assert.equal(obstacleY(800, 240, 'up', .3, .7), 240)
+  assert.equal(obstacleY(800, 240, 'down', .3, .7), 560)
+  assert.match(html, /pushGameState\.nextLane = lane === "up" \? "down" : "up"/)
   assert.match(html, /pushGameState\.locked = Math\.abs\(desiredY - gapCenter\) <= lockRange/)
   assert.doesNotMatch(html, /ТҮВШИН ТОГТЛОО/)
   assert.doesNotMatch(html, /desiredY = gapCenter/)

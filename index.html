@@ -2378,12 +2378,23 @@ const pushGameAssets = {
 const pushGameState = {
   active:false, over:false, raf:0, score:0, pipes:[], nextPipeAt:0,
   birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
-  anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
+  anchorAngle:170, anchorY:.24, upY:.24, downY:.62, nextLane:"up", locked:false,
   lastFrameAt:0, width:0
 };
 
 function pushGameTargetY(deg, anchorAngle = 170, anchorY = .24){
-  return Math.max(.14, Math.min(.86, anchorY + (anchorAngle - deg) * .0052));
+  const downAngle = 98;
+  const upY = Math.max(.22, Math.min(.5, anchorY));
+  const naturalTravel = (anchorAngle - downAngle) * .0052;
+  const downY = Math.min(.78, upY + Math.max(.28, naturalTravel));
+  // Endpoint-үүдийг тогтмол lane-д snap хийнэ. Завсарт smoothstep ашигласнаар
+  // гэнэт үсрэхгүй ч гараа бүрэн тэнийлгэх/нугалахад pixel-level тогтвортой.
+  if(deg >= anchorAngle - 7) return upY;
+  if(deg <= downAngle + 7) return downY;
+  const progress = Math.max(0, Math.min(1,
+    (anchorAngle - deg) / Math.max(1, anchorAngle - downAngle)));
+  const eased = progress * progress * (3 - 2 * progress);
+  return upY + (downY - upY) * eased;
 }
 
 function pushGameStableY(current, next){
@@ -2402,11 +2413,16 @@ function updatePushGameControl(deg, now, eyeY){
     // Ингэснээр хүн бүрийн камерын өнцөг өөр байсан ч шувуу нүүрэн дээрээс эхэлнэ.
     if(deg < 155 || !Number.isFinite(eyeY)) return;
     pushGameState.anchorAngle = deg;
-    pushGameState.anchorY = Math.max(.14, Math.min(.86, eyeY));
+    pushGameState.anchorY = Math.max(.22, Math.min(.5, eyeY));
+    pushGameState.upY = pushGameState.anchorY;
+    pushGameState.downY = pushGameTargetY(98, deg, pushGameState.anchorY);
     pushGameState.targetY = pushGameState.anchorY;
   } else {
     const rawTarget = pushGameTargetY(deg, pushGameState.anchorAngle, pushGameState.anchorY);
-    pushGameState.targetY = pushGameStableY(pushGameState.targetY, rawTarget);
+    const atStableLane = deg >= pushGameState.anchorAngle - 7 || deg <= 105;
+    pushGameState.targetY = atStableLane
+      ? rawTarget
+      : pushGameStableY(pushGameState.targetY, rawTarget);
   }
   pushGameState.lastPoseAt = now;
   if(!pushGameState.poseReady){
@@ -2416,11 +2432,10 @@ function updatePushGameControl(deg, now, eyeY){
   }
 }
 
-function pushGameGapY(height, gap, previous, startY, random = Math.random()){
-  const margin = gap / 2 + Math.max(64, height * .07);
-  const base = Number.isFinite(previous) ? previous : startY;
-  const maxStep = Math.min(height * .16, gap * .52);
-  return Math.max(margin, Math.min(height - margin, base + (random * 2 - 1) * maxStep));
+function pushGameObstacleY(height, gap, lane, upY, downY){
+  const margin = gap / 2 + Math.max(18, height * .03);
+  const laneY = lane === "down" ? downY : upY;
+  return Math.max(margin, Math.min(height - margin, laneY * height));
 }
 
 function sizePushGameCanvas(){
@@ -2434,6 +2449,7 @@ function sizePushGameCanvas(){
     gameCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
     if(pushGameState.width && Math.abs(pushGameState.width - width) > 2){
       pushGameState.pipes = [];
+      pushGameState.nextLane = "up";
       pushGameState.nextPipeAt = performance.now() + 900;
     }
     pushGameState.width = width;
@@ -2574,10 +2590,11 @@ function pushGameFrame(now){
     const pipeWidth = Math.max(48, Math.min(76, width * .15));
     const gap = Math.max(154, Math.min(height * .38, 260));
     if(now >= pushGameState.nextPipeAt){
-      const gapY = pushGameGapY(height, gap, pushGameState.lastGapY,
-        pushGameState.birdY * height);
-      pushGameState.lastGapY = gapY;
-      pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap, gapY, scored:false });
+      const lane = pushGameState.nextLane;
+      const gapY = pushGameObstacleY(height, gap, lane,
+        pushGameState.upY, pushGameState.downY);
+      pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap, gapY, lane, scored:false });
+      pushGameState.nextLane = lane === "up" ? "down" : "up";
       pushGameState.nextPipeAt = now + 2050;
     }
     const speed = Math.max(92, width * .25);
@@ -2618,7 +2635,7 @@ function startPushGame(){
   stopPushGame();
   Object.assign(pushGameState, { active:true, over:false, score:0, pipes:[], nextPipeAt:0,
     birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
-    anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
+    anchorAngle:170, anchorY:.24, upY:.24, downY:.62, nextLane:"up", locked:false,
     lastFrameAt:performance.now(), width:0 });
   $("pushGameScore").textContent = "0";
   $("pushGameReps").textContent = count;
