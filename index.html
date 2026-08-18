@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
 <link rel="preload" as="image" href="./assets/pushup-battle-loading-v1.webp" type="image/webp" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/flappy/bird-mid.png" type="image/png">
+<link rel="preload" as="image" href="./assets/flappy/pipe-cap.png" type="image/png">
+<link rel="preload" as="image" href="./assets/flappy/pipe-body.png" type="image/png">
 <script src="https://usions.com/usion-sdk.js"></script>
 <style>
   :root{
@@ -2361,7 +2364,17 @@ const clock = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
 // Тоглоомын удирдлагыг нүүрний дэлгэц дээрх Y-ээс авахгүй. Утас шалан дээр
 // байхад хүн камер луу ойртож/холддог тул нүүрний Y бараг өөрчлөгдөхгүй.
 // Тохойн 3D өнцөг бол одоо байгаа push-up танилттай яг ижил, тогтвортой дохио.
-const pushGameReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+function pushGameImage(src){
+  const image = new Image();
+  image.decoding = "async";
+  image.src = src;
+  return image;
+}
+const pushGameAssets = {
+  bird:pushGameImage("./assets/flappy/bird-mid.png"),
+  pipeCap:pushGameImage("./assets/flappy/pipe-cap.png"),
+  pipeBody:pushGameImage("./assets/flappy/pipe-body.png")
+};
 const pushGameState = {
   active:false, over:false, raf:0, score:0, pipes:[], nextPipeAt:0,
   birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
@@ -2371,6 +2384,15 @@ const pushGameState = {
 
 function pushGameTargetY(deg, anchorAngle = 170, anchorY = .24){
   return Math.max(.14, Math.min(.86, anchorY + (anchorAngle - deg) * .0052));
+}
+
+function pushGameStableY(current, next){
+  const delta = next - current;
+  // 3° орчмын pose noise-ийг хөдөлгөхгүй. Жинхэнэ хөдөлгөөн хурдсах тусам
+  // шүүлт багасч, шувуу тухайн frame дээрээ бараг шууд дагана.
+  if(Math.abs(delta) <= .015) return current;
+  const alpha = Math.min(.94, .48 + Math.abs(delta) * 6);
+  return current + delta * alpha;
 }
 
 function updatePushGameControl(deg, now, eyeY){
@@ -2384,9 +2406,7 @@ function updatePushGameControl(deg, now, eyeY){
     pushGameState.targetY = pushGameState.anchorY;
   } else {
     const rawTarget = pushGameTargetY(deg, pushGameState.anchorAngle, pushGameState.anchorY);
-    const delta = rawTarget - pushGameState.targetY;
-    // Жижиг pose чичиргээг дарна, харин бодит хөдөлгөөнийг smoothing-гүй шууд дагана.
-    if(Math.abs(delta) > .008) pushGameState.targetY = rawTarget;
+    pushGameState.targetY = pushGameStableY(pushGameState.targetY, rawTarget);
   }
   pushGameState.lastPoseAt = now;
   if(!pushGameState.poseReady){
@@ -2444,17 +2464,28 @@ function drawPushGame(now, width, height){
 
   for(const pipe of pushGameState.pipes){
     const gapTop = pipe.gapY - pipe.gap / 2, gapBottom = pipe.gapY + pipe.gap / 2;
-    const gradient = gameCtx.createLinearGradient(pipe.x, 0, pipe.x + pipe.width, 0);
-    gradient.addColorStop(0, "#158a58"); gradient.addColorStop(.45, "#42e49a"); gradient.addColorStop(1, "#0d7047");
-    gameCtx.fillStyle = gradient;
-    gameCtx.fillRect(pipe.x, 0, pipe.width, gapTop);
-    gameCtx.fillRect(pipe.x, gapBottom, pipe.width, height - gapBottom);
-    gameCtx.fillStyle = "rgba(255,255,255,.2)";
-    gameCtx.fillRect(pipe.x + pipe.width * .17, 0, Math.max(3, pipe.width * .09), gapTop);
-    gameCtx.fillRect(pipe.x + pipe.width * .17, gapBottom, Math.max(3, pipe.width * .09), height - gapBottom);
-    gameCtx.fillStyle = "#32cc86";
-    gameCtx.fillRect(pipe.x - 5, Math.max(0, gapTop - 18), pipe.width + 10, 18);
-    gameCtx.fillRect(pipe.x - 5, gapBottom, pipe.width + 10, 18);
+    if(pushGameAssets.pipeCap.complete && pushGameAssets.pipeCap.naturalWidth &&
+        pushGameAssets.pipeBody.complete && pushGameAssets.pipeBody.naturalWidth){
+      const capWidth = pipe.width + 12;
+      const capHeight = capWidth * pushGameAssets.pipeCap.naturalHeight /
+        pushGameAssets.pipeCap.naturalWidth;
+      const capX = pipe.x - (capWidth - pipe.width) / 2;
+      const topBodyHeight = Math.max(1, gapTop - capHeight * .56 + 10);
+      gameCtx.drawImage(pushGameAssets.pipeBody, pipe.x, -10, pipe.width, topBodyHeight);
+      gameCtx.save();
+      gameCtx.translate(pipe.x + pipe.width / 2, gapTop);
+      gameCtx.rotate(Math.PI);
+      gameCtx.drawImage(pushGameAssets.pipeCap, -capWidth / 2, 0, capWidth, capHeight);
+      gameCtx.restore();
+      gameCtx.drawImage(pushGameAssets.pipeCap, capX, gapBottom, capWidth, capHeight);
+      const bottomBodyY = gapBottom + capHeight * .56;
+      gameCtx.drawImage(pushGameAssets.pipeBody, pipe.x, bottomBodyY, pipe.width,
+        Math.max(1, height - bottomBodyY + 10));
+    } else {
+      gameCtx.fillStyle = "#20b96f";
+      gameCtx.fillRect(pipe.x, 0, pipe.width, gapTop);
+      gameCtx.fillRect(pipe.x, gapBottom, pipe.width, height - gapBottom);
+    }
   }
 
   const birdX = width * .28, birdY = pushGameState.birdY * height;
@@ -2485,14 +2516,16 @@ function drawPushGame(now, width, height){
   gameCtx.save();
   gameCtx.translate(birdX, birdY);
   gameCtx.shadowColor = "rgba(255,210,30,.55)"; gameCtx.shadowBlur = 18;
-  gameCtx.fillStyle = "#ffd21e"; gameCtx.beginPath(); gameCtx.ellipse(0, 0, radius * 1.12, radius, 0, 0, Math.PI * 2); gameCtx.fill();
-  gameCtx.shadowBlur = 0;
-  const wing = pushGameState.active && !pushGameState.over && !pushGameReducedMotion
-    ? Math.sin(now / 105) * radius * .24 : 0;
-  gameCtx.fillStyle = "#f2a900"; gameCtx.beginPath(); gameCtx.ellipse(-radius * .25, wing, radius * .68, radius * .43, -.25, 0, Math.PI * 2); gameCtx.fill();
-  gameCtx.fillStyle = "#ff7b22"; gameCtx.beginPath(); gameCtx.moveTo(radius, -2); gameCtx.lineTo(radius * 1.65, radius * .14); gameCtx.lineTo(radius, radius * .38); gameCtx.closePath(); gameCtx.fill();
-  gameCtx.fillStyle = "#fff"; gameCtx.beginPath(); gameCtx.arc(radius * .45, -radius * .34, radius * .3, 0, Math.PI * 2); gameCtx.fill();
-  gameCtx.fillStyle = "#111827"; gameCtx.beginPath(); gameCtx.arc(radius * .52, -radius * .34, radius * .12, 0, Math.PI * 2); gameCtx.fill();
+  if(pushGameAssets.bird.complete && pushGameAssets.bird.naturalWidth){
+    const birdWidth = radius * 3.2;
+    const birdHeight = birdWidth * pushGameAssets.bird.naturalHeight /
+      pushGameAssets.bird.naturalWidth;
+    gameCtx.drawImage(pushGameAssets.bird, -birdWidth / 2, -birdHeight / 2,
+      birdWidth, birdHeight);
+  } else {
+    gameCtx.fillStyle = "#ffd21e";
+    gameCtx.beginPath(); gameCtx.arc(0, 0, radius, 0, Math.PI * 2); gameCtx.fill();
+  }
   gameCtx.restore();
 
   if(!pushGameState.poseReady)

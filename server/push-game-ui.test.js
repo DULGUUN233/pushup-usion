@@ -30,12 +30,24 @@ test('тохой нугарахад шувуу доош, тэнийхэд дээ
   assert.ok(target(95, 155, 0.43) > 0.7)
 })
 
-test('шувуу эхлэхдээ нүдний түвшинд таарч, game control raw өнцгийг хоцролтгүй дагана', () => {
+test('шувуу эхлэхдээ нүдний түвшинд таарч, adaptive dead-zone чичиргээг дарна', () => {
   assert.match(html, /updatePushGameControl\(raw, now, mean\(lm, \[0,2,5\]\)\)/)
   assert.match(html, /if\(deg < 155 \|\| !Number\.isFinite\(eyeY\)\) return/)
   assert.match(html, /pushGameState\.anchorY = Math\.max\(\.14, Math\.min\(\.86, eyeY\)\)/)
-  assert.match(html, /if\(Math\.abs\(delta\) > \.008\) pushGameState\.targetY = rawTarget/)
+  const source = html.match(/function pushGameStableY\(current, next\)\{[\s\S]*?\n\}/)?.[0]
+  assert.ok(source, 'pushGameStableY source олдсонгүй')
+  const stableY = new Function(`${source}\nreturn pushGameStableY`)()
+  assert.equal(stableY(.5, .51), .5)
+  assert.ok(stableY(.5, .7) > .68)
   assert.match(html, /pushGameState\.birdY = desiredY/)
+})
+
+test('Flappy source-ийн local bird, pipe asset-уудыг preload хийгээд canvas дээр зурна', () => {
+  assert.match(html, /preload" as="image" href="\.\/assets\/flappy\/bird-mid\.png"/)
+  assert.match(html, /pushGameImage\("\.\/assets\/flappy\/pipe-cap\.png"\)/)
+  assert.match(html, /drawImage\(pushGameAssets\.bird/)
+  assert.match(html, /drawImage\(pushGameAssets\.pipeBody/)
+  assert.doesNotMatch(html, /Math\.sin\(now \/ 105\)/)
 })
 
 test('дараагийн нүх хүрч болох өндөртэй бөгөөд төвтэй таарсныг хөдөлгөөн түгжихгүй харуулдаг', () => {
@@ -47,7 +59,7 @@ test('дараагийн нүх хүрч болох өндөртэй бөгөө�
   assert.match(html, /pushGameState\.locked = Math\.abs\(desiredY - gapCenter\) <= lockRange/)
   assert.doesNotMatch(html, /ТҮВШИН ТОГТЛОО/)
   assert.doesNotMatch(html, /desiredY = gapCenter/)
-  assert.match(html, /prefers-reduced-motion: reduce/)
+  assert.match(html, /prefers-reduced-motion:\s*reduce/)
 })
 
 test('tracking тасрахад game pause хийж, camera хаахад loop цэвэрлэгдэнэ', () => {
