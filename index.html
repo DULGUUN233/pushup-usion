@@ -2314,7 +2314,9 @@ function loop(){
   smooth = smooth === null ? raw : smooth*0.5 + raw*0.5;
   const deg = smooth;
   $("angle").textContent = Math.round(deg) + "°";
-  if(mode === "solo" && soloVariant === "game") updatePushGameControl(deg, now, mean(lm, [0,2,5]));
+  // Game control-д rep тоологчийн smoothing-ийг давхардуулахгүй. Raw өнцөг нь
+  // тохойн хөдөлгөөнийг тухайн pose frame дээр нь шууд дагуулна.
+  if(mode === "solo" && soloVariant === "game") updatePushGameControl(raw, now, mean(lm, [0,2,5]));
 
   // Хөдөлгөөний ХАМГИЙН ДЭЭД цэгийг хадгална (зурган дээр y хамгийн бага).
   // "up" фаз нь буултын эхний 75%-д үнэн хэвээр байдаг тул сүүлийн утгыг
@@ -2383,8 +2385,8 @@ function updatePushGameControl(deg, now, eyeY){
   } else {
     const rawTarget = pushGameTargetY(deg, pushGameState.anchorAngle, pushGameState.anchorY);
     const delta = rawTarget - pushGameState.targetY;
-    // 1.2% dead-zone нь MediaPipe-ийн жижиг чичиргээг хөдөлгөөн болгохгүй.
-    if(Math.abs(delta) > .012) pushGameState.targetY += delta * .34;
+    // Жижиг pose чичиргээг дарна, харин бодит хөдөлгөөнийг smoothing-гүй шууд дагана.
+    if(Math.abs(delta) > .008) pushGameState.targetY = rawTarget;
   }
   pushGameState.lastPoseAt = now;
   if(!pushGameState.poseReady){
@@ -2464,7 +2466,7 @@ function drawPushGame(now, width, height){
   }
 
   // Шувууны одоогийн харааны түвшнийг дараагийн нүх хүртэл тасархай
-  // шугамаар үзүүлнэ. Нүхний төвд ойртоход ногоон болж level lock асна.
+  // шугамаар үзүүлнэ. Нүхний төвд ойртоход ногоон болж харааны дохио өгнө.
   const guideColor = pushGameState.locked ? "#39d98a" : "#ffd21e";
   const guideEnd = nextPipe ? Math.max(birdX + radius * 2.2, nextPipe.x - 7) : width - 18;
   gameCtx.save();
@@ -2478,9 +2480,6 @@ function drawPushGame(now, width, height){
     gameCtx.beginPath(); gameCtx.arc(targetX, nextPipe.gapY, 8, 0, Math.PI * 2); gameCtx.stroke();
     gameCtx.beginPath(); gameCtx.moveTo(targetX - 13, nextPipe.gapY); gameCtx.lineTo(targetX + 13, nextPipe.gapY); gameCtx.stroke();
   }
-  gameCtx.font = "800 10px system-ui"; gameCtx.textAlign = "left";
-  gameCtx.fillText(pushGameState.locked ? "ТҮВШИН ТОГТЛОО" : "ХАРААНЫ ТҮВШИН",
-    birdX + radius * 1.7, Math.max(18, birdY - 10));
   gameCtx.restore();
 
   gameCtx.save();
@@ -2535,9 +2534,8 @@ function pushGameFrame(now){
     const gapCenter = lockPipe.gapY / height;
     const lockRange = Math.min(.055, (lockPipe.gap / height) * .18);
     pushGameState.locked = Math.abs(desiredY - gapCenter) <= lockRange;
-    if(pushGameState.locked) desiredY = gapCenter;
   } else pushGameState.locked = false;
-  pushGameState.birdY += (desiredY - pushGameState.birdY) * Math.min(1, dt * 8);
+  pushGameState.birdY = desiredY;
 
   if(started){
     const pipeWidth = Math.max(48, Math.min(76, width * .15));

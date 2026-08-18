@@ -30,22 +30,23 @@ test('тохой нугарахад шувуу доош, тэнийхэд дээ
   assert.ok(target(95, 155, 0.43) > 0.7)
 })
 
-test('шувуу эхлэхдээ нүдний түвшинд таарч, pose чичиргээг dead-zone-оор дарна', () => {
-  assert.match(html, /updatePushGameControl\(deg, now, mean\(lm, \[0,2,5\]\)\)/)
+test('шувуу эхлэхдээ нүдний түвшинд таарч, game control raw өнцгийг хоцролтгүй дагана', () => {
+  assert.match(html, /updatePushGameControl\(raw, now, mean\(lm, \[0,2,5\]\)\)/)
   assert.match(html, /if\(deg < 155 \|\| !Number\.isFinite\(eyeY\)\) return/)
   assert.match(html, /pushGameState\.anchorY = Math\.max\(\.14, Math\.min\(\.86, eyeY\)\)/)
-  assert.match(html, /if\(Math\.abs\(delta\) > \.012\) pushGameState\.targetY \+= delta \* \.34/)
+  assert.match(html, /if\(Math\.abs\(delta\) > \.008\) pushGameState\.targetY = rawTarget/)
+  assert.match(html, /pushGameState\.birdY = desiredY/)
 })
 
-test('дараагийн нүх хүрч болох өндөртэй бөгөөд төвдөө level lock хийдэг', () => {
+test('дараагийн нүх хүрч болох өндөртэй бөгөөд төвтэй таарсныг хөдөлгөөн түгжихгүй харуулдаг', () => {
   const source = html.match(/function pushGameGapY\(height, gap, previous, startY, random = Math\.random\(\)\)\{[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'pushGameGapY source олдсонгүй')
   const gapY = new Function(`${source}\nreturn pushGameGapY`)()
   assert.ok(Math.abs(gapY(800, 240, 400, 400, 0) - 400) <= 125)
   assert.ok(Math.abs(gapY(800, 240, 400, 400, 1) - 400) <= 125)
   assert.match(html, /pushGameState\.locked = Math\.abs\(desiredY - gapCenter\) <= lockRange/)
-  assert.match(html, /ТҮВШИН ТОГТЛОО/)
-  assert.match(html, /ХАРААНЫ ТҮВШИН/)
+  assert.doesNotMatch(html, /ТҮВШИН ТОГТЛОО/)
+  assert.doesNotMatch(html, /desiredY = gapCenter/)
   assert.match(html, /prefers-reduced-motion: reduce/)
 })
 
