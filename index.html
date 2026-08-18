@@ -316,10 +316,70 @@
   .battleType.active{background:var(--gold);color:#231a00}
   .battleType:disabled{opacity:.72}
 
+  /* ---------- Push Up горим сонгох ---------- */
+  #pushChoice{display:grid;place-items:center;background:
+    radial-gradient(circle at 50% 20%,rgba(32,184,255,.16),transparent 42%),var(--bg)}
+  .pushChoiceShell{width:min(100%,440px);display:flex;flex-direction:column;gap:14px}
+  .pushChoiceHead{margin-bottom:8px;text-align:center}
+  .pushChoiceHead h2{margin:0;font-size:30px;letter-spacing:-.04em}
+  .pushChoiceHead p{margin:8px 0 0;color:var(--dim);font-size:14px}
+  .pushChoiceCard{min-height:132px;width:100%;padding:20px;border-radius:24px;text-align:left;
+    display:grid;grid-template-columns:56px 1fr 24px;align-items:center;gap:15px;
+    background:var(--card);border:1px solid rgba(255,255,255,.08);box-shadow:0 14px 34px rgba(0,0,0,.2)}
+  .pushChoiceCard.game{background:
+    linear-gradient(135deg,rgba(57,217,138,.13),rgba(32,184,255,.13)),var(--card);
+    border-color:rgba(57,217,138,.34);box-shadow:0 16px 40px rgba(32,184,255,.11)}
+  .pushChoiceCard:active{transform:scale(.98)}
+  .pushChoiceIcon{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;
+    color:var(--gold);background:rgba(255,210,30,.11)}
+  .pushChoiceCard.game .pushChoiceIcon{color:var(--accent);background:rgba(57,217,138,.12)}
+  .pushChoiceIcon svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2.2;
+    stroke-linecap:round;stroke-linejoin:round}
+  .pushChoiceText strong{display:block;font-size:19px;color:var(--fg)}
+  .pushChoiceText small{display:block;margin-top:6px;color:var(--dim);font-size:12px;line-height:1.45}
+  .pushChoiceArrow{width:24px;height:24px;fill:none;stroke:var(--dim);stroke-width:2.2}
+  #pushChoiceBack{align-self:center;min-height:44px;margin-top:4px}
+  .pushChoiceCard:focus-visible,#pushChoiceBack:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
   /* ---------- тоолох дэлгэц ---------- */
   #play{padding:0;overflow:hidden;background:#000}
   video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .mirror{transform:scaleX(-1)}
+
+  #gameCanvas{display:none;pointer-events:none}
+  #play.push-game #gameCanvas{display:block}
+  #play.push-game #canvas{opacity:.14}
+  #play.push-game #deepGlow,#play.push-game #meterWrap,#play.push-game #bottom{display:none}
+  #pushGameHud{display:none;position:absolute;z-index:4;left:12px;right:12px;
+    top:calc(env(safe-area-inset-top) + 12px);align-items:center;justify-content:space-between;
+    gap:8px;pointer-events:none}
+  #play.push-game #pushGameHud{display:flex}
+  .pushGameScore{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:16px;
+    background:rgba(5,10,18,.74);border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 8px 24px rgba(0,0,0,.32);backdrop-filter:blur(12px)}
+  .pushGameScore span{display:flex;flex-direction:column;color:var(--dim);font-size:9px;font-weight:800;
+    letter-spacing:.08em;text-transform:uppercase}
+  .pushGameScore b{color:#fff;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
+  #gameEnd{width:48px;height:48px;padding:0;display:grid;place-items:center;pointer-events:auto;
+    background:rgba(5,10,18,.74);border:1px solid rgba(255,255,255,.14)}
+  #gameEnd svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2.3;stroke-linecap:round}
+  #gameEnd:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  #pushGameOver{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:12px;padding:28px;text-align:center;
+    background:rgba(3,8,15,.84);backdrop-filter:blur(8px)}
+  #pushGameOver h2{margin:0;font-size:30px;letter-spacing:-.03em}
+  #pushGameFinalScore{font-size:64px;font-weight:950;line-height:1;color:var(--gold);
+    font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(255,210,30,.26)}
+  #pushGameOver p{margin:0 0 8px;color:var(--dim);font-size:14px}
+  .pushGameOverBtns{width:min(100%,300px);display:grid;gap:9px}
+  .pushGameOverBtns button{min-height:48px}
+  #pushGameRestart{background:linear-gradient(135deg,var(--accent),#20b8ff);color:#04140c;font-size:15px}
+  #pushGameExit{border:1px solid rgba(255,255,255,.14)}
+  @media (orientation:landscape) and (max-height:520px){
+    .pushChoiceShell{max-width:680px;display:grid;grid-template-columns:1fr 1fr}
+    .pushChoiceHead,#pushChoiceBack{grid-column:1/-1}
+    .pushChoiceCard{min-height:104px;padding:14px 18px}
+  }
 
   /* Хангалттай гүн буусныг бүтэн дэлгэцээр хэлнэ — тоолуур эсвэл нарийн
      мөр хараад байх шаардлагагүй, нүдний булангаар мэдэгдэнэ. */
@@ -720,6 +780,31 @@
   </button>
 </nav>
 
+<!-- ================= PUSH UP ГОРИМ ================= -->
+<section id="pushChoice" class="screen hidden" aria-labelledby="pushChoiceTitle">
+  <div class="pushChoiceShell">
+    <header class="pushChoiceHead">
+      <h2 id="pushChoiceTitle">Push Up</h2>
+      <p>Хийх горимоо сонгоно уу</p>
+    </header>
+    <button id="pushNormal" class="pushChoiceCard" type="button">
+      <span class="pushChoiceIcon" aria-hidden="true">
+        <svg viewBox="0 0 40 40"><path d="M5 29h30"></path><circle cx="12" cy="15" r="4"></circle><path d="m15 18 8 3 6 8M17 25l-6 4m12-8-3 8"></path></svg>
+      </span>
+      <span class="pushChoiceText"><strong>Энгийн</strong><small>Зөв push-up бүрийг AI тоолно</small></span>
+      <svg class="pushChoiceArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+    </button>
+    <button id="pushGame" class="pushChoiceCard game" type="button">
+      <span class="pushChoiceIcon" aria-hidden="true">
+        <svg viewBox="0 0 40 40"><circle cx="15" cy="20" r="8"></circle><path d="m8 18-5-3 5-2m14 5 6 2-6 3m-2-9 3-5m-3 17 3 5"></path><circle cx="17.5" cy="17" r="1"></circle><path d="M31 6v8m0 12v8M27 14h8m-8 12h8"></path></svg>
+      </span>
+      <span class="pushChoiceText"><strong>Game</strong><small>Тохойгоороо шувууг удирдаж саадыг давна</small></span>
+      <svg class="pushChoiceArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+    </button>
+    <button id="pushChoiceBack" type="button">← Нүүр рүү</button>
+  </div>
+</section>
+
 <!-- ================= ХҮЛЭЭЛГИЙН ӨРӨӨ ================= -->
 <section id="hall" class="screen hidden">
   <h2 id="hallTitle">Хүлээлгийн өрөө</h2>
@@ -750,6 +835,16 @@
   <video id="video" playsinline muted autoplay></video>
   <canvas id="canvas"></canvas>
   <div id="deepGlow"></div>
+  <canvas id="gameCanvas" aria-hidden="true"></canvas>
+  <div id="pushGameHud" aria-label="Тоглоомын оноо">
+    <div class="pushGameScore">
+      <span>Оноо <b id="pushGameScore">0</b></span>
+      <span>Push Up <b id="pushGameReps">0</b></span>
+    </div>
+    <button id="gameEnd" type="button" aria-label="Тоглоом дуусгах">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"></path></svg>
+    </button>
+  </div>
   <div id="oppNote" class="hidden"></div>
   <div id="aiLoading" class="hidden" role="status" aria-live="polite" aria-atomic="true">
     <div class="aiLoadingCard">
@@ -854,11 +949,31 @@
       <text x="140" y="162" text-anchor="middle" font-size="13" font-weight="700"
             fill="#ffd21e">ташаа өвдөгний түвшинд хүрнэ</text>
     </svg>
+    <svg id="howtoGame" class="howto hidden" viewBox="0 0 280 168" aria-label="Тохойгоор шувуу удирдах зураг">
+      <defs><linearGradient id="gameHowtoSky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#10283a"/><stop offset="1" stop-color="#0b171f"/></linearGradient></defs>
+      <rect x="1" y="1" width="278" height="166" rx="24" fill="url(#gameHowtoSky)" stroke="rgba(255,255,255,.12)"/>
+      <rect x="212" y="0" width="32" height="50" rx="8" fill="#39d98a"/><rect x="212" y="116" width="32" height="52" rx="8" fill="#39d98a"/>
+      <circle cx="96" cy="82" r="23" fill="#ffd21e"/><path d="M75 80 58 72l15-8" fill="#ff8a20"/>
+      <circle cx="103" cy="75" r="4" fill="#111827"/><path d="M93 88c10 7 19 5 24-3" fill="none" stroke="#d88d00" stroke-width="5" stroke-linecap="round"/>
+      <path d="M35 118c28 19 57 18 82 0M35 51c28-18 57-18 82 0" fill="none" stroke="#20b8ff" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 7"/>
+      <text x="154" y="80" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">ДЭЭШ</text>
+      <text x="154" y="101" text-anchor="middle" font-size="12" font-weight="800" fill="#9aa6b5">ДООШ</text>
+    </svg>
     <p id="startHint">Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга — биедээ
        наавал халхлагдаж, өнцөг буруу уншина.</p>
     <button class="primary" id="go">Камер асаах</button>
     <button id="pBack">← Буцах</button>
     <div id="err" class="hidden" role="alert" aria-live="assertive" aria-atomic="true"></div>
+  </div>
+
+  <div id="pushGameOver" class="hidden" role="dialog" aria-modal="true" aria-labelledby="pushGameOverTitle">
+    <h2 id="pushGameOverTitle">Тоглоом дууслаа</h2>
+    <div id="pushGameFinalScore">0</div>
+    <p><span id="pushGameFinalReps">0</span> зөв push-up</p>
+    <div class="pushGameOverBtns">
+      <button id="pushGameRestart" type="button">Дахин тоглох</button>
+      <button id="pushGameExit" type="button">Дүнгээ хадгалаад гарах</button>
+    </div>
   </div>
 
   <div id="seek" class="hidden">
@@ -890,6 +1005,7 @@ import { PoseLandmarker, FilesetResolver }
 
 const $ = id => document.getElementById(id);
 const video = $("video"), canvas = $("canvas"), ctx = canvas.getContext("2d");
+const gameCanvas = $("gameCanvas"), gameCtx = gameCanvas.getContext("2d");
 
 // ======================= Usion + сервер =======================
 
@@ -1398,6 +1514,7 @@ function setBack(id){
   // Өрөөгөө үлдээхгүйн тулд `leaveBattle` дуудна: урилга үхэж, найз хоосон
   // өрөө рүү орохгүй.
   if(id === "hall") return void u.claimBackButton(() => leaveBattle());
+  if(id === "pushChoice") return void u.claimBackButton(() => show("menu"));
   if(id === "board") return void u.claimBackButton(() => {
     if(!$('boardDetail').classList.contains('hidden')) showBoardHub(true);
     else show('menu');
@@ -1407,7 +1524,7 @@ function setBack(id){
   // дахин авбал цэсэн дээрх суллалтыг дарж, аппыг хаах боломжгүй болно.
   u.claimBackButton(() => {
     if(id === "play") stopCamera();
-    show("menu");
+    show(id === "play" && exercise === "pushup" ? "pushChoice" : "menu");
   });
 }
 
@@ -1483,6 +1600,7 @@ let lastKnee = { deg: null, vis: 0 };   // rep тоологдох агшинд �
 let armBest = -99;                      // rep дотор мөр тохойд хэр ойртсон
 let bodyMinAngle = 180, bodyAngleSeen = false; // rep доторх хамгийн муу биеийн шугам
 let exercise = "pushup";                                  // solo дасгал
+let soloVariant = "normal";                               // энгийн эсвэл game
 let squatReady = false, squatDepthFrames = 0, squatStandFrames = 0;
 let squatMinKnee = 180, squatMinHip = 180, squatMaxDepthDelta = -1;
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
@@ -2132,7 +2250,8 @@ function loop(){
     return;
   }
 
-  drawSkeleton(lm);
+  if(soloVariant !== "game" || mode === "battle") drawSkeleton(lm);
+  if(mode === "solo" && soloVariant === "game" && pushGameState.over) return;
 
   // Battle-ийн оноог зөвхөн серверийн authoritative 30 секундэд тоолно.
   // Эхлэх 10 секунд болон combined-ийн 10 секундийн амралтын хөдөлгөөн rep биш.
@@ -2195,6 +2314,7 @@ function loop(){
   smooth = smooth === null ? raw : smooth*0.5 + raw*0.5;
   const deg = smooth;
   $("angle").textContent = Math.round(deg) + "°";
+  if(mode === "solo" && soloVariant === "game") updatePushGameControl(deg, now);
 
   // Хөдөлгөөний ХАМГИЙН ДЭЭД цэгийг хадгална (зурган дээр y хамгийн бага).
   // "up" фаз нь буултын эхний 75%-д үнэн хэвээр байдаг тул сүүлийн утгыг
@@ -2234,6 +2354,182 @@ function loop(){
 
 const elapsed = () => Math.floor((performance.now() - t0)/1000);
 const clock = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+
+// ======================= Push Up Bird =======================
+// Тоглоомын удирдлагыг нүүрний дэлгэц дээрх Y-ээс авахгүй. Утас шалан дээр
+// байхад хүн камер луу ойртож/холддог тул нүүрний Y бараг өөрчлөгдөхгүй.
+// Тохойн 3D өнцөг бол одоо байгаа push-up танилттай яг ижил, тогтвортой дохио.
+const pushGameState = {
+  active:false, over:false, raf:0, score:0, pipes:[], nextPipeAt:0,
+  birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
+  lastFrameAt:0, width:0
+};
+
+function pushGameTargetY(deg){
+  const up = Math.max(0, Math.min(1, (deg - 70) / 100));
+  return .76 - up * .52;
+}
+
+function updatePushGameControl(deg, now){
+  if(!pushGameState.active || pushGameState.over || !Number.isFinite(deg)) return;
+  pushGameState.targetY = pushGameTargetY(deg);
+  pushGameState.lastPoseAt = now;
+  if(!pushGameState.poseReady){
+    pushGameState.poseReady = true;
+    pushGameState.birdY = pushGameState.targetY;
+    pushGameState.readyAt = now + 1200;
+  }
+}
+
+function sizePushGameCanvas(){
+  const rect = gameCanvas.getBoundingClientRect();
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
+  if(gameCanvas.width !== Math.round(width * ratio) || gameCanvas.height !== Math.round(height * ratio)){
+    gameCanvas.width = Math.round(width * ratio);
+    gameCanvas.height = Math.round(height * ratio);
+    gameCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    if(pushGameState.width && Math.abs(pushGameState.width - width) > 2){
+      pushGameState.pipes = [];
+      pushGameState.nextPipeAt = performance.now() + 900;
+    }
+    pushGameState.width = width;
+  }
+  return { width, height };
+}
+
+function drawPushGameMessage(width, height, title, detail){
+  const boxWidth = Math.min(width - 32, 310);
+  const x = (width - boxWidth) / 2, y = height * .46 - 42;
+  gameCtx.fillStyle = "rgba(3,8,15,.82)";
+  gameCtx.beginPath();
+  if(typeof gameCtx.roundRect === "function") gameCtx.roundRect(x, y, boxWidth, 84, 18);
+  else gameCtx.rect(x, y, boxWidth, 84);
+  gameCtx.fill();
+  gameCtx.strokeStyle = "rgba(255,255,255,.14)"; gameCtx.lineWidth = 1; gameCtx.stroke();
+  gameCtx.textAlign = "center"; gameCtx.fillStyle = "#fff";
+  gameCtx.font = "800 17px system-ui"; gameCtx.fillText(title, width / 2, y + 34);
+  gameCtx.fillStyle = "#9aa6b5"; gameCtx.font = "600 12px system-ui";
+  gameCtx.fillText(detail, width / 2, y + 58);
+}
+
+function drawPushGame(now, width, height){
+  gameCtx.clearRect(0, 0, width, height);
+  const shade = gameCtx.createLinearGradient(0, 0, 0, height);
+  shade.addColorStop(0, "rgba(5,27,39,.24)"); shade.addColorStop(1, "rgba(1,9,15,.48)");
+  gameCtx.fillStyle = shade; gameCtx.fillRect(0, 0, width, height);
+
+  for(const pipe of pushGameState.pipes){
+    const gapTop = pipe.gapY - pipe.gap / 2, gapBottom = pipe.gapY + pipe.gap / 2;
+    const gradient = gameCtx.createLinearGradient(pipe.x, 0, pipe.x + pipe.width, 0);
+    gradient.addColorStop(0, "#158a58"); gradient.addColorStop(.45, "#42e49a"); gradient.addColorStop(1, "#0d7047");
+    gameCtx.fillStyle = gradient;
+    gameCtx.fillRect(pipe.x, 0, pipe.width, gapTop);
+    gameCtx.fillRect(pipe.x, gapBottom, pipe.width, height - gapBottom);
+    gameCtx.fillStyle = "rgba(255,255,255,.2)";
+    gameCtx.fillRect(pipe.x + pipe.width * .17, 0, Math.max(3, pipe.width * .09), gapTop);
+    gameCtx.fillRect(pipe.x + pipe.width * .17, gapBottom, Math.max(3, pipe.width * .09), height - gapBottom);
+    gameCtx.fillStyle = "#32cc86";
+    gameCtx.fillRect(pipe.x - 5, Math.max(0, gapTop - 18), pipe.width + 10, 18);
+    gameCtx.fillRect(pipe.x - 5, gapBottom, pipe.width + 10, 18);
+  }
+
+  const birdX = width * .28, birdY = pushGameState.birdY * height;
+  const radius = Math.max(13, Math.min(20, Math.min(width, height) * .038));
+  gameCtx.save();
+  gameCtx.translate(birdX, birdY);
+  gameCtx.shadowColor = "rgba(255,210,30,.55)"; gameCtx.shadowBlur = 18;
+  gameCtx.fillStyle = "#ffd21e"; gameCtx.beginPath(); gameCtx.ellipse(0, 0, radius * 1.12, radius, 0, 0, Math.PI * 2); gameCtx.fill();
+  gameCtx.shadowBlur = 0;
+  const wing = pushGameState.active && !pushGameState.over ? Math.sin(now / 105) * radius * .24 : 0;
+  gameCtx.fillStyle = "#f2a900"; gameCtx.beginPath(); gameCtx.ellipse(-radius * .25, wing, radius * .68, radius * .43, -.25, 0, Math.PI * 2); gameCtx.fill();
+  gameCtx.fillStyle = "#ff7b22"; gameCtx.beginPath(); gameCtx.moveTo(radius, -2); gameCtx.lineTo(radius * 1.65, radius * .14); gameCtx.lineTo(radius, radius * .38); gameCtx.closePath(); gameCtx.fill();
+  gameCtx.fillStyle = "#fff"; gameCtx.beginPath(); gameCtx.arc(radius * .45, -radius * .34, radius * .3, 0, Math.PI * 2); gameCtx.fill();
+  gameCtx.fillStyle = "#111827"; gameCtx.beginPath(); gameCtx.arc(radius * .52, -radius * .34, radius * .12, 0, Math.PI * 2); gameCtx.fill();
+  gameCtx.restore();
+
+  if(!pushGameState.poseReady)
+    drawPushGameMessage(width, height, "Push-up байрлалд ор", "Тохой танигдмагц тоглоом эхэлнэ");
+  else if(now - pushGameState.lastPoseAt > 900)
+    drawPushGameMessage(width, height, "Түр зогслоо", "Биеэ камерт бүтэн багтаана уу");
+  else if(now < pushGameState.readyAt)
+    drawPushGameMessage(width, height, "Бэлэн", "Доош буухад шувуу доошилно");
+}
+
+function finishPushGame(title = "Тоглоом дууслаа"){
+  if(!pushGameState.active || pushGameState.over) return;
+  pushGameState.over = true;
+  cancelAnimationFrame(pushGameState.raf);
+  $("pushGameOverTitle").textContent = title;
+  $("pushGameFinalScore").textContent = pushGameState.score;
+  $("pushGameFinalReps").textContent = count;
+  $("pushGameOver").classList.remove("hidden");
+  if(navigator.vibrate) navigator.vibrate([60, 45, 90]);
+}
+
+function pushGameFrame(now){
+  if(!pushGameState.active || pushGameState.over) return;
+  const { width, height } = sizePushGameCanvas();
+  const tracked = pushGameState.poseReady && now - pushGameState.lastPoseAt <= 900;
+  const started = tracked && now >= pushGameState.readyAt;
+  const dt = Math.min(.05, Math.max(0, (now - (pushGameState.lastFrameAt || now)) / 1000));
+  pushGameState.lastFrameAt = now;
+  pushGameState.birdY += (pushGameState.targetY - pushGameState.birdY) * Math.min(1, dt * 12);
+
+  if(started){
+    const pipeWidth = Math.max(48, Math.min(76, width * .15));
+    const gap = Math.max(132, Math.min(height * .34, 220));
+    if(now >= pushGameState.nextPipeAt){
+      const margin = gap / 2 + Math.max(72, height * .08);
+      pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap,
+        gapY:margin + Math.random() * Math.max(1, height - margin * 2), scored:false });
+      pushGameState.nextPipeAt = now + 2050;
+    }
+    const speed = Math.max(92, width * .25);
+    const birdX = width * .28, birdY = pushGameState.birdY * height;
+    const radius = Math.max(13, Math.min(20, Math.min(width, height) * .038));
+    for(const pipe of pushGameState.pipes){
+      pipe.x -= speed * dt;
+      if(!pipe.scored && pipe.x + pipe.width < birdX){
+        pipe.scored = true; pushGameState.score++; tone(880, 55);
+      }
+      const overlapsX = birdX + radius > pipe.x && birdX - radius < pipe.x + pipe.width;
+      const gapTop = pipe.gapY - pipe.gap / 2, gapBottom = pipe.gapY + pipe.gap / 2;
+      if(overlapsX && (birdY - radius < gapTop || birdY + radius > gapBottom)){
+        drawPushGame(now, width, height); finishPushGame(); return;
+      }
+    }
+    pushGameState.pipes = pushGameState.pipes.filter(pipe => pipe.x + pipe.width > -12);
+    if(birdY - radius < 0 || birdY + radius > height){
+      drawPushGame(now, width, height); finishPushGame(); return;
+    }
+  }
+
+  $("pushGameScore").textContent = pushGameState.score;
+  $("pushGameReps").textContent = count;
+  drawPushGame(now, width, height);
+  pushGameState.raf = requestAnimationFrame(pushGameFrame);
+}
+
+function stopPushGame(){
+  cancelAnimationFrame(pushGameState.raf);
+  pushGameState.active = false; pushGameState.over = false; pushGameState.raf = 0;
+  $("play").classList.remove("push-game");
+  $("pushGameOver").classList.add("hidden");
+  gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+}
+
+function startPushGame(){
+  stopPushGame();
+  Object.assign(pushGameState, { active:true, over:false, score:0, pipes:[], nextPipeAt:0,
+    birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
+    lastFrameAt:performance.now(), width:0 });
+  $("pushGameScore").textContent = "0";
+  $("pushGameReps").textContent = count;
+  $("play").classList.add("push-game");
+  pushGameState.raf = requestAnimationFrame(pushGameFrame);
+}
 
 function reset(){
   resetPoseFeedback();
@@ -2284,6 +2580,7 @@ async function openCamera(){
 function stopCamera(){
   camGen++;
   running = false;
+  stopPushGame();
   stream?.getTracks().forEach(t => t.stop());
   stream = null;
   video.srcObject = null;
@@ -2488,6 +2785,7 @@ async function startSolo(){
       setMsg("AI танилт бэлтгэж байна…", "var(--dim)");
     });
     $("start").classList.add("hidden");
+    if(soloVariant === "game") startPushGame();
   }catch(e){
     $("start").classList.remove("hidden");
     err.classList.remove("hidden");
@@ -3703,22 +4001,35 @@ async function loadBoard(metric){
 
 // ======================= холболт =======================
 
-function openSolo(kind){
+function openPushChoice(){
+  stopCamera();
+  soloVariant = "normal";
+  show("pushChoice");
+}
+
+function openSolo(kind, variant = "normal"){
+  stopPushGame();
   exercise = kind;
+  soloVariant = kind === "pushup" ? variant : "normal";
   mode = "solo";
+  const isGame = kind === "pushup" && soloVariant === "game";
   resetBattleCountdown();
   $("play").classList.remove("duel");
   $("play").classList.remove("squat-duel");
-  $("startTitle").textContent = kind === "squat" ? "Squat · Суулт" : "Push Up";
-  $("howtoPush").classList.toggle("hidden", kind === "squat");
+  $("startTitle").textContent = kind === "squat" ? "Squat · Суулт" : isGame ? "Push Up Bird" : "Push Up";
+  $("howtoPush").classList.toggle("hidden", kind === "squat" || isGame);
   $("howtoSquat").classList.toggle("hidden", kind !== "squat");
+  $("howtoGame").classList.toggle("hidden", !isGame);
   $("startHint").innerHTML = kind === "squat"
     ? `Утсаа биеэсээ <b>2–3 метр</b> зайд, ташааны өндөрт байрлуул. Камер руу
        хажуу эсвэл 45° харж, толгойноос хөл хүртэл бүтэн биеэ багтаа.`
+    : isGame
+      ? `Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо нугалж доошлоход шувуу доош,
+         гараа тэнийлгэж дээшлэхэд шувуу дээш явна.`
     : `Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга —
        биедээ наавал халхлагдаж, өнцөг буруу уншина.`;
   $("go").disabled = false;
-  $("go").textContent = "Камер асаах";
+  $("go").textContent = isGame ? "Game эхлүүлэх" : "Камер асаах";
   $("err").classList.add("hidden");
   $("err").textContent = "";
   show("play");
@@ -3773,7 +4084,7 @@ $("challengeStop").onclick = async () => {
   }finally{ $("challengeStop").disabled = false; }
 };
 $("navHome").onclick = () => show("menu");
-$("navPush").onclick = () => openSolo("pushup");
+$("navPush").onclick = openPushChoice;
 $("navSquat").onclick = () => openSolo("squat");
 $("navBoard").onclick = openBoard;
 $("boardPush").onclick = () => loadBoard("pushup");
@@ -3832,10 +4143,16 @@ for(const button of document.querySelectorAll(".battleType")){
 // Давхар даралт нь серверээс «эхлүүлэх боломжгүй» гэсэн хариу авчирч,
 // камер асаж байх зуур зөвлөмжийг дарна
 $("hallStart").onclick = () => { $("hallStart").disabled = true; hallSend({ type: "start" }); };
-$("pBack").onclick   = () => { if(mode === "battle") leaveBattle(); else { stopCamera(); show("menu"); } };
+$("pushNormal").onclick = () => openSolo("pushup", "normal");
+$("pushGame").onclick = () => openSolo("pushup", "game");
+$("pushChoiceBack").onclick = () => show("menu");
+$("pBack").onclick   = () => { if(mode === "battle") leaveBattle(); else { stopCamera(); show(exercise === "pushup" ? "pushChoice" : "menu"); } };
 $("go").onclick      = startSolo;
 $("reset").onclick  = reset;
 $("done").onclick   = finish;
+$("gameEnd").onclick = () => finishPushGame("Тоглоом зогслоо");
+$("pushGameRestart").onclick = () => { reset(); startPushGame(); };
+$("pushGameExit").onclick = finish;
 
 renderDailyActivity();
 $("challengeSection").classList.toggle("hidden", !CHALLENGES_ENABLED);

@@ -108,7 +108,7 @@ test('activity switch нягт боловч mobile touch target-аа хадга�
   assert.match(html, /\.activityPeriodNav button\{width:44px;height:44px/)
 })
 
-test('Push Up ба Суулт доод navigation-аас бэлтгэл дэлгэц нээнэ', () => {
-  assert.match(html, /\$\("navPush"\)\.onclick = \(\) => openSolo\("pushup"\)/)
+test('Push Up сонголт, Суулт бэлтгэл дэлгэцийг доод navigation-аас нээнэ', () => {
+  assert.match(html, /\$\("navPush"\)\.onclick = openPushChoice/)
   assert.match(html, /\$\("navSquat"\)\.onclick = \(\) => openSolo\("squat"\)/)
 })
