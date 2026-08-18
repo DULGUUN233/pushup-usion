@@ -2314,7 +2314,7 @@ function loop(){
   smooth = smooth === null ? raw : smooth*0.5 + raw*0.5;
   const deg = smooth;
   $("angle").textContent = Math.round(deg) + "°";
-  if(mode === "solo" && soloVariant === "game") updatePushGameControl(deg, now);
+  if(mode === "solo" && soloVariant === "game") updatePushGameControl(deg, now, mean(lm, [0,2,5]));
 
   // Хөдөлгөөний ХАМГИЙН ДЭЭД цэгийг хадгална (зурган дээр y хамгийн бага).
   // "up" фаз нь буултын эхний 75%-д үнэн хэвээр байдаг тул сүүлийн утгыг
@@ -2359,26 +2359,46 @@ const clock = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
 // Тоглоомын удирдлагыг нүүрний дэлгэц дээрх Y-ээс авахгүй. Утас шалан дээр
 // байхад хүн камер луу ойртож/холддог тул нүүрний Y бараг өөрчлөгдөхгүй.
 // Тохойн 3D өнцөг бол одоо байгаа push-up танилттай яг ижил, тогтвортой дохио.
+const pushGameReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
 const pushGameState = {
   active:false, over:false, raf:0, score:0, pipes:[], nextPipeAt:0,
   birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
+  anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
   lastFrameAt:0, width:0
 };
 
-function pushGameTargetY(deg){
-  const up = Math.max(0, Math.min(1, (deg - 70) / 100));
-  return .76 - up * .52;
+function pushGameTargetY(deg, anchorAngle = 170, anchorY = .24){
+  return Math.max(.14, Math.min(.86, anchorY + (anchorAngle - deg) * .0052));
 }
 
-function updatePushGameControl(deg, now){
+function updatePushGameControl(deg, now, eyeY){
   if(!pushGameState.active || pushGameState.over || !Number.isFinite(deg)) return;
-  pushGameState.targetY = pushGameTargetY(deg);
+  if(!pushGameState.poseReady){
+    // Эхний цэх байрлалыг тухайн хүний нүдний бодит өндөртэй тааруулна.
+    // Ингэснээр хүн бүрийн камерын өнцөг өөр байсан ч шувуу нүүрэн дээрээс эхэлнэ.
+    if(deg < 155 || !Number.isFinite(eyeY)) return;
+    pushGameState.anchorAngle = deg;
+    pushGameState.anchorY = Math.max(.14, Math.min(.86, eyeY));
+    pushGameState.targetY = pushGameState.anchorY;
+  } else {
+    const rawTarget = pushGameTargetY(deg, pushGameState.anchorAngle, pushGameState.anchorY);
+    const delta = rawTarget - pushGameState.targetY;
+    // 1.2% dead-zone нь MediaPipe-ийн жижиг чичиргээг хөдөлгөөн болгохгүй.
+    if(Math.abs(delta) > .012) pushGameState.targetY += delta * .34;
+  }
   pushGameState.lastPoseAt = now;
   if(!pushGameState.poseReady){
     pushGameState.poseReady = true;
     pushGameState.birdY = pushGameState.targetY;
     pushGameState.readyAt = now + 1200;
   }
+}
+
+function pushGameGapY(height, gap, previous, startY, random = Math.random()){
+  const margin = gap / 2 + Math.max(64, height * .07);
+  const base = Number.isFinite(previous) ? previous : startY;
+  const maxStep = Math.min(height * .16, gap * .52);
+  return Math.max(margin, Math.min(height - margin, base + (random * 2 - 1) * maxStep));
 }
 
 function sizePushGameCanvas(){
@@ -2437,12 +2457,39 @@ function drawPushGame(now, width, height){
 
   const birdX = width * .28, birdY = pushGameState.birdY * height;
   const radius = Math.max(13, Math.min(20, Math.min(width, height) * .038));
+  let nextPipe = null;
+  for(const pipe of pushGameState.pipes){
+    if(pipe.x + pipe.width < birdX || (nextPipe && pipe.x >= nextPipe.x)) continue;
+    nextPipe = pipe;
+  }
+
+  // Шувууны одоогийн харааны түвшнийг дараагийн нүх хүртэл тасархай
+  // шугамаар үзүүлнэ. Нүхний төвд ойртоход ногоон болж level lock асна.
+  const guideColor = pushGameState.locked ? "#39d98a" : "#ffd21e";
+  const guideEnd = nextPipe ? Math.max(birdX + radius * 2.2, nextPipe.x - 7) : width - 18;
+  gameCtx.save();
+  gameCtx.strokeStyle = guideColor; gameCtx.fillStyle = guideColor;
+  gameCtx.lineWidth = pushGameState.locked ? 2.8 : 2;
+  gameCtx.setLineDash([8, 7]); gameCtx.globalAlpha = .9;
+  gameCtx.beginPath(); gameCtx.moveTo(birdX + radius * 1.45, birdY); gameCtx.lineTo(guideEnd, birdY); gameCtx.stroke();
+  gameCtx.setLineDash([]); gameCtx.globalAlpha = 1;
+  if(nextPipe){
+    const targetX = nextPipe.x + nextPipe.width / 2;
+    gameCtx.beginPath(); gameCtx.arc(targetX, nextPipe.gapY, 8, 0, Math.PI * 2); gameCtx.stroke();
+    gameCtx.beginPath(); gameCtx.moveTo(targetX - 13, nextPipe.gapY); gameCtx.lineTo(targetX + 13, nextPipe.gapY); gameCtx.stroke();
+  }
+  gameCtx.font = "800 10px system-ui"; gameCtx.textAlign = "left";
+  gameCtx.fillText(pushGameState.locked ? "ТҮВШИН ТОГТЛОО" : "ХАРААНЫ ТҮВШИН",
+    birdX + radius * 1.7, Math.max(18, birdY - 10));
+  gameCtx.restore();
+
   gameCtx.save();
   gameCtx.translate(birdX, birdY);
   gameCtx.shadowColor = "rgba(255,210,30,.55)"; gameCtx.shadowBlur = 18;
   gameCtx.fillStyle = "#ffd21e"; gameCtx.beginPath(); gameCtx.ellipse(0, 0, radius * 1.12, radius, 0, 0, Math.PI * 2); gameCtx.fill();
   gameCtx.shadowBlur = 0;
-  const wing = pushGameState.active && !pushGameState.over ? Math.sin(now / 105) * radius * .24 : 0;
+  const wing = pushGameState.active && !pushGameState.over && !pushGameReducedMotion
+    ? Math.sin(now / 105) * radius * .24 : 0;
   gameCtx.fillStyle = "#f2a900"; gameCtx.beginPath(); gameCtx.ellipse(-radius * .25, wing, radius * .68, radius * .43, -.25, 0, Math.PI * 2); gameCtx.fill();
   gameCtx.fillStyle = "#ff7b22"; gameCtx.beginPath(); gameCtx.moveTo(radius, -2); gameCtx.lineTo(radius * 1.65, radius * .14); gameCtx.lineTo(radius, radius * .38); gameCtx.closePath(); gameCtx.fill();
   gameCtx.fillStyle = "#fff"; gameCtx.beginPath(); gameCtx.arc(radius * .45, -radius * .34, radius * .3, 0, Math.PI * 2); gameCtx.fill();
@@ -2450,7 +2497,7 @@ function drawPushGame(now, width, height){
   gameCtx.restore();
 
   if(!pushGameState.poseReady)
-    drawPushGameMessage(width, height, "Push-up байрлалд ор", "Тохой танигдмагц тоглоом эхэлнэ");
+    drawPushGameMessage(width, height, "Гараа бүрэн тэнийлгэ", "Шувуу харааны түвшинд таарна");
   else if(now - pushGameState.lastPoseAt > 900)
     drawPushGameMessage(width, height, "Түр зогслоо", "Биеэ камерт бүтэн багтаана уу");
   else if(now < pushGameState.readyAt)
@@ -2475,19 +2522,35 @@ function pushGameFrame(now){
   const started = tracked && now >= pushGameState.readyAt;
   const dt = Math.min(.05, Math.max(0, (now - (pushGameState.lastFrameAt || now)) / 1000));
   pushGameState.lastFrameAt = now;
-  pushGameState.birdY += (pushGameState.targetY - pushGameState.birdY) * Math.min(1, dt * 12);
+  let desiredY = pushGameState.targetY;
+  let lockPipe = null;
+  const birdX = width * .28;
+  if(started){
+    for(const pipe of pushGameState.pipes){
+      if(pipe.x + pipe.width < birdX || (lockPipe && pipe.x >= lockPipe.x)) continue;
+      lockPipe = pipe;
+    }
+  }
+  if(lockPipe){
+    const gapCenter = lockPipe.gapY / height;
+    const lockRange = Math.min(.055, (lockPipe.gap / height) * .18);
+    pushGameState.locked = Math.abs(desiredY - gapCenter) <= lockRange;
+    if(pushGameState.locked) desiredY = gapCenter;
+  } else pushGameState.locked = false;
+  pushGameState.birdY += (desiredY - pushGameState.birdY) * Math.min(1, dt * 8);
 
   if(started){
     const pipeWidth = Math.max(48, Math.min(76, width * .15));
-    const gap = Math.max(132, Math.min(height * .34, 220));
+    const gap = Math.max(154, Math.min(height * .38, 260));
     if(now >= pushGameState.nextPipeAt){
-      const margin = gap / 2 + Math.max(72, height * .08);
-      pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap,
-        gapY:margin + Math.random() * Math.max(1, height - margin * 2), scored:false });
+      const gapY = pushGameGapY(height, gap, pushGameState.lastGapY,
+        pushGameState.birdY * height);
+      pushGameState.lastGapY = gapY;
+      pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap, gapY, scored:false });
       pushGameState.nextPipeAt = now + 2050;
     }
     const speed = Math.max(92, width * .25);
-    const birdX = width * .28, birdY = pushGameState.birdY * height;
+    const birdY = pushGameState.birdY * height;
     const radius = Math.max(13, Math.min(20, Math.min(width, height) * .038));
     for(const pipe of pushGameState.pipes){
       pipe.x -= speed * dt;
@@ -2524,6 +2587,7 @@ function startPushGame(){
   stopPushGame();
   Object.assign(pushGameState, { active:true, over:false, score:0, pipes:[], nextPipeAt:0,
     birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
+    anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
     lastFrameAt:performance.now(), width:0 });
   $("pushGameScore").textContent = "0";
   $("pushGameReps").textContent = count;

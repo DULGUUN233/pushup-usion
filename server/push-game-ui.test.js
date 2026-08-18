@@ -21,11 +21,32 @@ test('Game нь camera overlay canvas, score, rep, restart controls-той', () 
 })
 
 test('тохой нугарахад шувуу доош, тэнийхэд дээш явна', () => {
-  const source = html.match(/function pushGameTargetY\(deg\)\{[\s\S]*?\n\}/)?.[0]
+  const source = html.match(/function pushGameTargetY\(deg, anchorAngle = 170, anchorY = \.24\)\{[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'pushGameTargetY source олдсонгүй')
   const target = new Function(`${source}\nreturn pushGameTargetY`)()
   assert.ok(target(70) > target(170))
   assert.ok(target(70) <= 0.76 && target(170) >= 0.24)
+  assert.equal(target(155, 155, 0.43), 0.43)
+  assert.ok(target(95, 155, 0.43) > 0.7)
+})
+
+test('шувуу эхлэхдээ нүдний түвшинд таарч, pose чичиргээг dead-zone-оор дарна', () => {
+  assert.match(html, /updatePushGameControl\(deg, now, mean\(lm, \[0,2,5\]\)\)/)
+  assert.match(html, /if\(deg < 155 \|\| !Number\.isFinite\(eyeY\)\) return/)
+  assert.match(html, /pushGameState\.anchorY = Math\.max\(\.14, Math\.min\(\.86, eyeY\)\)/)
+  assert.match(html, /if\(Math\.abs\(delta\) > \.012\) pushGameState\.targetY \+= delta \* \.34/)
+})
+
+test('дараагийн нүх хүрч болох өндөртэй бөгөөд төвдөө level lock хийдэг', () => {
+  const source = html.match(/function pushGameGapY\(height, gap, previous, startY, random = Math\.random\(\)\)\{[\s\S]*?\n\}/)?.[0]
+  assert.ok(source, 'pushGameGapY source олдсонгүй')
+  const gapY = new Function(`${source}\nreturn pushGameGapY`)()
+  assert.ok(Math.abs(gapY(800, 240, 400, 400, 0) - 400) <= 125)
+  assert.ok(Math.abs(gapY(800, 240, 400, 400, 1) - 400) <= 125)
+  assert.match(html, /pushGameState\.locked = Math\.abs\(desiredY - gapCenter\) <= lockRange/)
+  assert.match(html, /ТҮВШИН ТОГТЛОО/)
+  assert.match(html, /ХАРААНЫ ТҮВШИН/)
+  assert.match(html, /prefers-reduced-motion: reduce/)
 })
 
 test('tracking тасрахад game pause хийж, camera хаахад loop цэвэрлэгдэнэ', () => {
