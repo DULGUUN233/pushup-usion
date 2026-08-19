@@ -34,7 +34,7 @@ test('active challenge үед бусад challenge харагдаж, дэлгэ�
   assert.match(html, /templates\.classList\.remove\("hidden"\)/)
   assert.match(html, /customToggle\.disabled = challengeRunning/)
   assert.match(html, /button\.disabled = challengeRunning/)
-  assert.match(html, /#menu\{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;[^}]*padding-bottom:/)
+  assert.match(html, /#menu\{[^}]*display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;[^}]*padding-bottom:/)
 })
 
 test('богино challenge хоногийн цэг, урт challenge progress bar харуулна', () => {
@@ -46,7 +46,7 @@ test('богино challenge хоногийн цэг, урт challenge progress 
 test('challenge controls mobile touch target-тай', () => {
   assert.match(html, /\.challengeHead button\{min-height:44px/)
   assert.match(html, /\.challengeActions button,\.challengeStart\{width:100%;min-height:44px/)
-  assert.match(html, /#mBattle\{[^}]*min-height:52px/)
+  assert.match(html, /#mainNav #navBattle\{height:52px;min-height:52px/)
 })
 
 test('active болон default challenge card-ууд нэг мөрөнд хажуу тийш swipe хийгдэнэ', () => {

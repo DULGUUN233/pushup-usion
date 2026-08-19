@@ -10,12 +10,15 @@
 <link rel="preload" as="image" href="./assets/flappy/bird-mid.png" type="image/png">
 <link rel="preload" as="image" href="./assets/flappy/pipe-cap.png" type="image/png">
 <link rel="preload" as="image" href="./assets/flappy/pipe-body.png" type="image/png">
+<link rel="preload" as="image" href="./assets/modes/pushup-mode-v1.png" type="image/png">
+<link rel="preload" as="image" href="./assets/modes/game-mode-v1.png" type="image/png">
 <script src="https://usions.com/usion-sdk.js"></script>
 <style>
   :root{
-    --bg:#0b0f14; --fg:#e8eef5; --dim:#7b8a9c;
+    --bg:#070b11; --fg:#f3f7fb; --dim:#8795a6;
     --accent:#39d98a; --warn:#ffb020; --bad:#ff5c5c; --gold:#ffd21e;
-    --card:#141b23;
+    --card:#121b25; --surface-raised:#17222e;
+    --surface-border:rgba(255,255,255,.075); --surface-shadow:rgba(0,0,0,.24);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
@@ -46,51 +49,60 @@
     background:linear-gradient(180deg,transparent 58%,rgba(1,5,12,.16) 70%,rgba(1,5,12,.88) 94%)}
 
   /* ---------- цэс ---------- */
-  #menu{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;overflow-y:auto;
-    padding-bottom:calc(env(safe-area-inset-bottom) + 172px);scroll-padding-bottom:calc(env(safe-area-inset-bottom) + 172px);
-    overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+  #menu{--home-bg:#0b0d10;--home-bg-deep:#07080a;--home-card:#181c22;--home-card-raised:#20252d;
+    --home-border:rgba(255,255,255,.085);--home-muted:#a5abb5;--home-primary:#f97316;--home-secondary:#fbbf24;
+    --fg:#f8fafc;--dim:var(--home-muted);--accent:var(--home-primary);--card:var(--home-card);
+    display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto;overflow-y:auto;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 104px);scroll-padding-bottom:calc(env(safe-area-inset-bottom) + 104px);
+    overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;
+    background:
+      radial-gradient(circle at 50% -8%,rgba(249,115,22,.16),transparent 35%),
+      radial-gradient(circle at 100% 64%,rgba(251,191,36,.055),transparent 30%),
+      linear-gradient(180deg,var(--home-bg) 0%,#101116 54%,var(--home-bg-deep) 100%)}
   #menu>*{flex-shrink:0}
-  #dailyPushups{--activity:#39d98a;--activity-alt:#20b8ff;display:flex;flex-direction:column;gap:12px}
-  #dailyPushups.squat{--activity:#ffb020;--activity-alt:#d96bff}
-  .activityRangeSwitch{align-self:center;display:grid;grid-template-columns:repeat(3,52px);gap:4px;padding:3px;
-    border-radius:999px;background:var(--card);border:1px solid rgba(255,255,255,.07)}
-  .activityRangeSwitch button{width:52px;min-height:44px;padding:8px;border-radius:999px;background:transparent;
-    color:var(--dim);font-size:14px;transition:color .18s ease,background .18s ease}
-  .activityRangeSwitch button[aria-pressed="true"]{background:rgba(255,255,255,.1);color:var(--fg)}
-  .activitySwitch{position:relative;isolation:isolate;align-self:center;width:156px;height:44px;
-    display:grid;grid-template-columns:1fr 1fr;gap:2px}
-  .activitySwitch::before{content:"";position:absolute;z-index:-1;inset:5px 0;border-radius:999px;
-    background:rgba(5,10,15,.28);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
-  .activitySwitch button{min-width:0;height:44px;padding:0 7px;border-radius:999px;background:transparent;
-    color:var(--dim);font-size:11px;transition:color .18s ease,background .18s ease}
-  .activitySwitch button[aria-pressed="true"]{background:linear-gradient(135deg,var(--activity),var(--activity-alt));
-    background-position:center;background-size:calc(100% - 4px) 34px;background-repeat:no-repeat;color:#04140c}
-  .activitySwitch button:focus-visible,.activityRangeSwitch button:focus-visible,.activityPeriodNav button:focus-visible,
+  #dailyPushups{--activity:#f97316;--activity-alt:#fbbf24;display:flex;flex-direction:column;gap:12px}
+  #dailyPushups.squat{--activity:#fbbf24;--activity-alt:#fb923c}
+  .activityRangeSwitch{position:relative;isolation:isolate;align-self:center;display:grid;grid-template-columns:repeat(3,52px);gap:4px;padding:3px;
+    border-radius:999px;background:rgba(24,28,34,.94);border:1px solid var(--home-border);
+    box-shadow:inset 0 1px rgba(255,255,255,.035),0 10px 28px rgba(0,0,0,.22)}
+  .activityRangeSwitch button{position:relative;z-index:1;width:52px;min-height:44px;padding:8px;border-radius:999px;background:transparent;
+    color:var(--dim);font-size:14px;transition:color 250ms cubic-bezier(.22,1,.36,1)}
+  .activityRangeSwitch button[aria-pressed="true"]{color:var(--fg)}
+  .activitySwitch{position:relative;isolation:isolate;align-self:center;width:170px;height:48px;margin-bottom:2px;
+    display:grid;grid-template-columns:1fr 1fr;gap:0;background:transparent;border:0;box-shadow:none}
+  .activitySwitch button{position:relative;z-index:1;min-width:0;height:44px;padding:0 8px;border-radius:12px;background:transparent;
+    color:var(--dim);font-size:12px;font-weight:750;transition:color 250ms cubic-bezier(.22,1,.36,1),background 180ms ease}
+  .activitySwitch button:active{background:rgba(255,255,255,.05)}
+  .activitySwitch button[aria-pressed="true"]{color:var(--activity);font-weight:900}
+  .activityTabsPill{position:absolute;left:0;width:0;border-radius:999px;transform:translateX(0);
+    transition:transform 250ms cubic-bezier(.22,1,.36,1),width 250ms cubic-bezier(.22,1,.36,1);
+    will-change:transform,width;z-index:0;pointer-events:none}
+  .activityRangeSwitch .activityTabsPill{top:3px;height:44px;background:linear-gradient(180deg,#353941,#292d34);
+    box-shadow:inset 0 1px rgba(255,255,255,.075),0 4px 12px rgba(0,0,0,.22)}
+  .activitySwitch .activityTabsPill{bottom:0;height:3px;border-radius:999px;
+    background:linear-gradient(90deg,transparent calc(50% - 18px),var(--activity) calc(50% - 18px),var(--activity-alt) calc(50% + 18px),transparent calc(50% + 18px));
+    box-shadow:0 0 10px color-mix(in srgb,var(--activity) 34%,transparent)}
+  .activitySwitch button:focus-visible,.activityRangeSwitch button:focus-visible,
   .activityWeekDay:focus-visible,.activityMonthDay:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
-  .dailyRingCard{min-height:284px;border-radius:24px;padding:14px 16px 18px;display:flex;flex-direction:column;
-    align-items:center;
-    background:radial-gradient(circle at 50% 42%,rgba(57,217,138,.13),transparent 58%),var(--card);
-    border:1px solid rgba(255,255,255,.06);touch-action:pan-y}
-  #dailyPushups.squat .dailyRingCard{background:radial-gradient(circle at 50% 42%,rgba(255,176,32,.13),transparent 58%),var(--card)}
-  .activityPeriodNav{width:100%;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px}
-  .activityPeriodNav button{width:44px;height:44px;padding:9px;border-radius:50%;background:transparent;color:var(--dim)}
-  .activityPeriodNav button:disabled{opacity:.18}
-  .activityPeriodNav svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.2;
-    stroke-linecap:round;stroke-linejoin:round}
-  #activityPeriodLabel{text-align:center;font-size:13px;font-weight:850;color:var(--activity)}
+  .dailyRingCard{position:relative;isolation:isolate;overflow:hidden;min-height:284px;
+    padding:14px 16px 18px;display:flex;flex-direction:column;align-items:center;
+    background:transparent;border:0;box-shadow:none;touch-action:pan-y}
+  .activityPeriodNav{display:none}
   .activityPanel{width:100%;min-height:218px;display:grid;place-items:center}
   .dailyRing{position:relative;width:min(58vw,214px);aspect-ratio:1}
   .dailyRing svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
   .dailyRing circle{fill:none;stroke-width:8}
-  .dailyRingTrack{stroke:rgba(255,255,255,.09)}
+  .dailyRingTrack{stroke:rgba(255,255,255,.085)}
   .dailyGradientStart{stop-color:var(--activity)}
   .dailyGradientEnd{stop-color:var(--activity-alt)}
   .dailyRingValue{stroke:url(#dailyGradient);stroke-linecap:round;stroke-dasharray:0 100;
-    transition:stroke-dasharray .45s ease-out;filter:drop-shadow(0 0 6px var(--activity))}
+    transition:stroke-dasharray .45s ease-out;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--activity) 72%,transparent))}
   .dailyRingCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;text-align:center}
-  .dailyRingCenter small{font-size:11px;font-weight:850;letter-spacing:.09em;color:var(--activity)}
-  #dailyCount{font-size:58px;line-height:.98;font-weight:900;letter-spacing:-.05em;
+  .dailyRingCenter time{font-size:11px;font-weight:850;letter-spacing:.06em;color:var(--activity);
+    font-variant-numeric:tabular-nums}
+  #dailyCount{font-size:58px;line-height:.98;font-weight:900;letter-spacing:-.05em;color:var(--fg);
+    text-shadow:0 6px 24px rgba(0,0,0,.24);
     font-variant-numeric:tabular-nums}
   #dailyGoal{margin-top:7px;font-size:12px;color:var(--dim)}
   .activitySummary{width:100%;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
@@ -99,35 +111,46 @@
   .activitySummary small{display:block;margin-top:5px;color:var(--dim);font-size:10px;font-weight:750}
   .activitySummaryEnd{text-align:right}
   .activitySummary .activityAverage{color:var(--fg);font-size:29px;font-weight:900}
-  .activityWeekChart{width:100%;height:158px;display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end}
+  .activityWeekChart{width:100%;height:168px;display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:stretch}
   .activityWeekDay{height:100%;min-width:0;padding:0 1px 4px;border-radius:11px;background:transparent;color:var(--dim);
-    display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px}
+    display:grid;grid-template-rows:18px 1fr;align-items:stretch;gap:6px}
   .activityWeekDay:active,.activityMonthDay:active{transform:none;background:rgba(255,255,255,.05)}
-  .activityWeekValue{font-size:9px;font-weight:850;color:var(--fg);font-variant-numeric:tabular-nums}
-  .activityWeekBarTrack{width:min(28px,100%);height:106px;border-radius:999px;background:rgba(255,255,255,.07);
-    display:flex;align-items:flex-end;overflow:hidden}
-  .activityWeekBar{width:100%;min-height:5px;border-radius:inherit;background:linear-gradient(180deg,var(--activity-alt),var(--activity))}
-  .activityWeekLabel{font-size:9px;font-weight:800;text-transform:uppercase}
-  .activityMonth{width:100%}
-  .activityMonthWeekdays,.activityMonthGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .activityWeekLabel{display:grid;place-items:center;font-size:9px;font-weight:800;text-transform:uppercase}
+  .activityWeekPlot{position:relative;width:100%;height:100%;min-height:0}
+  .activityWeekValue{position:absolute;z-index:1;left:50%;bottom:calc(var(--bar-height,0%) + 5px);
+    transform:translateX(-50%);font-size:9px;font-weight:850;color:var(--fg);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .activityWeekBar{position:absolute;left:50%;bottom:0;width:min(28px,72%);height:var(--bar-height,18%);min-height:18px;
+    transform:translateX(-50%);border-radius:999px;background:linear-gradient(180deg,var(--activity-alt),var(--activity))}
+  .activityWeekZero{position:absolute;left:50%;bottom:0;width:min(28px,72%);aspect-ratio:1;transform:translateX(-50%);
+    border-radius:50%;background:rgba(255,255,255,.075);box-shadow:inset 0 1px rgba(255,255,255,.035)}
+  .activityMonth{width:calc(100% + 32px);margin-inline:-16px}
+  .activityMonthTitle{display:block;margin:0 4px 8px;color:var(--fg);font-size:13px;font-weight:850;
+    font-variant-numeric:tabular-nums}
+  .activityMonthWeekdays,.activityMonthGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
   .activityMonthWeekdays{margin:4px 0 8px;text-align:center;color:var(--dim);font-size:9px;font-weight:800}
-  .activityMonthDay{position:relative;min-width:0;min-height:44px;padding:3px;border-radius:50%;background:transparent;color:var(--dim);
+  .activityMonthDay{position:relative;justify-self:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:3px;border-radius:50%;background:transparent;color:var(--dim);
     display:grid;place-items:center;font-size:11px;font-weight:850}
   .activityMonthDay::before{content:"";position:absolute;inset:4px;border-radius:50%;background:
     conic-gradient(var(--activity) var(--activity-progress,0%),rgba(255,255,255,.08) 0)}
-  .activityMonthDay::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--card)}
+  .activityMonthDay::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--home-card)}
   .activityMonthDay span{position:relative;z-index:1;font-variant-numeric:tabular-nums}
   .activityMonthDay.today span{color:var(--activity)}
+  .activityMonthDay.complete::before{background:linear-gradient(135deg,var(--activity),var(--activity-alt));
+    box-shadow:0 0 12px color-mix(in srgb,var(--activity) 28%,transparent)}
+  .activityMonthDay.complete::after{display:none}
+  .activityMonthDay.complete span{color:#1c0d03}
+  .activityMonthDay.empty::before{background:rgba(255,255,255,.075)}
+  .activityMonthDay.empty::after{display:none}
   .activityMonthDay.future{opacity:.28}
-  .activityMonthBlank{min-height:44px}
+  .activityMonthBlank{justify-self:center;width:44px;height:44px}
 
   .challengeSection{display:flex;flex-direction:column;gap:12px}
   .challengeHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .challengeHead h2{margin:0;font-size:17px}
-  .challengeHead button{min-height:44px;padding:8px 13px;background:var(--card);color:var(--fg);
-    border:1px solid rgba(255,255,255,.09)}
-  .challengeCard{padding:16px;border-radius:20px;background:var(--card);border:1px solid rgba(255,255,255,.07)}
-  .challengeCard.active{background:linear-gradient(145deg,rgba(57,217,138,.1),rgba(32,184,255,.05)),var(--card)}
+  .challengeHead button{min-height:44px;padding:8px 13px;background:var(--home-card);color:var(--fg);
+    border:1px solid var(--home-border)}
+  .challengeCard{padding:16px;border-radius:20px;background:var(--home-card);border:1px solid var(--home-border)}
+  .challengeCard.active{background:linear-gradient(145deg,rgba(249,115,22,.13),rgba(251,191,36,.055)),var(--home-card)}
   .challengeTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
   .challengeTop h3{margin:0;font-size:16px}
   .challengeBadge{flex:none;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.08);
@@ -135,12 +158,12 @@
   .challengeMeta{margin:5px 0 12px;color:var(--dim);font-size:12px}
   .challengeProgress{height:12px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.09)}
   .challengeProgress>span{display:block;width:0;height:100%;border-radius:inherit;
-    background:linear-gradient(90deg,#39d98a,#20b8ff);transition:width .3s ease-out}
+    background:linear-gradient(90deg,var(--home-primary),var(--home-secondary));transition:width .3s ease-out}
   .challengeNumbers{display:flex;justify-content:space-between;gap:12px;margin-top:7px;color:var(--dim);
     font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
   .challengeDays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:14px 0}
   .challengeDay{height:12px;border-radius:999px;background:rgba(255,255,255,.1)}
-  .challengeDay.done{background:#39d98a}.challengeDay.current{outline:2px solid #20b8ff;outline-offset:2px}
+  .challengeDay.done{background:var(--home-primary)}.challengeDay.current{outline:2px solid var(--home-secondary);outline-offset:2px}
   .challengeDay.missed{background:var(--bad)}
   .challengeActions{display:flex;gap:8px;margin-top:14px}
   .challengeActions button,.challengeStart{width:100%;min-height:44px}
@@ -150,41 +173,42 @@
     scroll-snap-type:x mandatory;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   #challengeTemplates::-webkit-scrollbar{display:none}
   #challengeTemplates .challengeCard{flex:0 0 calc(100% - 42px);scroll-snap-align:start}
-  .challengeForm{display:grid;gap:12px;padding:16px;border-radius:20px;background:var(--card);
-    border:1px solid rgba(255,255,255,.07)}
+  .challengeForm{display:grid;gap:12px;padding:16px;border-radius:20px;background:var(--home-card);
+    border:1px solid var(--home-border)}
   .challengeForm label{display:grid;gap:6px;color:var(--dim);font-size:11px;font-weight:750}
   .challengeForm select,.challengeForm input{width:100%;height:44px;border-radius:12px;padding:0 12px;
-    border:1px solid rgba(255,255,255,.12);background:#0f151d;color:var(--fg);font:inherit}
-  .challengeForm select:focus,.challengeForm input:focus{outline:3px solid rgba(57,217,138,.18);border-color:#39d98a}
-  .challengeForm button{min-height:46px;background:var(--accent);color:#04140c}
+    border:1px solid rgba(255,255,255,.12);background:#111318;color:var(--fg);font:inherit}
+  .challengeForm select:focus,.challengeForm input:focus{outline:3px solid rgba(249,115,22,.2);border-color:var(--home-primary)}
+  .challengeForm button{min-height:46px;background:var(--home-primary);color:#1a0c03}
   #challengeStatus{min-height:18px;color:var(--dim);font-size:12px}
   #challengeStatus.bad{color:var(--bad)}
-  .mode{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;
-    padding:16px 18px;border-radius:16px;width:100%;font-size:17px}
-  .mode small{font-size:12px;font-weight:500;opacity:.75}
-  .mode.duel{background:#2a1e3d;color:#e6dcff}
-  #mBattle{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 80px);z-index:29;
-    width:min(calc(100% - 36px),460px);min-height:52px;padding:6px 16px;transform:translateX(-50%);
-    align-items:center;justify-content:center;text-align:center;border:1px solid rgba(255,255,255,.2);
-    background:linear-gradient(135deg,#39d98a 0%,#20b8ff 100%);color:#04140c;
-    box-shadow:0 12px 30px rgba(32,184,255,.22),0 5px 16px rgba(57,217,138,.2);
-    font-size:15px;font-weight:900;transition:filter .18s ease,box-shadow .18s ease}
-  #mBattle small{font-size:10px;font-weight:700;opacity:.72}
-  #mBattle:focus-visible{outline:3px solid #fff;outline-offset:3px}
-  #mBattle:active{transform:translateX(-50%) scale(.98);filter:brightness(.9);
-    box-shadow:0 6px 18px rgba(32,184,255,.16)}
-
   #mainNav{position:fixed;left:50%;bottom:0;z-index:30;transform:translateX(-50%);
-    width:min(100%,560px);display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
-    padding:8px 8px calc(env(safe-area-inset-bottom) + 8px);background:rgba(11,15,20,.96);
-    border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+    width:min(100%,560px);display:grid;grid-template-columns:repeat(5,1fr);gap:4px;
+    padding:8px 8px calc(env(safe-area-inset-bottom) + 8px);background:rgba(11,13,16,.95);
+    border-top:1px solid rgba(255,255,255,.085);box-shadow:0 -16px 36px rgba(0,0,0,.24);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
   #mainNav button{min-width:0;min-height:52px;padding:6px 2px;border-radius:13px;background:transparent;
     color:var(--dim);display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;font-size:10px;white-space:nowrap;transition:color .18s ease,background .18s ease}
+    gap:3px;font-size:10px;white-space:nowrap;
+    transition:color 250ms cubic-bezier(.22,1,.36,1),background 250ms cubic-bezier(.22,1,.36,1)}
   #mainNav button:active{transform:none;background:rgba(255,255,255,.06)}
-  #mainNav button.active{color:var(--accent)}
+  #mainNav button.active{color:#fb923c;background:rgba(249,115,22,.09)}
   #mainNav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;
     stroke-linecap:round;stroke-linejoin:round}
+  #mainNav button.active svg{filter:drop-shadow(0 0 7px rgba(249,115,22,.3))}
+  #mainNav #navBattle{height:52px;min-height:52px;padding:0;transform:translateY(-12px);
+    gap:2px;background:transparent;color:#fb923c;overflow:visible}
+  #mainNav #navBattle:active{transform:translateY(-12px);background:transparent}
+  .navBattleOrb{width:50px;height:50px;flex:none;display:grid;place-items:center;border-radius:50%;
+    color:#1a0c03;background:linear-gradient(135deg,#f97316 0%,#fbbf24 100%);
+    border:1px solid rgba(255,219,128,.5);
+    box-shadow:0 8px 22px rgba(249,115,22,.3),inset 0 1px rgba(255,255,255,.25);
+    transition:transform 180ms cubic-bezier(.22,1,.36,1),filter 180ms cubic-bezier(.22,1,.36,1)}
+  #navBattle .navBattleOrb svg{width:25px;height:25px;filter:none}
+  .navBattleLabel{font-size:9px;line-height:1;font-weight:900;color:#fb923c}
+  #navBattle:active .navBattleOrb{transform:scale(.94);filter:brightness(.92)}
+  #navBattle:focus-visible{outline:none}
+  #navBattle:focus-visible .navBattleOrb{outline:3px solid #fff;outline-offset:3px}
 
   #note{font-size:12px;line-height:1.6;color:var(--dim);min-height:18px}
   #note.bad{color:var(--bad)}
@@ -284,10 +308,27 @@
   @media (prefers-reduced-motion:reduce){
     .dailyRingValue{transition:none}
     .challengeProgress>span{transition:none}
-    .activitySwitch button,.activityRangeSwitch button{transition:none}
+    .activityTabsPill,.activitySwitch button,.activityRangeSwitch button{transition:none!important}
     .leagueCard{transition:none}
-    #mainNav button{transition:none}
+    #mainNav button,.navBattleOrb{transition:none}
     .boardLoading{animation:none;background:#182029}
+  }
+  @media (max-width:360px){
+    #menu{gap:12px;padding-left:14px;padding-right:14px;
+      padding-bottom:calc(env(safe-area-inset-bottom) + 104px);
+      scroll-padding-bottom:calc(env(safe-area-inset-bottom) + 104px)}
+    .dailyRingCard{min-height:270px;padding:12px 12px 16px}
+    .activityMonth{width:calc(100% + 24px);margin-inline:-12px}
+    .dailyRing{width:min(56vw,192px)}
+    #dailyCount{font-size:52px}
+    #mainNav{gap:2px;padding-left:4px;padding-right:4px}
+    #mainNav button{min-height:50px;font-size:9px}
+    #mainNav #navBattle{height:50px;min-height:50px;transform:translateY(-10px)}
+    #mainNav #navBattle:active{transform:translateY(-10px)}
+    .navBattleOrb{width:46px;height:46px}
+  }
+  @media (max-width:340px){
+    .activityMonthDay,.activityMonthBlank{width:39px;height:39px;min-width:39px;min-height:39px}
   }
 
   /* ---------- хүлээлгийн өрөө ---------- */
@@ -336,8 +377,8 @@
   .pushChoiceIcon{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;
     color:var(--gold);background:rgba(255,210,30,.11)}
   .pushChoiceCard.game .pushChoiceIcon{color:var(--accent);background:rgba(57,217,138,.12)}
-  .pushChoiceIcon svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2.2;
-    stroke-linecap:round;stroke-linejoin:round}
+  .pushChoiceIcon img{width:52px;height:52px;display:block;object-fit:contain;
+    filter:drop-shadow(0 5px 8px rgba(0,0,0,.22))}
   .pushChoiceText strong{display:block;font-size:19px;color:var(--fg)}
   .pushChoiceText small{display:block;margin-top:6px;color:var(--dim);font-size:12px;line-height:1.45}
   .pushChoiceArrow{width:24px;height:24px;fill:none;stroke:var(--dim);stroke-width:2.2}
@@ -645,20 +686,22 @@
 
 <!-- ================= ЦЭС ================= -->
 <section id="menu" class="screen hidden">
-  <section id="dailyPushups" aria-labelledby="dailyPushupsTitle">
+  <section id="dailyPushups" aria-label="Дасгалын статистик">
     <div class="activityRangeSwitch" role="group" aria-label="Хугацааны төрөл">
+      <span class="activityTabsPill" aria-hidden="true"></span>
       <button id="activityDay" type="button" aria-label="Өдөр" aria-pressed="true">D</button>
       <button id="activityWeek" type="button" aria-label="Долоо хоног" aria-pressed="false">W</button>
       <button id="activityMonth" type="button" aria-label="Сар" aria-pressed="false">M</button>
     </div>
     <div id="activityViewport" class="dailyRingCard">
       <div class="activitySwitch" role="group" aria-label="Статистикийн дасгал">
+        <span class="activityTabsPill" aria-hidden="true"></span>
         <button id="activityPush" type="button" aria-pressed="true">Суниалт</button>
         <button id="activitySquat" type="button" aria-pressed="false">Суулт</button>
       </div>
       <div class="activityPeriodNav">
         <button id="activityPrev" type="button" aria-label="Өмнөх хугацаа"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
-        <strong id="activityPeriodLabel">Өнөөдөр</strong>
+        <span id="activityPeriodLabel" class="srOnly" aria-live="polite">Өнөөдөр</span>
         <button id="activityNext" type="button" aria-label="Дараагийн хугацаа" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
       </div>
       <div id="activityDayView" class="activityPanel">
@@ -669,7 +712,7 @@
           <circle id="dailyRingValue" class="dailyRingValue" cx="50" cy="50" r="44" pathLength="100"></circle>
         </svg>
           <div class="dailyRingCenter">
-          <small id="dailyPushupsTitle">PUSH UP</small>
+          <time id="dailyActivityDate" datetime=""></time>
           <strong id="dailyCount">0</strong>
           <span id="dailyGoal">50 зорилго</span>
           </div>
@@ -679,7 +722,7 @@
         <div style="width:100%"><div class="activitySummary"><div><strong id="activityWeekTotal">0</strong><small>НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityWeekAverage" class="activityAverage">0</strong><small>ӨДРИЙН ДУНДАЖ</small></div></div><div id="activityWeekChart" class="activityWeekChart" role="group" aria-label="Долоо хоногийн дасгал"></div></div>
       </div>
       <div id="activityMonthView" class="activityPanel hidden">
-        <div class="activityMonth"><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small>НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityMonthAverage" class="activityAverage">0</strong><small>ӨДРИЙН ДУНДАЖ</small></div></div><div class="activityMonthWeekdays" aria-hidden="true"><span>ДА</span><span>МЯ</span><span>ЛХ</span><span>ПҮ</span><span>БА</span><span>БЯ</span><span>НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал"></div></div>
+        <div class="activityMonth"><time id="activityMonthTitle" class="activityMonthTitle" datetime=""></time><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small>НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityMonthAverage" class="activityAverage">0</strong><small>ӨДРИЙН ДУНДАЖ</small></div></div><div class="activityMonthWeekdays" aria-hidden="true"><span>ДА</span><span>МЯ</span><span>ЛХ</span><span>ПҮ</span><span>БА</span><span>БЯ</span><span>НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал"></div></div>
       </div>
     </div>
   </section>
@@ -712,8 +755,6 @@
     </form>
     <div id="challengeStatus" role="status" aria-live="polite"></div>
   </section>
-
-  <button class="mode duel" id="mBattle">Battle Friend<small>Найзтайгаа өрсөлдөх</small></button>
 
   <div id="note" role="status" aria-live="polite" aria-atomic="true"></div>
   <button id="retrySave" class="hidden">Дахин хадгалах</button>
@@ -770,11 +811,28 @@
     <span>Нүүр</span>
   </button>
   <button id="navPush" type="button" aria-label="Push Up">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="12" r="2"></circle><path d="M6 12h3l2-3 2 6 2-3h3"></path><circle cx="20" cy="12" r="2"></circle></svg>
+    <svg class="navExerciseIcon navPushIcon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="18.5" cy="6" r="2"></circle>
+      <path d="m16.6 8.4-6.6 2-4.5 3-2.8-.1"></path>
+      <path d="m14.1 9.2-1.5 5 4 3.1h2.7"></path>
+      <path d="m10 10.4-3.9 6.8H2.7"></path>
+      <path d="M2.4 20h17.3"></path>
+    </svg>
     <span>Push Up</span>
   </button>
+  <button id="navBattle" type="button" aria-label="Battle Friend">
+    <span class="navBattleOrb" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6Z"></path><path d="m13 7-4 6h3l-1 4 4-6h-3Z"></path></svg>
+    </span>
+    <span class="navBattleLabel">Battle</span>
+  </button>
   <button id="navSquat" type="button" aria-label="Суулт">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"></circle><path d="M12 7v5m0-3-4 3m4-3 4 3m-4 0-4 5m4-5 4 5M5 17h3m8 0h3"></path></svg>
+    <svg class="navExerciseIcon navSquatIcon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="3.7" r="2"></circle>
+      <path d="M12 5.7v6.5M10.6 8l-3.8 3H3.9M13.4 8l3.8 3h2.9"></path>
+      <path d="M8.8 12.2h6.4M8.8 12.2l-3 4.1-2.7 3M15.2 12.2l3 4.1 2.7 3"></path>
+      <path d="M2.5 20h3.3m12.4 0h3.3"></path>
+    </svg>
     <span>Суулт</span>
   </button>
   <button id="navBoard" type="button" aria-label="Жагсаалт">
@@ -792,14 +850,14 @@
     </header>
     <button id="pushNormal" class="pushChoiceCard" type="button">
       <span class="pushChoiceIcon" aria-hidden="true">
-        <svg viewBox="0 0 40 40"><path d="M5 29h30"></path><circle cx="12" cy="15" r="4"></circle><path d="m15 18 8 3 6 8M17 25l-6 4m12-8-3 8"></path></svg>
+        <img src="./assets/modes/pushup-mode-v1.png" alt="" width="52" height="52" decoding="async">
       </span>
       <span class="pushChoiceText"><strong>Энгийн</strong><small>Зөв push-up бүрийг AI тоолно</small></span>
       <svg class="pushChoiceArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
     </button>
     <button id="pushGame" class="pushChoiceCard game" type="button">
       <span class="pushChoiceIcon" aria-hidden="true">
-        <svg viewBox="0 0 40 40"><circle cx="15" cy="20" r="8"></circle><path d="m8 18-5-3 5-2m14 5 6 2-6 3m-2-9 3-5m-3 17 3 5"></path><circle cx="17.5" cy="17" r="1"></circle><path d="M31 6v8m0 12v8M27 14h8m-8 12h8"></path></svg>
+        <img src="./assets/modes/game-mode-v1.png" alt="" width="52" height="52" decoding="async">
       </span>
       <span class="pushChoiceText"><strong>Game</strong><small>Тохойгоороо шувууг удирдаж саадыг давна</small></span>
       <svg class="pushChoiceArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
@@ -1221,6 +1279,12 @@ function activityPeriodTitle(period){
   return `${start.getMonth() + 1}-р сарын ${start.getDate()} – ${end.getMonth() + 1}-р сарын ${end.getDate()}`;
 }
 
+function activityDateDisplay(dateKey){
+  if(dateKey === activityDateKey()) return "Өнөөдөр";
+  const [year, month, day] = dateKey.split("-");
+  return `${year}.${month}.${day}`;
+}
+
 function openActivityDay(date){
   if(date > activityDateKey()) return;
   activityRange = "day";
@@ -1230,25 +1294,54 @@ function openActivityDay(date){
   loadDailyActivity(activityExercise);
 }
 
+function positionActivityTabsPill(container, animate = true){
+  const pill = container?.querySelector(".activityTabsPill");
+  const active = container?.querySelector('button[aria-pressed="true"]');
+  if(!pill || !active) return;
+  const transition = pill.style.transition;
+  if(!animate) pill.style.transition = "none";
+  pill.style.transform = `translateX(${active.offsetLeft}px)`;
+  pill.style.width = `${active.offsetWidth}px`;
+  if(!animate){
+    pill.getBoundingClientRect();
+    pill.style.transition = transition;
+  }
+}
+
+function syncActivityTabsPills(animate = true){
+  positionActivityTabsPill(document.querySelector(".activityRangeSwitch"), animate);
+  positionActivityTabsPill(document.querySelector(".activitySwitch"), animate);
+}
+
+let activityTabsResizeFrame = 0;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(activityTabsResizeFrame);
+  activityTabsResizeFrame = requestAnimationFrame(() => syncActivityTabsPills(false));
+});
+
 function renderDailyActivity(){
   const period = activityPeriodState();
   const days = activityValues(period);
   const todayKey = activityDateKey();
   const isSquat = activityExercise === "squat";
-  const exerciseLabel = isSquat ? "СУУЛТ" : "PUSH UP";
+  const exerciseA11yLabel = isSquat ? "суулт" : "суниалт";
   $("dailyPushups").classList.toggle("squat", isSquat);
   $("activityPush").setAttribute("aria-pressed", String(!isSquat));
   $("activitySquat").setAttribute("aria-pressed", String(isSquat));
   for(const [id, range] of [["activityDay","day"],["activityWeek","week"],["activityMonth","month"]]) $(id).setAttribute("aria-pressed", String(activityRange === range));
+  syncActivityTabsPills();
   $("activityDayView").classList.toggle("hidden", activityRange !== "day");
   $("activityWeekView").classList.toggle("hidden", activityRange !== "week");
   $("activityMonthView").classList.toggle("hidden", activityRange !== "month");
   $("activityPeriodLabel").textContent = activityPeriodTitle(period);
+  $("activityMonthTitle").dateTime = period.dates[0].slice(0,7);
+  $("activityMonthTitle").textContent = activityPeriodTitle(period);
   $("activityNext").disabled = period.dates.at(-1) >= todayKey;
 
   const selected = days.find(day => day.date === activityAnchor)?.reps || 0;
   const progress = Math.min(100, selected / DAILY_GOALS[activityExercise] * 100);
-  $("dailyPushupsTitle").textContent = exerciseLabel;
+  $("dailyActivityDate").dateTime = activityAnchor;
+  $("dailyActivityDate").textContent = activityDateDisplay(activityAnchor);
   $("dailyCount").textContent = activityNumber.format(selected);
   $("dailyGoal").textContent = `${activityNumber.format(DAILY_GOALS[activityExercise])} зорилго`;
   $("dailyRingValue").style.strokeDasharray = `${progress} 100`;
@@ -1270,21 +1363,28 @@ function renderDailyActivity(){
     button.type = "button";
     button.className = "activityWeekDay";
     button.disabled = day.date > todayKey;
-    button.setAttribute("aria-label", `${day.date}: ${day.reps} ${exerciseLabel}`);
+    button.setAttribute("aria-label", `${day.date}: ${day.reps} ${exerciseA11yLabel}`);
     button.onclick = () => openActivityDay(day.date);
-    const value = document.createElement("span");
-    value.className = "activityWeekValue";
-    value.textContent = day.reps ? activityNumber.format(day.reps) : "";
-    const track = document.createElement("span");
-    track.className = "activityWeekBarTrack";
-    const bar = document.createElement("span");
-    bar.className = "activityWeekBar";
-    bar.style.height = `${Math.max(5, day.reps / weekMax * 100)}%`;
-    track.appendChild(bar);
     const label = document.createElement("span");
     label.className = "activityWeekLabel";
     label.textContent = weekLabels[index];
-    button.append(value, track, label);
+    const plot = document.createElement("span");
+    plot.className = "activityWeekPlot";
+    if(day.reps){
+      const barHeight = Math.max(18, day.reps / weekMax * 84);
+      plot.style.setProperty("--bar-height", `${barHeight}%`);
+      const value = document.createElement("span");
+      value.className = "activityWeekValue";
+      value.textContent = activityNumber.format(day.reps);
+      const bar = document.createElement("span");
+      bar.className = "activityWeekBar";
+      plot.append(value, bar);
+    }else{
+      const zero = document.createElement("span");
+      zero.className = "activityWeekZero";
+      plot.appendChild(zero);
+    }
+    button.append(label, plot);
     weekChart.appendChild(button);
   });
 
@@ -1303,8 +1403,12 @@ function renderDailyActivity(){
       button.className = "activityMonthDay";
       if(day.date === todayKey) button.classList.add("today");
       if(day.date > todayKey){ button.classList.add("future"); button.disabled = true; }
-      button.style.setProperty("--activity-progress", `${Math.min(100, day.reps / DAILY_GOALS[activityExercise] * 100)}%`);
-      button.setAttribute("aria-label", `${day.date}: ${day.reps} ${exerciseLabel}`);
+      const dayProgress = Math.min(100, day.reps / DAILY_GOALS[activityExercise] * 100);
+      button.style.setProperty("--activity-progress", `${dayProgress}%`);
+      if(dayProgress >= 100) button.classList.add("complete");
+      else if(day.reps > 0) button.classList.add("partial");
+      else button.classList.add("empty");
+      button.setAttribute("aria-label", `${day.date}: ${day.reps} ${exerciseA11yLabel}`);
       button.onclick = () => openActivityDay(day.date);
       const number = document.createElement("span");
       number.textContent = String(activityDateFromKey(day.date).getDate());
@@ -1535,12 +1639,13 @@ function show(id){
   for(const s of document.querySelectorAll(".screen")) s.classList.toggle("hidden", s.id !== id);
   const hasMainNav = id === "menu" || id === "board";
   $("mainNav").classList.toggle("hidden", !hasMainNav);
-  for(const [buttonId, active] of [["navHome", id === "menu"], ["navPush", false], ["navSquat", false], ["navBoard", id === "board"]]){
+  for(const [buttonId, active] of [["navHome", id === "menu"], ["navPush", false], ["navBattle", false], ["navSquat", false], ["navBoard", id === "board"]]){
     const button = $(buttonId);
     button.classList.toggle("active", active);
     if(active) button.setAttribute("aria-current", "page");
     else button.removeAttribute("aria-current");
   }
+  if(id === "menu") requestAnimationFrame(() => syncActivityTabsPills(false));
   setBack(id);
 }
 
@@ -4149,7 +4254,6 @@ function openSolo(kind, variant = "normal"){
   $("start").classList.remove("hidden");
 }
 
-$("mBattle").onclick = startBattle;
 $("activityPush").onclick = () => selectActivity("pushup");
 $("activitySquat").onclick = () => selectActivity("squat");
 $("activityDay").onclick = () => selectActivityRange("day");
@@ -4198,6 +4302,7 @@ $("challengeStop").onclick = async () => {
 };
 $("navHome").onclick = () => show("menu");
 $("navPush").onclick = openPushChoice;
+$("navBattle").onclick = startBattle;
 $("navSquat").onclick = () => openSolo("squat");
 $("navBoard").onclick = openBoard;
 $("boardPush").onclick = () => loadBoard("pushup");

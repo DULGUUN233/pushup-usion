@@ -38,13 +38,14 @@ test('лиг UI reduced motion ба keyboard focus-ийг дэмжинэ', () =>
   assert.match(html, /#board button:focus-visible/)
 })
 
-test('Нүүр, Push Up, Суулт, Жагсаалт гэсэн дөрвөн item доод navigation-д байна', () => {
+test('Нүүр, Push Up, Battle, Суулт, Жагсаалт гэсэн таван item доод navigation-д байна', () => {
   assert.match(html, /<nav id="mainNav"[^>]*aria-label="Үндсэн цэс"/)
   assert.match(html, /id="navHome"[^>]*aria-label="Нүүр"/)
   assert.match(html, /id="navPush"[^>]*aria-label="Push Up"/)
+  assert.match(html, /id="navBattle"[^>]*aria-label="Battle Friend"/)
   assert.match(html, /id="navSquat"[^>]*aria-label="Суулт"/)
   assert.match(html, /id="navBoard"[^>]*aria-label="Жагсаалт"/)
-  assert.match(html, /grid-template-columns:repeat\(4,1fr\)/)
+  assert.match(html, /grid-template-columns:repeat\(5,1fr\)/)
   assert.match(html, /id === "menu" \|\| id === "board"/)
   assert.doesNotMatch(html, /id="mBoard"|id="bBack"/)
 })

@@ -11,6 +11,13 @@ test('Push Up нь энгийн болон Game гэсэн хоёр сонгол
   assert.match(html, /\$\("navPush"\)\.onclick = openPushChoice/)
 })
 
+test('горимын card-ууд generated local PNG asset ашиглана', () => {
+  assert.match(html, /preload" as="image" href="\.\/assets\/modes\/pushup-mode-v1\.png"/)
+  assert.match(html, /id="pushNormal"[\s\S]*?<img src="\.\/assets\/modes\/pushup-mode-v1\.png"/)
+  assert.match(html, /id="pushGame"[\s\S]*?<img src="\.\/assets\/modes\/game-mode-v1\.png"/)
+  assert.match(html, /\.pushChoiceIcon img\{width:52px;height:52px/)
+})
+
 test('Game нь camera overlay canvas, score, rep, restart controls-той', () => {
   assert.match(html, /<canvas id="gameCanvas"/)
   assert.match(html, /id="pushGameScore"/)
