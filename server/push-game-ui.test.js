@@ -20,6 +20,12 @@ test('Game нь camera overlay canvas, score, rep, restart controls-той', () 
   assert.match(html, /#gameEnd\{width:48px;height:48px/)
 })
 
+test('Game дээр тохой болон биеийн skeleton тоглоомын дээр тод харагдана', () => {
+  assert.match(html, /#play\.push-game #canvas\{opacity:\.74;z-index:3;pointer-events:none\}/)
+  assert.match(html, /\n  drawSkeleton\(lm\);\n  if\(mode === "solo" && soloVariant === "game"/)
+  assert.doesNotMatch(html, /soloVariant !== "game" \|\| mode === "battle"/)
+})
+
 test('тохой нугарахад шувуу доош, тэнийхэд дээш явна', () => {
   const source = html.match(/function pushGameTargetY\(deg, anchorAngle = 170, anchorY = \.24\)\{[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'pushGameTargetY source олдсонгүй')

@@ -351,7 +351,7 @@
 
   #gameCanvas{display:none;pointer-events:none}
   #play.push-game #gameCanvas{display:block}
-  #play.push-game #canvas{opacity:.14}
+  #play.push-game #canvas{opacity:.74;z-index:3;pointer-events:none}
   #play.push-game #deepGlow,#play.push-game #meterWrap,#play.push-game #bottom{display:none}
   #pushGameHud{display:none;position:absolute;z-index:4;left:12px;right:12px;
     top:calc(env(safe-area-inset-top) + 12px);align-items:center;justify-content:space-between;
@@ -2253,7 +2253,7 @@ function loop(){
     return;
   }
 
-  if(soloVariant !== "game" || mode === "battle") drawSkeleton(lm);
+  drawSkeleton(lm);
   if(mode === "solo" && soloVariant === "game" && pushGameState.over) return;
 
   // Battle-ийн оноог зөвхөн серверийн authoritative 30 секундэд тоолно.
