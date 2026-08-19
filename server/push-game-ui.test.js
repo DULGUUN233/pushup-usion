@@ -52,13 +52,16 @@ test('Flappy source-ийн local bird, pipe asset-уудыг preload хийгэ�
   assert.doesNotMatch(html, /Math\.sin\(now \/ 105\)/)
 })
 
-test('саад энгийн Flappy Bird шиг аюулгүй мужид random байрлана', () => {
-  const source = html.match(/function pushGameGapY\(height, gap, random = Math\.random\(\)\)\{[\s\S]*?\n\}/)?.[0]
+test('саад хэт захад гарахгүй, дараагийн gap хүрч болох зайд random байрлана', () => {
+  const source = html.match(/function pushGameGapY\(height, gap, previous = null, random = Math\.random\(\)\)\{[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'pushGameGapY source олдсонгүй')
   const gapY = new Function(`${source}\nreturn pushGameGapY`)()
-  assert.equal(gapY(800, 240, 0), 160)
-  assert.equal(gapY(800, 240, 1), 640)
-  assert.equal(gapY(800, 240, .5), 400)
+  assert.equal(gapY(800, 240, null, 0), 240)
+  assert.equal(gapY(800, 240, null, 1), 560)
+  assert.equal(gapY(800, 240, null, .5), 400)
+  assert.equal(gapY(800, 240, 400, 0), 256)
+  assert.equal(gapY(800, 240, 400, 1), 544)
+  assert.match(html, /pushGameState\.lastGapY = gapY/)
   assert.doesNotMatch(html, /nextLane/)
   assert.match(html, /pushGameState\.locked = Math\.abs\(desiredY - gapCenter\) <= lockRange/)
   assert.doesNotMatch(html, /ТҮВШИН ТОГТЛОО/)

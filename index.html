@@ -2378,7 +2378,7 @@ const pushGameAssets = {
 const pushGameState = {
   active:false, over:false, raf:0, score:0, pipes:[], nextPipeAt:0,
   birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
-  anchorAngle:170, anchorY:.24, locked:false,
+  anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
   lastFrameAt:0, width:0
 };
 
@@ -2430,9 +2430,15 @@ function updatePushGameControl(deg, now, eyeY){
   }
 }
 
-function pushGameGapY(height, gap, random = Math.random()){
-  const margin = gap / 2 + Math.max(28, height * .05);
-  return margin + Math.max(0, Math.min(1, random)) * (height - margin * 2);
+function pushGameGapY(height, gap, previous = null, random = Math.random()){
+  const edgeMargin = gap / 2 + Math.max(28, height * .05);
+  const minY = Math.max(edgeMargin, height * .3);
+  const maxY = Math.min(height - edgeMargin, height * .7);
+  const rawY = minY + Math.max(0, Math.min(1, random)) * (maxY - minY);
+  if(!Number.isFinite(previous)) return rawY;
+  const maxStep = height * .18;
+  return Math.max(minY, Math.min(maxY,
+    Math.max(previous - maxStep, Math.min(previous + maxStep, rawY))));
 }
 
 function sizePushGameCanvas(){
@@ -2446,6 +2452,7 @@ function sizePushGameCanvas(){
     gameCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
     if(pushGameState.width && Math.abs(pushGameState.width - width) > 2){
       pushGameState.pipes = [];
+      pushGameState.lastGapY = null;
       pushGameState.nextPipeAt = performance.now() + 900;
     }
     pushGameState.width = width;
@@ -2586,7 +2593,8 @@ function pushGameFrame(now){
     const pipeWidth = Math.max(48, Math.min(76, width * .15));
     const gap = Math.max(154, Math.min(height * .38, 260));
     if(now >= pushGameState.nextPipeAt){
-      const gapY = pushGameGapY(height, gap);
+      const gapY = pushGameGapY(height, gap, pushGameState.lastGapY);
+      pushGameState.lastGapY = gapY;
       pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap, gapY, scored:false });
       pushGameState.nextPipeAt = now + 2050;
     }
@@ -2628,7 +2636,7 @@ function startPushGame(){
   stopPushGame();
   Object.assign(pushGameState, { active:true, over:false, score:0, pipes:[], nextPipeAt:0,
     birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
-    anchorAngle:170, anchorY:.24, locked:false,
+    anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
     lastFrameAt:performance.now(), width:0 });
   $("pushGameScore").textContent = "0";
   $("pushGameReps").textContent = count;
