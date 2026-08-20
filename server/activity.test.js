@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { activityLookback, activityQueryWindow, dailyPushups, normalizeActivityEndDate, normalizeActivityExercise, normalizeTimeZone } from './activity.js'
+import { activityLookback, activityQueryWindow, dailyPushups, normalizeActivityDays, normalizeActivityEndDate, normalizeActivityExercise, normalizeTimeZone } from './activity.js'
 
 test('сүүлийн 7 өдрийн push-up-ийг өдөр бүрээр нэгтгэнэ', () => {
   const days = dailyPushups(
@@ -33,7 +33,21 @@ test('хэрэглэгчийн timezone-аар өдрийн заагийг то�
 test('буруу timezone UTC fallback болж, lookback хамгаалагдана', () => {
   assert.equal(normalizeTimeZone('not/a-zone'), 'UTC')
   assert.equal(activityLookback(7), 9 * 86_400_000)
-  assert.equal(activityLookback(100), 33 * 86_400_000)
+  assert.equal(activityLookback(100), 102 * 86_400_000)
+  assert.equal(activityLookback(500), 222 * 86_400_000)
+  assert.equal(normalizeActivityDays(49), 49)
+  assert.equal(normalizeActivityDays(500), 220)
+})
+
+test('7 сарын trend-д хэрэгтэй 220 хүртэл өдрийг буцаана', () => {
+  const days = dailyPushups([], {
+    days: 220,
+    timeZone: 'UTC',
+    now: new Date('2026-08-20T08:00:00Z'),
+  })
+
+  assert.equal(days.length, 220)
+  assert.equal(days.at(-1).date, '2026-08-20')
 })
 
 test('activity дасгал зөвхөн pushup эсвэл squat байна', () => {

@@ -141,6 +141,22 @@
   .activityMonthDay.empty::after{display:none}
   .activityMonthDay.future{opacity:.28}
   .activityMonthBlank{justify-self:center;width:44px;height:44px}
+  .activityTrendCard{margin:0 16px;padding:15px 14px 13px;border-radius:20px;
+    background:rgba(24,28,34,.9);border:1px solid var(--home-border);
+    box-shadow:inset 0 1px rgba(255,255,255,.025),0 14px 32px rgba(0,0,0,.18)}
+  .activityTrendHead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:4px}
+  .activityTrendHead h3{margin:0;color:var(--dim);font-size:11px;font-weight:850;letter-spacing:.07em}
+  .activityTrendHead strong{color:var(--fg);font-size:18px;line-height:1;font-variant-numeric:tabular-nums}
+  .activityTrendHead small{margin-left:3px;color:var(--dim);font-size:9px;font-weight:800}
+  .activityTrendChart{display:block;width:100%;height:auto;overflow:visible}
+  .activityTrendGrid{stroke:rgba(255,255,255,.07);stroke-width:1;stroke-dasharray:3 5}
+  .activityTrendArea{fill:url(#activityTrendGradient)}
+  .activityTrendLine{fill:none;stroke:var(--activity);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 0 6px color-mix(in srgb,var(--activity) 30%,transparent))}
+  .activityTrendPoint{fill:var(--home-card);stroke:var(--activity-alt);stroke-width:3}
+  .activityTrendValue{fill:var(--fg);font-size:8px;font-weight:850;text-anchor:middle;font-variant-numeric:tabular-nums}
+  .activityTrendLabels{display:grid;grid-template-columns:repeat(7,1fr);margin-top:-2px;color:var(--dim);
+    text-align:center;font-size:9px;font-weight:800;font-variant-numeric:tabular-nums}
 
   .challengeSection{display:flex;flex-direction:column;gap:12px}
   .challengeHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -361,6 +377,7 @@
       padding-bottom:calc(env(safe-area-inset-bottom) + 104px);
       scroll-padding-bottom:calc(env(safe-area-inset-bottom) + 104px)}
     .dailyRingCard{min-height:270px;padding:12px 12px 16px}
+    .activityTrendCard{margin-inline:8px;padding-inline:10px}
     .activityMonth{width:calc(100% + 24px);margin-inline:-12px}
     .dailyRing{width:min(56vw,192px)}
     #dailyCount{font-size:52px}
@@ -849,6 +866,20 @@
         <div class="activityMonth"><time id="activityMonthTitle" class="activityMonthTitle" datetime=""></time><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small>НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityMonthAverage" class="activityAverage">0</strong><small>ӨДРИЙН ДУНДАЖ</small></div></div><div class="activityMonthWeekdays" aria-hidden="true"><span>ДА</span><span>МЯ</span><span>ЛХ</span><span>ПҮ</span><span>БА</span><span>БЯ</span><span>НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал"></div></div>
       </div>
     </div>
+    <section class="activityTrendCard" aria-labelledby="activityTrendTitle">
+      <div class="activityTrendHead"><h3 id="activityTrendTitle">СҮҮЛИЙН 7 ӨДӨР</h3><strong><span id="activityTrendTotal">0</span><small>REP</small></strong></div>
+      <svg id="activityTrendChart" class="activityTrendChart" viewBox="0 0 320 126" role="img" aria-describedby="activityTrendDescription">
+        <defs><linearGradient id="activityTrendGradient" x1="0" y1="0" x2="0" y2="1"><stop class="dailyGradientStart" stop-opacity=".28"></stop><stop class="dailyGradientEnd" offset="1" stop-opacity="0"></stop></linearGradient></defs>
+        <line class="activityTrendGrid" x1="18" y1="35" x2="302" y2="35"></line>
+        <line class="activityTrendGrid" x1="18" y1="68" x2="302" y2="68"></line>
+        <line class="activityTrendGrid" x1="18" y1="101" x2="302" y2="101"></line>
+        <path id="activityTrendArea" class="activityTrendArea"></path>
+        <path id="activityTrendLine" class="activityTrendLine"></path>
+        <g id="activityTrendPoints"></g>
+      </svg>
+      <div id="activityTrendLabels" class="activityTrendLabels" aria-hidden="true"></div>
+      <p id="activityTrendDescription" class="srOnly"></p>
+    </section>
   </section>
 
   <section id="challengeSection" class="challengeSection hidden" aria-labelledby="challengeTitle" aria-hidden="true">
@@ -1366,7 +1397,7 @@ function restoreDailyActivity(exercise){
 }
 
 function cacheDailyActivity(exercise){
-  localStorage.setItem(activityCacheKey(exercise), JSON.stringify({ days:dailyActivity[exercise] }));
+  localStorage.setItem(activityCacheKey(exercise), JSON.stringify({ days:dailyActivity[exercise].slice(-31) }));
 }
 
 function addDailyActivityReps(exercise, reps){
@@ -1376,7 +1407,7 @@ function addDailyActivityReps(exercise, reps){
     today = { date:todayKey, reps:0 };
     dailyActivity[exercise].push(today);
     dailyActivity[exercise].sort((a,b) => a.date.localeCompare(b.date));
-    dailyActivity[exercise] = dailyActivity[exercise].slice(-31);
+    dailyActivity[exercise] = dailyActivity[exercise].slice(-220);
   }
   today.reps = Math.max(0, Number(today.reps) || 0) + Math.max(0, Number(reps) || 0);
   cacheDailyActivity(exercise);
@@ -1390,6 +1421,114 @@ function emptyActivityDays(count = 31, endKey = activityDateKey()){
 function activityValues(period){
   const values = new Map(dailyActivity[activityExercise].map(day => [day.date, Math.max(0, Number(day.reps) || 0)]));
   return period.dates.map(date => ({ date, reps:values.get(date) || 0 }));
+}
+
+function activityTrendState(period = activityPeriodState()){
+  const today = activityDateKey();
+  let title = "СҮҮЛИЙН 7 ӨДӨР";
+  let groups;
+
+  if(activityRange === "day"){
+    const weekdays = ["НЯ","ДА","МЯ","ЛХ","ПҮ","БА","БЯ"];
+    groups = Array.from({ length:7 }, (_, index) => {
+      const date = activityShiftDate(activityAnchor, index - 6);
+      return { dates:[date], label:weekdays[activityDateFromKey(date).getDay()] };
+    });
+  }else if(activityRange === "week"){
+    title = "СҮҮЛИЙН 7 ДОЛОО ХОНОГ";
+    const selectedWeekStart = period.dates[0];
+    groups = Array.from({ length:7 }, (_, index) => {
+      const start = activityShiftDate(selectedWeekStart, (index - 6) * 7);
+      const date = activityDateFromKey(start);
+      return {
+        dates:Array.from({ length:7 }, (_value, dayIndex) => activityShiftDate(start, dayIndex)),
+        label:`${date.getMonth() + 1}/${date.getDate()}`,
+      };
+    });
+  }else{
+    title = "СҮҮЛИЙН 7 САР";
+    const selectedMonth = activityDateFromKey(period.dates[0]);
+    groups = Array.from({ length:7 }, (_, index) => {
+      const first = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + index - 6, 1, 12);
+      const dayCount = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+      return {
+        dates:Array.from({ length:dayCount }, (_value, dayIndex) => activityDateKey(new Date(first.getFullYear(), first.getMonth(), dayIndex + 1, 12))),
+        label:`${first.getMonth() + 1}-р`,
+      };
+    });
+  }
+
+  const requestStart = groups[0].dates[0];
+  const groupEnd = groups.at(-1).dates.at(-1);
+  const requestEnd = groupEnd > today ? today : groupEnd;
+  return {
+    title,
+    groups,
+    requestEnd,
+    requestDays:Math.max(1, activityDayDistance(requestStart, requestEnd) + 1),
+  };
+}
+
+function activityCompactNumber(value){
+  if(value < 1000) return activityNumber.format(value);
+  const scaled = value / 1000;
+  return `${scaled >= 10 ? Math.round(scaled) : scaled.toFixed(1)}K`;
+}
+
+function renderActivityTrend(period){
+  const trend = activityTrendState(period);
+  const values = new Map(dailyActivity[activityExercise].map(day => [day.date, Math.max(0, Number(day.reps) || 0)]));
+  const points = trend.groups.map(group => ({
+    ...group,
+    reps:group.dates.reduce((sum, date) => sum + (values.get(date) || 0), 0),
+  }));
+  const total = points.reduce((sum, point) => sum + point.reps, 0);
+  const max = Math.max(1, ...points.map(point => point.reps));
+  const left = 18;
+  const right = 302;
+  const top = 24;
+  const bottom = 101;
+  const coordinates = points.map((point, index) => ({
+    ...point,
+    x:left + index * ((right - left) / 6),
+    y:bottom - (point.reps / max) * (bottom - top),
+  }));
+  const linePath = coordinates.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  const areaPath = `${linePath} L${right},${bottom} L${left},${bottom} Z`;
+
+  $("activityTrendTitle").textContent = trend.title;
+  $("activityTrendTotal").textContent = activityNumber.format(total);
+  $("activityTrendArea").setAttribute("d", areaPath);
+  $("activityTrendLine").setAttribute("d", linePath);
+  $("activityTrendChart").setAttribute("aria-label", `${trend.title}: нийт ${total} ${activityExercise === "squat" ? "суулт" : "суниалт"}`);
+  $("activityTrendDescription").textContent = points.map(point => `${point.label}: ${point.reps}`).join(", ");
+
+  const pointGroup = $("activityTrendPoints");
+  pointGroup.textContent = "";
+  for(const point of coordinates){
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("class", "activityTrendPoint");
+    circle.setAttribute("cx", point.x);
+    circle.setAttribute("cy", point.y);
+    circle.setAttribute("r", "5");
+    pointGroup.appendChild(circle);
+    if(point.reps){
+      const value = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      value.setAttribute("class", "activityTrendValue");
+      value.setAttribute("x", point.x);
+      value.setAttribute("y", Math.max(11, point.y - 9));
+      value.textContent = activityCompactNumber(point.reps);
+      pointGroup.appendChild(value);
+    }
+  }
+
+  const labels = $("activityTrendLabels");
+  labels.textContent = "";
+  for(const point of points){
+    const label = document.createElement("span");
+    label.textContent = point.label;
+    labels.appendChild(label);
+  }
 }
 
 function activityPeriodTitle(period){
@@ -1544,16 +1683,18 @@ function renderDailyActivity(){
       monthGrid.appendChild(blank);
     }
   }
+  renderActivityTrend(period);
 }
 
 async function loadDailyActivity(exercise = activityExercise){
   const isCurrent = exercise === activityExercise;
   if(isCurrent) $("dailyPushups").setAttribute("aria-busy", "true");
   const period = activityPeriodState();
+  const trend = activityTrendState(period);
   const today = activityDateKey();
   const includesToday = period.dates.includes(today);
-  const days = includesToday ? 31 : period.requestDays;
-  const end = includesToday ? today : period.requestEnd;
+  const days = trend.requestDays;
+  const end = trend.requestEnd;
   const request = ++activityRequests[exercise];
   try{
     const data = await api(`/activity?days=${days}&end=${end}&exercise=${exercise}&timeZone=${encodeURIComponent(localTimeZone)}`);

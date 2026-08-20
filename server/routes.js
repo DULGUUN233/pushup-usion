@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { activityQueryWindow, dailyPushups, normalizeActivityEndDate, normalizeActivityExercise, normalizeTimeZone } from './activity.js'
+import { activityQueryWindow, dailyPushups, normalizeActivityDays, normalizeActivityEndDate, normalizeActivityExercise, normalizeTimeZone } from './activity.js'
 import { requireUser } from './auth.js'
 import { CHALLENGE_TEMPLATES, challengeSummary, createChallenge } from './challenge.js'
 import { findOrCreateUser, leagues, rankOf, sessions, users } from './db.js'
@@ -49,7 +49,7 @@ router.get('/me', requireUser, async (req, res) => {
 })
 
 router.get('/activity', requireUser, async (req, res) => {
-  const days = Math.min(31, Math.max(1, Number.parseInt(req.query.days, 10) || 7))
+  const days = normalizeActivityDays(req.query.days)
   const timeZone = normalizeTimeZone(req.query.timeZone)
   const exercise = normalizeActivityExercise(req.query.exercise)
   const now = new Date()

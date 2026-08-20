@@ -14,6 +14,18 @@ test('Нүүрийн activity өдөр, 7 хоног, сарын гурван х
   assert.match(html, /#activityDayView \.dailyRing\{transform:translateY\(8px\)\}/)
   assert.match(html, /id="activityWeekChart"/)
   assert.match(html, /id="activityMonthGrid"/)
+  assert.match(html, /id="activityTrendChart"[^>]*viewBox="0 0 320 126"/)
+})
+
+test('доод trend график D, W, M бүрээр сүүлийн 7 хугацааг нэгтгэнэ', () => {
+  assert.match(html, /id="activityTrendTitle">СҮҮЛИЙН 7 ӨДӨР</)
+  assert.match(html, /if\(activityRange === "day"\)[\s\S]*?Array\.from\(\{ length:7 \}/)
+  assert.match(html, /title = "СҮҮЛИЙН 7 ДОЛОО ХОНОГ"[\s\S]*?\(index - 6\) \* 7/)
+  assert.match(html, /title = "СҮҮЛИЙН 7 САР"[\s\S]*?selectedMonth\.getMonth\(\) \+ index - 6/)
+  assert.match(html, /group\.dates\.reduce\(\(sum, date\) => sum \+ \(values\.get\(date\) \|\| 0\), 0\)/)
+  assert.match(html, /id="activityTrendLine" class="activityTrendLine"/)
+  assert.match(html, /id="activityTrendDescription" class="srOnly"/)
+  assert.match(html, /const trend = activityTrendState\(period\);[\s\S]*?const days = trend\.requestDays;[\s\S]*?const end = trend\.requestEnd;/)
 })
 
 test('өдрийн тойрог дасгалын нэрийн оронд огноо харуулж, хугацааны сумнууд төвдөө байна', () => {

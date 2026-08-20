@@ -1,4 +1,9 @@
 const DAY_MS = 86_400_000
+export const MAX_ACTIVITY_DAYS = 220
+
+export function normalizeActivityDays(value) {
+  return Math.min(MAX_ACTIVITY_DAYS, Math.max(1, Number.parseInt(value, 10) || 7))
+}
 
 export function normalizeTimeZone(value) {
   const candidate = typeof value === 'string' && value.length <= 64 ? value : 'UTC'
@@ -35,7 +40,7 @@ export function normalizeActivityEndDate(value, { timeZone = 'UTC', now = new Da
 }
 
 export function activityQueryWindow(endDate, days) {
-  const count = Math.min(31, Math.max(1, Number.parseInt(days, 10) || 7))
+  const count = normalizeActivityDays(days)
   const endNoon = new Date(`${endDate}T12:00:00Z`).getTime()
   return {
     start: new Date(endNoon - (count + 2) * DAY_MS),
@@ -44,7 +49,7 @@ export function activityQueryWindow(endDate, days) {
 }
 
 export function dailyPushups(rows, { days = 7, timeZone = 'UTC', now = new Date(), endDate } = {}) {
-  const count = Math.min(31, Math.max(1, Number.parseInt(days, 10) || 7))
+  const count = normalizeActivityDays(days)
   const zone = normalizeTimeZone(timeZone)
   const [year, month, day] = normalizeActivityEndDate(endDate, { timeZone: zone, now }).split('-').map(Number)
   const keys = Array.from({ length: count }, (_, index) =>
@@ -61,5 +66,5 @@ export function dailyPushups(rows, { days = 7, timeZone = 'UTC', now = new Date(
 }
 
 export function activityLookback(days) {
-  return (Math.min(31, Math.max(1, Number.parseInt(days, 10) || 7)) + 2) * DAY_MS
+  return (normalizeActivityDays(days) + 2) * DAY_MS
 }
