@@ -14,6 +14,7 @@ test('техникийн алдааг хэрэглэгчид ойлгомжто�
   const friendlyError = new Function(`${sourceOf('friendlyError')}\nreturn friendlyError`)()
 
   assert.match(friendlyError({ name:'NotAllowedError' }), /зөвшөөрөл.*Тохиргоо/i)
+  assert.match(friendlyError({ name:'ModelLoadError' }), /AI танилт.*ачаалсангүй/i)
   assert.match(friendlyError(new Error('HTTP 401')), /дахин нээнэ/i)
   assert.match(friendlyError(new Error('урилга хүчингүй')), /шинэ урилга/i)
   assert.doesNotMatch(friendlyError(new Error('USION_SERVICE_ID тохируулаагүй байна')), /USION|SERVICE_ID/)

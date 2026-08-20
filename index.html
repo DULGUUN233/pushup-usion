@@ -1307,6 +1307,7 @@ function friendlyError(error, fallback = "Үйлдэл амжилтгүй. Да�
   const raw = String(error?.message ?? error ?? "").toLowerCase();
   const name = String(error?.name ?? "").toLowerCase();
   if(name === "notallowederror" || raw.includes("permission") || raw.includes("denied")) return "Камерын зөвшөөрөл хаалттай байна. Тохиргооноос камерын зөвшөөрлийг нээгээд дахин оролдоно уу.";
+  if(name === "modelloaderror") return "AI танилт ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.";
   if(name === "notfounderror") return "Камер олдсонгүй. Камертай төхөөрөмжөөр дахин оролдоно уу.";
   if(name === "notreadableerror") return "Камерыг өөр апп ашиглаж байна. Тэр аппыг хаагаад дахин оролдоно уу.";
   if(name === "aborterror" || raw.includes("камер цуцлагдсан")) return "Камерын хүсэлт цуцлагдлаа. Дахин оролдоно уу.";
@@ -3079,10 +3080,18 @@ let camGen = 0;
 async function openCamera(){
   const gen = ++camGen;
   if(stream) stream.getTracks().forEach(t => t.stop());
-  const got = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "user", width:{ideal:1280}, height:{ideal:720} },
-    audio: false
-  });
+  let got;
+  try{
+    got = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width:{ideal:1280}, height:{ideal:720} },
+      audio: false
+    });
+  }catch(error){
+    // Зарим iOS/Android WebView урд камер байхад resolution/facingMode
+    // constraint-ийг буруу NotFound/Overconstrained гэж буцаадаг.
+    if(error?.name !== "NotFoundError" && error?.name !== "OverconstrainedError") throw error;
+    got = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+  }
   if(gen !== camGen){
     got.getTracks().forEach(t => t.stop());
     throw new Error("Камер цуцлагдсан");
@@ -3152,7 +3161,7 @@ async function modelAssetWithProgress(modelAssetPath, onProgress){
   return tracked.getReader();
 }
 
-async function createLandmarker(modelAssetPath, onProgress){
+async function createLandmarkerWithDelegate(modelAssetPath, onProgress, delegate){
   onProgress?.(2);
   const modelAsset = onProgress
     ? modelAssetWithProgress(modelAssetPath, onProgress)
@@ -3164,9 +3173,9 @@ async function createLandmarker(modelAssetPath, onProgress){
   const [resolvedFileset, modelAssetBuffer] = await Promise.all([fileset, modelAsset]);
   visionFileset ||= resolvedFileset;
   const baseOptions = modelAssetBuffer
-    ? { modelAssetBuffer, delegate: "GPU" }
-    : { modelAssetPath, delegate: "GPU" };
-  const model = await PoseLandmarker.createFromOptions(visionFileset, {
+    ? { modelAssetBuffer, delegate }
+    : { modelAssetPath, delegate };
+  return PoseLandmarker.createFromOptions(visionFileset, {
     baseOptions,
     runningMode: "VIDEO",
     numPoses: 1,
@@ -3174,6 +3183,24 @@ async function createLandmarker(modelAssetPath, onProgress){
     minPosePresenceConfidence: 0.5,
     minTrackingConfidence: 0.5
   });
+}
+
+async function createLandmarker(modelAssetPath, onProgress, allowCpu = true){
+  let model;
+  try{
+    model = await createLandmarkerWithDelegate(modelAssetPath, onProgress, "GPU");
+  }catch(gpuError){
+    if(!allowCpu) throw gpuError;
+    // Usion-ийн зарим iOS WebView WebGL/GPU delegate үүсгэж чаддаггүй.
+    // Ижил model-ийг CPU delegate-аар үргэлжлүүлж camera урсгалыг аварна.
+    onProgress?.(94);
+    try{
+      model = await createLandmarkerWithDelegate(modelAssetPath, null, "CPU");
+    }catch(cpuError){
+      cpuError.gpuError = gpuError;
+      throw cpuError;
+    }
+  }
   onProgress?.(100);
   return model;
 }
@@ -3181,12 +3208,21 @@ async function createLandmarker(modelAssetPath, onProgress){
 async function loadInitialPoseModel(){
   if(landmarker) return landmarker;
   if(!modelLoadPromise){
-    modelLoadPromise = createLandmarker(HEAVY_MODEL, setModelProgress)
-      .then(model => {
-        landmarker = model;
+    modelLoadPromise = (async () => {
+      try{
+        // Heavy-CPU нь mobile WebView-д хэт удаан. Heavy зөвхөн GPU дээр,
+        // бүтэлгүйтвэл доорх Full GPU/CPU fallback-ийг ашиглана.
+        landmarker = await createLandmarker(HEAVY_MODEL, setModelProgress, false);
         modelVariant = "heavy";
-        return model;
-      })
+      }catch{
+        // Heavy нь memory багатай WebView-д үүсэхгүй бол нарийвчлал сайтай
+        // боловч хөнгөн Full model-оор camera session-ийг үргэлжлүүлнэ.
+        setModelProgress(3);
+        landmarker = await createLandmarker(FULL_MODEL, setModelProgress);
+        modelVariant = "full";
+      }
+      return landmarker;
+    })()
       .finally(() => { modelLoadPromise = null; });
   }
   return modelLoadPromise;
@@ -3264,6 +3300,13 @@ async function ensureExerciseModel(){
   }
 }
 
+function modelLoadError(error){
+  const wrapped = new Error("AI model ачаалсангүй.");
+  wrapped.name = "ModelLoadError";
+  wrapped.cause = error;
+  return wrapped;
+}
+
 async function startEngine(onCameraReady){
   // Дуу нээх ЦОРЫН ГАНЦ боломж бол хэрэглэгчийн дарлага. Энэ функц товч
   // дарснаас л дуудагддаг тул audio-г яг энд асаана.
@@ -3273,11 +3316,15 @@ async function startEngine(onCameraReady){
 
   // Permission хүсэлтийг хэрэглэгчийн даралтын дараа шууд гаргана. Heavy model
   // камераас хамааралгүй тул зэрэг ачаалж, эхний нээлтийн хүлээлтийг багасгана.
-  // Аль нэг нь бүтэлгүйтвэл нээгдсэн байж болох камерыг заавал хаана.
+  // Model түрүүлж алдсан ч camera permission хүсэлтийг дундаас нь цуцлахгүй.
   beginAiLoading();
   try{
     const cameraReady = openCamera().then(() => onCameraReady?.());
-    await Promise.all([cameraReady, ensureExerciseModel()]);
+    let modelFailure = null;
+    const modelReady = ensureExerciseModel().catch(error => { modelFailure = error; });
+    await cameraReady;
+    await modelReady;
+    if(modelFailure) throw modelLoadError(modelFailure);
   }catch(e){
     stopCamera();
     throw e;

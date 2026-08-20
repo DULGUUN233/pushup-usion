@@ -167,3 +167,75 @@ test('bottom navigation camera preview бэлэн болтол харагдаж,
   assert.match(html, /body\.mainNavVisible #hall\{[^}]*padding-bottom:/)
   assert.match(html, /body\.mainNavVisible #start\{[^}]*padding-bottom:/)
 })
+
+test('camera constraint таарахгүй бол энгийн video хүсэлтээр дахин оролдоно', async () => {
+  const run = new Function(`
+    const calls = [];
+    const fallbackStream = { getTracks(){ return []; } };
+    const navigator = { mediaDevices: { async getUserMedia(constraints){
+      calls.push(constraints);
+      if(calls.length === 1){ const error = new Error("constraint"); error.name = "OverconstrainedError"; throw error; }
+      return fallbackStream;
+    } } };
+    const video = { srcObject:null, async play(){}, classList:{ add(){} } };
+    const canvas = { classList:{ add(){} } };
+    let camGen = 0, stream = null;
+    ${sourceOf('openCamera')}
+    return openCamera().then(() => ({ calls, usedFallback:stream === fallbackStream }));
+  `)
+
+  const result = await run()
+  assert.equal(result.calls.length, 2)
+  assert.deepEqual(result.calls[1], { video:true, audio:false })
+  assert.equal(result.usedFallback, true)
+})
+
+test('GPU delegate ажиллахгүй WebView дээр CPU delegate fallback хийнэ', async () => {
+  const run = new Function(`
+    const delegates = [];
+    const FilesetResolver = { async forVisionTasks(){ return {}; } };
+    const PoseLandmarker = { async createFromOptions(fileset, options){
+      delegates.push(options.baseOptions.delegate);
+      if(options.baseOptions.delegate === "GPU") throw new Error("gpu unavailable");
+      return { delegate:options.baseOptions.delegate };
+    } };
+    let visionFileset = null;
+    const modelAssetWithProgress = () => { throw new Error("unused"); };
+    ${sourceOf('createLandmarkerWithDelegate')}
+    ${sourceOf('createLandmarker')}
+    return createLandmarker("model.task").then(model => ({ delegates, model }));
+  `)
+
+  const result = await run()
+  assert.deepEqual(result.delegates, ['GPU', 'CPU'])
+  assert.equal(result.model.delegate, 'CPU')
+})
+
+test('Heavy model ачаалахгүй бол Full model руу fallback хийнэ', async () => {
+  const run = new Function(`
+    const calls = [];
+    const HEAVY_MODEL = "heavy.task", FULL_MODEL = "full.task";
+    const setModelProgress = () => {};
+    const createLandmarker = async path => {
+      calls.push(path);
+      if(path === HEAVY_MODEL) throw new Error("heavy failed");
+      return { path };
+    };
+    let landmarker = null, modelLoadPromise = null, modelVariant = "heavy";
+    ${sourceOf('loadInitialPoseModel')}
+    return loadInitialPoseModel().then(model => ({ calls, model, modelVariant }));
+  `)
+
+  const result = await run()
+  assert.deepEqual(result.calls, ['heavy.task', 'full.task'])
+  assert.equal(result.model.path, 'full.task')
+  assert.equal(result.modelVariant, 'full')
+})
+
+test('model алдаа camera permission хүсэлтийг дундаас нь цуцлахгүй', () => {
+  const startEngine = sourceOf('startEngine')
+  assert.doesNotMatch(startEngine, /Promise\.all\(\[cameraReady, ensureExerciseModel\(\)\]\)/)
+  assert.match(startEngine, /const modelReady = ensureExerciseModel\(\)\.catch/)
+  assert.match(startEngine, /await cameraReady;\s*await modelReady;/)
+  assert.match(startEngine, /throw modelLoadError\(modelFailure\)/)
+})
