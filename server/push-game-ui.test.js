@@ -11,11 +11,24 @@ test('Push Up нь энгийн болон Game гэсэн хоёр сонгол
   assert.match(html, /\$\("navPush"\)\.onclick = openPushChoice/)
 })
 
+test('exercise chooser and camera prep share Carbon Ember UI and Usion system back', () => {
+  assert.match(html, /#pushChoice\{--choice-bg:#0b0d10/)
+  assert.match(html, /\.pushChoiceCard\{min-height:108px/)
+  assert.match(html, /@keyframes choiceEnter/)
+  assert.match(html, /#start\{--prep-surface:#181c22/)
+  assert.match(html, /#go\{min-width:190px;min-height:50px[\s\S]*?linear-gradient/)
+  assert.match(html, /@keyframes prepEnter/)
+  assert.doesNotMatch(html, /id="pushChoiceBack"/)
+  assert.doesNotMatch(html, /id="pBack"/)
+  assert.match(html, /if\(id === "pushChoice"\) return void u\.claimBackButton\(\(\) => show\("menu"\)\)/)
+  assert.match(html, /show\(id === "play" && exercise === "pushup" \? "pushChoice" : "menu"\)/)
+})
+
 test('горимын card-ууд generated local PNG asset ашиглана', () => {
   assert.match(html, /preload" as="image" href="\.\/assets\/modes\/pushup-mode-v1\.png"/)
   assert.match(html, /id="pushNormal"[\s\S]*?<img src="\.\/assets\/modes\/pushup-mode-v1\.png"/)
   assert.match(html, /id="pushGame"[\s\S]*?<img src="\.\/assets\/modes\/game-mode-v1\.png"/)
-  assert.match(html, /\.pushChoiceIcon img\{width:52px;height:52px/)
+  assert.match(html, /\.pushChoiceIcon img\{width:48px;height:48px/)
 })
 
 test('Game нь camera overlay canvas, score, rep, restart controls-той', () => {

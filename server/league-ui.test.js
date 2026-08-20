@@ -78,3 +78,48 @@ test('дөрөвдүгээр байрнаас эхлэх row rank-аа тэмд�
   assert.match(html, /pos\.textContent = player\.rank/)
   assert.doesNotMatch(html, /pos\.textContent = `#\$\{player\.rank\}`/)
 })
+
+test('лиг дотор давхар back товчгүй, Usion back лигийн жагсаалт руу буцна', () => {
+  assert.doesNotMatch(html, /id="detailBack"/)
+  assert.match(html, /if\(id === "board"\) return void u\.claimBackButton\(\(\) => \{[^]*showBoardHub\(true\)/)
+  assert.match(html, /function openLeagueBoard\(code, name\)\{[^]*setBack\("board"\)/)
+})
+
+test('leaderboard hub mobile-д compact Carbon Ember design ашиглана', () => {
+  assert.match(html, /#board\{--board-bg:#0b0d10;--board-surface:#171b21;/)
+  assert.match(html, /\.boardHead h2\{[^}]*font-size:28px/)
+  assert.match(html, /\.leagueForm\{padding:14px;margin:0 0 10px/)
+  assert.match(html, /\.leagueForm input\{[^}]*height:44px/)
+  assert.match(html, /\.leagueCard\{[^}]*min-height:78px/)
+  assert.match(html, /background:linear-gradient\(135deg,var\(--board-primary\),var\(--board-secondary\)\)/)
+})
+
+test('leaderboard hub animation нь transform, opacity ашиглаж reduced motion-ийг хүндэтгэнэ', () => {
+  assert.match(html, /@keyframes boardRise\{from\{opacity:0;transform:translateY\(10px\)\}/)
+  assert.match(html, /@keyframes leagueCardIn\{from\{opacity:0;transform:translateY\(8px\) scale\(\.985\)\}/)
+  assert.match(html, /\.leagueCard,\.leagueForm,\.leagueTitleRow,\.boardHead[^}]*\{animation:none!important;transition:none!important\}/)
+})
+
+test('leaderboard detail нь sliding metric pill болон compact мөрүүдтэй', () => {
+  assert.match(html, /id="boardTabs" data-active="pushup"/)
+  assert.match(html, /class="boardTabsPill" aria-hidden="true"/)
+  assert.match(html, /#boardTabs\[data-active="squat"\] \.boardTabsPill/)
+  assert.match(html, /\$\("boardTabs"\)\.dataset\.active = metric/)
+  assert.match(html, /#podium\{[^}]*min-height:154px/)
+  assert.match(html, /\.row\{min-height:54px/)
+})
+
+test('leaderboard metric tab нь давхар card биш flat underline байна', () => {
+  assert.match(html, /#boardTabs\{[^}]*border:0;border-bottom:1px solid var\(--board-border\);border-radius:0;background:transparent/)
+  assert.match(html, /\.boardTabsPill\{[^}]*bottom:-1px;width:33\.333%;height:3px/)
+  assert.match(html, /#boardTabs button\.active\{background:transparent;color:var\(--board-primary\)\}/)
+  assert.match(html, /#boardTabs\[data-active="battle"\] \.boardTabsPill\{transform:translateX\(200%\)\}/)
+})
+
+test('leaderboard detail podium ба мөрүүд staggered animation-тай', () => {
+  assert.match(html, /@keyframes podiumPop\{from\{opacity:0;transform:translateY\(10px\) scale\(\.94\)\}/)
+  assert.match(html, /@keyframes rankRowIn\{from\{opacity:0;transform:translateY\(7px\)\}/)
+  assert.match(html, /\.podiumPlace\.second\{animation-delay:35ms\}/)
+  assert.match(html, /\.row:nth-child\(5\)\{animation-delay:100ms\}/)
+  assert.match(html, /\.detailTop,#boardTabs,\.podiumPlace,\.row\{animation:none!important;transition:none!important\}/)
+})
