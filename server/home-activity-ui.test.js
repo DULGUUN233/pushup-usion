@@ -11,6 +11,7 @@ test('Нүүрийн activity өдөр, 7 хоног, сарын гурван х
   assert.match(html, /id="activityWeek"[^>]*aria-pressed="false">W</)
   assert.match(html, /id="activityMonth"[^>]*aria-pressed="false">M</)
   assert.match(html, /id="dailyRingValue"/)
+  assert.match(html, /#activityDayView \.dailyRing\{transform:translateY\(8px\)\}/)
   assert.match(html, /id="activityWeekChart"/)
   assert.match(html, /id="activityMonthGrid"/)
 })
