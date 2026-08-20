@@ -46,7 +46,7 @@ test('Нүүр, Push Up, Battle, Суулт, Жагсаалт гэсэн тав�
   assert.match(html, /id="navSquat"[^>]*aria-label="Суулт"/)
   assert.match(html, /id="navBoard"[^>]*aria-label="Жагсаалт"/)
   assert.match(html, /grid-template-columns:repeat\(5,1fr\)/)
-  assert.match(html, /id === "menu" \|\| id === "board"/)
+  assert.match(html, /const navByScreen = \{ menu:"navHome", pushChoice:"navPush", hall:"navBattle", board:"navBoard" \}/)
   assert.doesNotMatch(html, /id="mBoard"|id="bBack"/)
 })
 

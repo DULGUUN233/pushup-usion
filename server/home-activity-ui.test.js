@@ -135,7 +135,7 @@ test('Battle Friend доод navigation-ийн голд өргөгдсөн үн�
   assert.match(html, /#mainNav #navBattle\{height:52px;min-height:52px;[^}]*transform:translateY\(-12px\)/)
   assert.match(html, /\.navBattleOrb\{width:50px;height:50px;[^}]*border-radius:50%/)
   assert.match(html, /background:linear-gradient\(135deg,#f97316 0%,#fbbf24 100%\)/)
-  assert.match(html, /\$\("navBattle"\)\.onclick = startBattle/)
+  assert.match(html, /\$\("navBattle"\)\.onclick = \(\) => \{[\s\S]*?startBattle\(\);/)
   assert.match(html, /#menu\{[^}]*padding-bottom:calc\(env\(safe-area-inset-bottom\) \+ 104px\)/)
 })
 
@@ -161,7 +161,7 @@ test('activity tab-ууд сонголт руугаа sliding pill animation-т�
   assert.match(html, /pill\.style\.transform = `translateX\(\$\{active\.offsetLeft\}px\)`/)
   assert.match(html, /pill\.style\.width = `\$\{active\.offsetWidth\}px`/)
   assert.match(html, /if\(!animate\) pill\.style\.transition = "none"/)
-  assert.match(html, /requestAnimationFrame\(\(\) => syncActivityTabsPills\(false\)\)/)
+  assert.match(html, /requestAnimationFrame\(\(\) => \{[\s\S]*?syncActivityTabsPills\(false\);[\s\S]*?positionMainNavPill\(false\);/)
   assert.match(html, /prefers-reduced-motion:reduce[^}]*\{[\s\S]*?\.activityTabsPill[^}]*transition:none!important/)
 })
 
@@ -181,6 +181,15 @@ test('Нүүр Usion-ийн жижиг утасны viewport-д нягтарна
 })
 
 test('Push Up сонголт, Суулт бэлтгэл дэлгэцийг доод navigation-аас нээнэ', () => {
-  assert.match(html, /\$\("navPush"\)\.onclick = openPushChoice/)
-  assert.match(html, /\$\("navSquat"\)\.onclick = \(\) => openSolo\("squat"\)/)
+  assert.match(html, /\$\("navPush"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\(\); \}/)
+  assert.match(html, /\$\("navSquat"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openSolo\("squat"\); \}/)
+})
+
+test('доод navigation active tab руу transitions-style indicator гулгана', () => {
+  assert.match(html, /id="mainNavPill" class="mainNavPill"/)
+  assert.match(html, /\.mainNavPill\{[^}]*transform:translateX\(0\)[^}]*transition:transform 250ms cubic-bezier\(\.22,1,\.36,1\),width 250ms/s)
+  assert.match(html, /pill\.style\.transform = `translateX\(\$\{active\.offsetLeft\}px\)`/)
+  assert.match(html, /pill\.style\.width = `\$\{active\.offsetWidth\}px`/)
+  assert.match(html, /body\.classList\.toggle\("mainNavVisible", Boolean\(activeButtonId\)\)/)
+  assert.match(html, /\.mainNavPill\{transition:none!important\}/)
 })

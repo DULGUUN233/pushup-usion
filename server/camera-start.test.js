@@ -156,3 +156,14 @@ test('model эсвэл camera алдаа өгвөл нээгдсэн stream-ий
 
   assert.deepEqual(await run(), { stopped: 1, rejected: true })
 })
+
+test('bottom navigation camera preview бэлэн болтол харагдаж, дараа нь нуугдана', () => {
+  assert.match(html, /const navByScreen = \{ menu:"navHome", pushChoice:"navPush", hall:"navBattle", board:"navBoard" \}/)
+  assert.match(html, /function openSolo\([\s\S]*?show\("play"\);[\s\S]*?setMainNavActive\(kind === "squat" \? "navSquat" : "navPush"\);/)
+  assert.match(html, /async function startSolo\([\s\S]*?await startEngine\(\(\) => \{[\s\S]*?setMainNavActive\(null\);/)
+  assert.match(html, /async function armForBattle\([\s\S]*?show\("play"\);\s*setMainNavActive\("navBattle"\);[\s\S]*?await startEngine\(\(\) => \{\s*setMainNavActive\(null\);/)
+  assert.match(html, /function prepareMainNavDestination\(\)\{\s*if\(mode === "battle"\) leaveBattle\(\);\s*else stopCamera\(\);\s*\}/)
+  assert.match(html, /body\.mainNavVisible #pushChoice\{[^}]*padding-bottom:/)
+  assert.match(html, /body\.mainNavVisible #hall\{[^}]*padding-bottom:/)
+  assert.match(html, /body\.mainNavVisible #start\{[^}]*padding-bottom:/)
+})

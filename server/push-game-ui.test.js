@@ -8,7 +8,7 @@ test('Push Up нь энгийн болон Game гэсэн хоёр сонгол
   assert.match(html, /id="pushChoice"/)
   assert.match(html, /id="pushNormal"[\s\S]*?<strong>Энгийн<\/strong>/)
   assert.match(html, /id="pushGame"[\s\S]*?<strong>Game<\/strong>/)
-  assert.match(html, /\$\("navPush"\)\.onclick = openPushChoice/)
+  assert.match(html, /\$\("navPush"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\(\); \}/)
 })
 
 test('exercise chooser and camera prep share Carbon Ember UI and Usion system back', () => {

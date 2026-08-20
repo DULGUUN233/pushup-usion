@@ -201,12 +201,17 @@
     padding:8px 8px calc(env(safe-area-inset-bottom) + 8px);background:rgba(11,13,16,.95);
     border-top:1px solid rgba(255,255,255,.085);box-shadow:0 -16px 36px rgba(0,0,0,.24);
     backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-  #mainNav button{min-width:0;min-height:52px;padding:6px 2px;border-radius:13px;background:transparent;
+  .mainNavPill{position:absolute;z-index:0;left:0;bottom:calc(env(safe-area-inset-bottom) + 4px);width:0;height:3px;
+    border-radius:999px;transform:translateX(0);pointer-events:none;will-change:transform,width;
+    background:linear-gradient(90deg,transparent calc(50% - 17px),#f97316 calc(50% - 17px),#fbbf24 calc(50% + 17px),transparent calc(50% + 17px));
+    filter:drop-shadow(0 0 6px rgba(249,115,22,.42));
+    transition:transform 250ms cubic-bezier(.22,1,.36,1),width 250ms cubic-bezier(.22,1,.36,1)}
+  #mainNav button{position:relative;z-index:1;min-width:0;min-height:52px;padding:6px 2px;border-radius:13px;background:transparent;
     color:var(--dim);display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:3px;font-size:10px;white-space:nowrap;
     transition:color 250ms cubic-bezier(.22,1,.36,1),background 250ms cubic-bezier(.22,1,.36,1)}
   #mainNav button:active{transform:none;background:rgba(255,255,255,.06)}
-  #mainNav button.active{color:#fb923c;background:rgba(249,115,22,.09)}
+  #mainNav button.active{color:#fb923c;background:transparent}
   #mainNav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;
     stroke-linecap:round;stroke-linejoin:round}
   #mainNav button.active svg{filter:drop-shadow(0 0 7px rgba(249,115,22,.3))}
@@ -223,6 +228,9 @@
   #navBattle:active .navBattleOrb{transform:scale(.94);filter:brightness(.92)}
   #navBattle:focus-visible{outline:none}
   #navBattle:focus-visible .navBattleOrb{outline:3px solid #fff;outline-offset:3px}
+  body.mainNavVisible #pushChoice{padding-bottom:calc(env(safe-area-inset-bottom) + 104px)}
+  body.mainNavVisible #hall{padding-bottom:calc(env(safe-area-inset-bottom) + 112px)}
+  body.mainNavVisible #start{padding-bottom:calc(env(safe-area-inset-bottom) + 112px)}
 
   #note{font-size:12px;line-height:1.6;color:var(--dim);min-height:18px}
   #note.bad{color:var(--bad)}
@@ -366,7 +374,7 @@
     .activityTabsPill,.activitySwitch button,.activityRangeSwitch button{transition:none!important}
     .leagueCard,.leagueForm,.leagueTitleRow,.boardHead,.detailTop,#boardTabs,.podiumPlace,.row{animation:none!important;transition:none!important}
     .leagueChevron,.leagueForm button,.boardTabsPill,#boardTabs button{transition:none!important}
-    #mainNav button,.navBattleOrb{transition:none}
+    #mainNav button,.navBattleOrb,.mainNavPill{transition:none!important}
     #hallSeats,#battleTypes,.seat.on{animation:none!important}
     .seat.away .spfp::after{animation:none!important;display:none}
     .battleTypePill,.battleType,.seat{transition:none!important}
@@ -961,6 +969,7 @@
 </section>
 
 <nav id="mainNav" class="hidden" aria-label="Үндсэн цэс">
+  <span id="mainNavPill" class="mainNavPill" aria-hidden="true"></span>
   <button id="navHome" type="button" aria-label="Нүүр">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>
     <span>Нүүр</span>
@@ -1578,7 +1587,10 @@ function syncActivityTabsPills(animate = true){
 let activityTabsResizeFrame = 0;
 window.addEventListener("resize", () => {
   cancelAnimationFrame(activityTabsResizeFrame);
-  activityTabsResizeFrame = requestAnimationFrame(() => syncActivityTabsPills(false));
+  activityTabsResizeFrame = requestAnimationFrame(() => {
+    syncActivityTabsPills(false);
+    positionMainNavPill(false);
+  });
 });
 
 function renderDailyActivity(){
@@ -1901,16 +1913,39 @@ function setBack(id){
 
 function show(id){
   for(const s of document.querySelectorAll(".screen")) s.classList.toggle("hidden", s.id !== id);
-  const hasMainNav = id === "menu" || id === "board";
-  $("mainNav").classList.toggle("hidden", !hasMainNav);
-  for(const [buttonId, active] of [["navHome", id === "menu"], ["navPush", false], ["navBattle", false], ["navSquat", false], ["navBoard", id === "board"]]){
+  const navByScreen = { menu:"navHome", pushChoice:"navPush", hall:"navBattle", board:"navBoard" };
+  setMainNavActive(navByScreen[id] || null);
+  if(id === "menu") requestAnimationFrame(() => syncActivityTabsPills(false));
+  setBack(id);
+}
+
+function positionMainNavPill(animate = true){
+  const nav = $("mainNav");
+  const pill = $("mainNavPill");
+  const active = nav.querySelector("button.active");
+  if(nav.classList.contains("hidden") || !active) return;
+  const transition = pill.style.transition;
+  if(!animate) pill.style.transition = "none";
+  pill.style.transform = `translateX(${active.offsetLeft}px)`;
+  pill.style.width = `${active.offsetWidth}px`;
+  if(!animate){
+    pill.getBoundingClientRect();
+    pill.style.transition = transition;
+  }
+}
+
+function setMainNavActive(activeButtonId, animate = true){
+  const nav = $("mainNav");
+  nav.classList.toggle("hidden", !activeButtonId);
+  document.body.classList.toggle("mainNavVisible", Boolean(activeButtonId));
+  for(const buttonId of ["navHome","navPush","navBattle","navSquat","navBoard"]){
     const button = $(buttonId);
+    const active = buttonId === activeButtonId;
     button.classList.toggle("active", active);
     if(active) button.setAttribute("aria-current", "page");
     else button.removeAttribute("aria-current");
   }
-  if(id === "menu") requestAnimationFrame(() => syncActivityTabsPills(false));
-  setBack(id);
+  if(activeButtonId) requestAnimationFrame(() => positionMainNavPill(animate));
 }
 
 // ======================= тоолох хөдөлгүүр =======================
@@ -3264,12 +3299,14 @@ async function startSolo(){
     $("go").textContent = "Ачаалж байна…";
     await startEngine(() => {
       $("start").classList.add("hidden");
+      setMainNavActive(null);
       setMsg("AI танилт бэлтгэж байна…", "var(--dim)");
     });
     $("start").classList.add("hidden");
     if(soloVariant === "game") startPushGame();
   }catch(e){
     $("start").classList.remove("hidden");
+    setMainNavActive(exercise === "squat" ? "navSquat" : "navPush");
     err.classList.remove("hidden");
     err.textContent = friendlyError(e, "Камер ассангүй. Дахин оролдоно уу.");
     $("go").disabled = false;
@@ -3941,6 +3978,7 @@ async function armForBattle(){
   if(arming) return;
   arming = true;
   show("play");
+  setMainNavActive("navBattle");
   $("play").classList.add("duel");
   $("start").classList.add("hidden");
   $("over").classList.add("hidden");
@@ -3957,6 +3995,7 @@ async function armForBattle(){
   $("seekTitle").textContent = "Камер бэлдэж байна…";
   try{
     await startEngine(() => {
+      setMainNavActive(null);
       $("seekTitle").textContent = "AI танилт бэлтгэж байна…";
     });
     hallSend({ type: "armed" });
@@ -4534,6 +4573,7 @@ function openSolo(kind, variant = "normal"){
   $("err").textContent = "";
   show("play");
   $("start").classList.remove("hidden");
+  setMainNavActive(kind === "squat" ? "navSquat" : "navPush");
 }
 
 $("activityPush").onclick = () => selectActivity("pushup");
@@ -4582,11 +4622,20 @@ $("challengeStop").onclick = async () => {
     $("challengeStatus").textContent = friendlyError(e, "Challenge-аа зогсоож чадсангүй.");
   }finally{ $("challengeStop").disabled = false; }
 };
-$("navHome").onclick = () => show("menu");
-$("navPush").onclick = openPushChoice;
-$("navBattle").onclick = startBattle;
-$("navSquat").onclick = () => openSolo("squat");
-$("navBoard").onclick = openBoard;
+function prepareMainNavDestination(){
+  if(mode === "battle") leaveBattle();
+  else stopCamera();
+}
+
+$("navHome").onclick = () => { prepareMainNavDestination(); show("menu"); };
+$("navPush").onclick = () => { prepareMainNavDestination(); openPushChoice(); };
+$("navBattle").onclick = () => {
+  if(!$("hall").classList.contains("hidden")) return;
+  prepareMainNavDestination();
+  startBattle();
+};
+$("navSquat").onclick = () => { prepareMainNavDestination(); openSolo("squat"); };
+$("navBoard").onclick = () => { prepareMainNavDestination(); openBoard(); };
 $("boardPush").onclick = () => loadBoard("pushup");
 $("boardSquat").onclick = () => loadBoard("squat");
 $("boardBattle").onclick = () => loadBoard("battle");
