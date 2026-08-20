@@ -311,6 +311,9 @@
     .activityTabsPill,.activitySwitch button,.activityRangeSwitch button{transition:none!important}
     .leagueCard{transition:none}
     #mainNav button,.navBattleOrb{transition:none}
+    #hallSeats,#battleTypes,.seat.on{animation:none!important}
+    .seat.away .spfp::after{animation:none!important;display:none}
+    .battleTypePill,.battleType,.seat{transition:none!important}
     .boardLoading{animation:none;background:#182029}
   }
   @media (max-width:360px){
@@ -326,39 +329,79 @@
     #mainNav #navBattle{height:50px;min-height:50px;transform:translateY(-10px)}
     #mainNav #navBattle:active{transform:translateY(-10px)}
     .navBattleOrb{width:46px;height:46px}
+    #hall{gap:14px;padding-left:14px;padding-right:14px}
+    #hall h2{font-size:25px}
+    #battleTypes{padding:12px}
+    .battleType{font-size:10px}
   }
   @media (max-width:340px){
     .activityMonthDay,.activityMonthBlank{width:39px;height:39px;min-width:39px;min-height:39px}
   }
 
   /* ---------- хүлээлгийн өрөө ---------- */
-  #hall{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto}
-  #hall h2{margin:0;font-size:20px}
-  #hallSeats{display:flex;flex-direction:column;gap:8px}
-  .seat{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;
-    background:var(--card);border:1px solid transparent}
-  .seat.on{border-color:rgba(57,217,138,.4)}
-  .seat.away{border:1px dashed rgba(255,255,255,.16);background:transparent}
-  .spfp{width:44px;height:44px;border-radius:50%;flex:none;background:#1b2440;
+  #hall{--hall-bg:#0b0d10;--hall-bg-deep:#07080a;--hall-card:#181c22;--hall-card-raised:#20252d;
+    --hall-border:rgba(255,255,255,.085);--hall-muted:#a5abb5;--hall-primary:#f97316;--hall-secondary:#fbbf24;
+    --hall-fg:#f8fafc;--fg:var(--hall-fg);--dim:var(--hall-muted);--accent:var(--hall-primary);--card:var(--hall-card);
+    display:flex;flex-direction:column;gap:18px;max-width:460px;margin:0 auto;color:var(--hall-fg);
+    padding-bottom:calc(env(safe-area-inset-bottom) + 28px);background:
+      radial-gradient(circle at 50% -8%,rgba(249,115,22,.18),transparent 36%),
+      radial-gradient(circle at 100% 66%,rgba(251,191,36,.06),transparent 32%),
+      linear-gradient(180deg,var(--hall-bg) 0%,#101116 54%,var(--hall-bg-deep) 100%)}
+  #hall h2{margin:4px 0 0;font-size:28px;line-height:1.08;letter-spacing:-.035em}
+  #hallSeats{display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:24px;
+    background:rgba(24,28,34,.78);border:1px solid var(--hall-border);
+    box-shadow:inset 0 1px rgba(255,255,255,.035),0 18px 44px rgba(0,0,0,.24)}
+  .seat{display:flex;align-items:center;gap:12px;min-height:78px;padding:12px 13px;border-radius:18px;
+    background:var(--hall-card-raised);border:1px solid transparent;
+    transition:border-color 220ms ease,background-color 220ms ease,opacity 220ms ease}
+  .seat.on{border-color:rgba(249,115,22,.52);background:linear-gradient(135deg,rgba(249,115,22,.14),rgba(251,191,36,.05)),var(--hall-card-raised);
+    animation:seatReady 280ms cubic-bezier(.22,1,.36,1)}
+  .seat.away{border:1px dashed rgba(255,255,255,.15);background:rgba(7,8,10,.34)}
+  .spfp{position:relative;width:52px;height:52px;border-radius:50%;flex:none;background:#232834;
     background-size:cover;background-position:center;display:flex;align-items:center;
-    justify-content:center;font-size:17px;font-weight:800;color:rgba(255,255,255,.8)}
+    justify-content:center;font-size:18px;font-weight:850;color:rgba(255,255,255,.82);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 8px 20px rgba(0,0,0,.25)}
+  .seat.away .spfp{background:linear-gradient(145deg,rgba(249,115,22,.18),rgba(251,191,36,.06)),#20242c}
+  .seat.away .spfp::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(249,115,22,.38);
+    animation:waitingPulse 1.8s ease-out infinite}
   .seat .info{flex:1;min-width:0}
-  .seat .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .seat .elo{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
-  .chip{font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;white-space:nowrap;
-    background:rgba(255,255,255,.09);color:var(--dim)}
-  .chip.ok{background:rgba(57,217,138,.16);color:var(--accent)}
-  .chip.wait{background:rgba(255,176,32,.14);color:var(--warn)}
-  #hallVs{text-align:center;font-size:11px;font-weight:800;letter-spacing:.3em;color:var(--dim)}
-  #hallHint{font-size:12.5px;line-height:1.6;color:var(--dim);min-height:40px}
+  .seat .nm{font-size:16px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat .elo{margin-top:3px;font-size:12px;color:var(--hall-muted);font-variant-numeric:tabular-nums}
+  .chip{font-size:10px;font-weight:850;padding:6px 10px;border-radius:999px;white-space:nowrap;
+    background:rgba(255,255,255,.08);color:var(--hall-muted);text-transform:uppercase;letter-spacing:.04em}
+  .chip.ok{background:rgba(249,115,22,.17);color:#fdba74}
+  .chip.wait{background:rgba(251,191,36,.13);color:#fcd34d}
+  #hallVs{align-self:center;width:42px;height:28px;margin:-4px 0;display:grid;place-items:center;z-index:1;
+    border-radius:999px;background:#111318;border:1px solid var(--hall-border);font-size:10px;font-weight:900;
+    letter-spacing:.18em;color:var(--hall-muted);box-shadow:0 5px 16px rgba(0,0,0,.28)}
+  #hallHint{font-size:13px;line-height:1.55;color:var(--hall-muted);min-height:40px;padding:0 4px}
   #hallBtns{display:flex;flex-direction:column;gap:8px}
-  #battleTypes{padding:13px;border-radius:16px;background:var(--card)}
-  #battleTypes>span{display:block;font-size:11px;font-weight:800;color:var(--dim);
-    letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
-  #battleTypeBtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-  .battleType{border-radius:11px;padding:10px 6px;font-size:11px;line-height:1.25}
-  .battleType.active{background:var(--gold);color:#231a00}
-  .battleType:disabled{opacity:.72}
+  #battleTypes{padding:14px;border-radius:20px;background:rgba(24,28,34,.82);border:1px solid var(--hall-border);
+    box-shadow:inset 0 1px rgba(255,255,255,.035),0 14px 32px rgba(0,0,0,.18)}
+  #battleTypes>span{display:block;font-size:10px;font-weight:850;color:var(--hall-muted);
+    letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+  #battleTypeBtns{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+    padding:3px;border-radius:15px;background:rgba(7,8,10,.48);border:1px solid rgba(255,255,255,.045)}
+  .battleTypePill{position:absolute;z-index:0;top:3px;bottom:3px;left:3px;width:calc((100% - 18px)/3);
+    border-radius:12px;background:linear-gradient(135deg,var(--hall-primary),var(--hall-secondary));
+    box-shadow:0 7px 18px rgba(249,115,22,.24),inset 0 1px rgba(255,255,255,.18);
+    transform:translateX(0);transition:transform 250ms cubic-bezier(.22,1,.36,1);will-change:transform;pointer-events:none}
+  #battleTypes[data-active="squat"] .battleTypePill{transform:translateX(calc(100% + 6px))}
+  #battleTypes[data-active="combined"] .battleTypePill{transform:translateX(calc(200% + 12px))}
+  .battleType{position:relative;z-index:1;min-height:56px;border-radius:12px;padding:8px 5px;background:transparent;
+    color:var(--hall-muted);font-size:11px;line-height:1.25;transition:color 200ms ease,opacity 200ms ease}
+  .battleType.active{background:transparent;color:#1d0d03}
+  .battleType:disabled{opacity:.62}
+  #hallStart,#hallReady{width:100%;min-height:52px;background:linear-gradient(135deg,var(--hall-primary),var(--hall-secondary));
+    color:#1d0d03;font-size:15px;font-weight:900;box-shadow:0 12px 28px rgba(249,115,22,.2)}
+  #hallStart:disabled,#hallReady:disabled{background:rgba(255,255,255,.09);color:var(--hall-muted);box-shadow:none;opacity:.55}
+  #hallBack{width:100%;min-height:50px;background:rgba(255,255,255,.075);color:var(--hall-fg);border:1px solid var(--hall-border)}
+  #hall button:focus-visible{outline:3px solid var(--hall-fg);outline-offset:3px}
+  #hall:not(.hidden) #hallSeats,#hall:not(.hidden) #battleTypes{animation:hallEnter 320ms cubic-bezier(.22,1,.36,1) both}
+  #hall:not(.hidden) #battleTypes{animation-delay:55ms}
+  @keyframes hallEnter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes seatReady{from{transform:scale(.985)}to{transform:scale(1)}}
+  @keyframes waitingPulse{0%{opacity:.7;transform:scale(.9)}70%,100%{opacity:0;transform:scale(1.18)}}
 
   /* ---------- Push Up горим сонгох ---------- */
   #pushChoice{display:grid;place-items:center;background:
@@ -875,9 +918,10 @@
     <div class="seat away" id="seatOpp"></div>
   </div>
   <div id="hallHint" role="status" aria-live="polite" aria-atomic="true"></div>
-  <div id="battleTypes">
+  <div id="battleTypes" data-active="pushup">
     <span>Тулааны төрөл · Эзэн сонгоно</span>
     <div id="battleTypeBtns">
+      <span class="battleTypePill" aria-hidden="true"></span>
       <button class="battleType active" data-battle-type="pushup">Push-up<br>30 сек</button>
       <button class="battleType" data-battle-type="squat">Squat<br>30 сек</button>
       <button class="battleType" data-battle-type="combined">Хосолсон<br>30 + 10 + 30</button>
@@ -3079,6 +3123,7 @@ let hostedRoom = null;
  * бидэнд урих ажил үлдэхгүй, зөвхөн хүлээлгийн өрөөгөө нээнэ.
  */
 let assignedRoom = null;
+let acceptAssignedRoom = null;
 let startupInvitePending = false;
 
 /**
@@ -3209,6 +3254,7 @@ async function findOpponent(onInvited){
       if(done) return;
       done = true;
       clearInterval(invitePoll); invitePoll = null;
+      acceptAssignedRoom = null;
       fn(v);
     };
 
@@ -3234,7 +3280,11 @@ async function findOpponent(onInvited){
      * манай Battle товч (`invite()`) ба платформын share товч
      * (`onRoomAssigned`) — цаашид хоёулаа ижил ажиллана.
      */
-    const haveRoom = async (rid) => {
+    const haveRoom = async (rid, inviteCanceled = false) => {
+      if(invitedRoom === rid){
+        if(inviteCanceled) $("hallHint").textContent = "Та өрөөндөө үлдлээ. Дээд талын Share товчоор найзаа урьж болно.";
+        return;
+      }
       invitedRoom = rid;
       // Зочин энэ картыг хүчинтэй гэдгийг ЗӨВХӨН эндээс мэднэ — платформ
       // өрөөний төлөвийг асуух зам өгдөггүй.
@@ -3245,6 +3295,7 @@ async function findOpponent(onInvited){
       // Өрөөндөө ЗААВАЛ орно: түүнээс өмнө гарсан тул гишүүн биш үлдвэл
       // найз орсныг огт сонсохгүй
       try { await s.game.connect(); await s.game.join(rid); } catch { /* заавал биш */ }
+      if(inviteCanceled) $("hallHint").textContent = "Та өрөөндөө үлдлээ. Дээд талын Share товчоор найзаа урьж болно.";
 
       // Платформын үйл явдал ирэхгүй байх нь бий. Зочин орж ирээд тулааныг
       // МАНАЙ сервер дээр үүсгэдэг тул тэндээс асууж мэдэж болно —
@@ -3262,6 +3313,10 @@ async function findOpponent(onInvited){
         }catch{ /* хараахан үүсээгүй */ }
       }, 1500);
     };
+
+    // Platform-ын Share товчийг дарахад battle screen аль хэдийн нээлттэй байсан ч
+    // шинээр олгогдсон өрөөг хүлээж буй энэ урсгалдаа шууд холбоно.
+    acceptAssignedRoom = rid => haveRoom(rid, false).catch(e => settle(reject, e));
 
     // Платформын share товч аль хэдийн өрөө олгосон бол урих шаардлагагүй:
     // хост шинэ өрөө үүсгээд, SDK биднийг холбож оруулчихсан, найз нь
@@ -3283,16 +3338,21 @@ async function findOpponent(onInvited){
       .then(() => { clearLaunchRoom(); return s.game.invite(); })
       // Хост өрөөгүй хүсэлтийг хүлээж авахгүй бол л REST-ээр өөрсдөө үүсгэнэ
       .then(async r => {
-        if(r?.roomId || r?.success === false) return r;
+        if(r?.roomId) return r;
         const rid = await freshRoom();
         if(!rid) return r;
         try { await s.game.join(rid); } catch { /* заавал биш */ }
-        return s.game.invite();
+        if(r?.success === false) return { ...r, roomId:rid };
+        const retried = await s.game.invite();
+        return retried?.roomId ? retried : { ...retried, roomId:rid };
       })
       .then(r => {
-        if(r && r.success === false) return settle(reject, new Error("Урилга илгээгдсэнгүй"));
-        if(!r?.roomId) return;
-        return haveRoom(r.roomId);
+        if(r?.roomId) return haveRoom(r.roomId, r.success === false);
+        if(r?.success === false){
+          invited();
+          $("hallHint").textContent = "Та өрөөндөө үлдлээ. Дээд талын Share товчоор найзаа урьж болно.";
+          return;
+        }
       })
       .catch(e => settle(reject, e));
   });
@@ -3626,6 +3686,7 @@ function renderHall(state){
   const battleType = state?.battleType ?? "pushup";
 
   $("battleTypes").classList.toggle("hidden", !waiting);
+  $("battleTypes").dataset.active = battleType;
   for(const button of document.querySelectorAll(".battleType")){
     button.classList.toggle("active", button.dataset.battleType === battleType);
     button.disabled = !state || !host || !waiting;
@@ -3981,7 +4042,7 @@ function leaveBattle(){
   clearInterval(invitePoll); invitePoll = null;
   stopVideo();
   ws?.close(); ws = null;
-  duel = null; mode = "solo"; arming = false; assignedRoom = null;
+  duel = null; mode = "solo"; arming = false; assignedRoom = null; acceptAssignedRoom = null;
   // Урьчихаад буцлаа — картаа тэр дороо үхүүлнэ, эс тэгвээс найз хойно нь
   // дараад хэн ч байхгүй өрөөнд ганцаараа үлдэнэ
   if(hostedRoom){
@@ -4403,7 +4464,12 @@ sdk()?.game?.onRoomAssigned?.(d => {
   const rid = d?.roomId;
   if(!rid) return;
   assignedRoom = rid;
-  // Аль хэдийн тулаанд байвал `findOpponent` өөрөө үүнийг авна
+  if(mode === "battle" && acceptAssignedRoom){
+    const accept = acceptAssignedRoom;
+    acceptAssignedRoom = null;
+    accept(rid);
+    return;
+  }
   if(mode !== "battle") startBattle();
 });
 

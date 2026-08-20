@@ -18,3 +18,11 @@ test('урилгын waiting room profile API-г хүлээлгүй шууд х�
   assert.ok(init >= 0 && branch > init, 'invite startup branch олдсонгүй')
   assert.ok(hall > branch && hall < profile, 'waiting room profile ачааллаас өмнө харагдах ёстой')
 })
+
+test('найз сонгох цонхыг цуцлахад waiting room-оос гарахгүй', () => {
+  assert.doesNotMatch(html, /if\(r && r\.success === false\) return settle\(reject/)
+  assert.match(html, /if\(r\?\.success === false\) return \{ \.\.\.r, roomId:rid \}/)
+  assert.match(html, /if\(r\?\.roomId\) return haveRoom\(r\.roomId, r\.success === false\)/)
+  assert.match(html, /acceptAssignedRoom = rid => haveRoom\(rid, false\)/)
+  assert.match(html, /if\(mode === "battle" && acceptAssignedRoom\)/)
+})
