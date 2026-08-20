@@ -585,8 +585,6 @@
   #boot .modelProgressBar{border-radius:inherit;background:linear-gradient(90deg,#f97316,#fbbf24);
     box-shadow:0 0 10px rgba(249,115,22,.42)}
   #boot .modelProgressBar::after{display:none}
-  #boot .modelProgressValue{color:rgba(255,255,255,.72);font-size:11px;font-weight:800;
-    text-shadow:0 1px 5px #000}
   @keyframes aiLoadingSpin{to{transform:rotate(360deg)}}
   @media (prefers-reduced-motion:reduce){
     .aiLoadingRing{animation:none;border-color:rgba(255,210,30,.65)}
@@ -804,7 +802,6 @@
       <div class="modelProgress" data-model-progress role="progressbar"
            aria-label="Апп ачаалалт" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="modelProgressTrack" aria-hidden="true"><div class="modelProgressBar"></div></div>
-        <div class="modelProgressValue" aria-hidden="true">0%</div>
       </div>
       <span class="srOnly">Үндсэн мэдээллүүдийг ачаалж байна.</span>
     </div>
@@ -2939,7 +2936,8 @@ function setModelProgress(value){
   const percent = Math.max(0, Math.min(100, Math.round(value)));
   for(const progress of document.querySelectorAll("[data-model-progress]")){
     progress.setAttribute("aria-valuenow", String(percent));
-    progress.querySelector(".modelProgressValue").textContent = `${percent}%`;
+    const valueLabel = progress.querySelector(".modelProgressValue");
+    if(valueLabel) valueLabel.textContent = `${percent}%`;
     progress.querySelector(".modelProgressBar").style.width = `${percent}%`;
   }
 }
@@ -2949,7 +2947,6 @@ function setBootProgress(value){
   if(!progress) return;
   const percent = Math.max(0, Math.min(100, Math.round(value)));
   progress.setAttribute("aria-valuenow", String(percent));
-  progress.querySelector(".modelProgressValue").textContent = `${percent}%`;
   progress.querySelector(".modelProgressBar").style.width = `${percent}%`;
 }
 

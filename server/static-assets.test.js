@@ -11,6 +11,10 @@ test('loading artwork is project-local, preloaded, and served before the app fal
   assert.match(html, /\.bootArtwork\{[^}]*object-fit:cover;object-position:center/s)
   assert.match(html, /\$\("boot"\)\.classList\.add\("bootDone"\);[\s\S]*?setTimeout\(resolve, 220\)/)
 
+  const bootStart = html.indexOf('<section id="boot"')
+  const bootMarkup = html.slice(bootStart, html.indexOf('</section>', bootStart))
+  assert.doesNotMatch(bootMarkup, /modelProgressValue/)
+
   const assetsAt = server.indexOf("app.use('/assets', express.static")
   const fallbackAt = server.indexOf('app.use((_req, res) => {')
   assert.ok(assetsAt > 0 && assetsAt < fallbackAt)
