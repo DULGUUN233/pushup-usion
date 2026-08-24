@@ -4,10 +4,21 @@ export const METRICS = {
   pushup: { score: 'totalReps', best: 'bestSet' },
   squat: { score: 'squatTotalReps', best: 'squatBestSet' },
   battle: { score: 'rating', best: 'wins' },
+  flappy: { score: 'flappyBest', best: 'flappyBest' },
 }
+
+export const MAX_FLAPPY_SCORE = 100_000
 
 export function normalizeMetric(value) {
   return Object.hasOwn(METRICS, value) ? value : 'pushup'
+}
+
+export function parseFlappyScore(value) {
+  const score = Number(value)
+  if (!Number.isInteger(score) || score < 1 || score > MAX_FLAPPY_SCORE) {
+    throw new RangeError(`score нь 1-${MAX_FLAPPY_SCORE} хооронд бүхэл тоо байх ёстой`)
+  }
+  return score
 }
 
 export function makeLeagueCode(random = Math.random) {
@@ -40,7 +51,7 @@ export function rankUsers(list, metricValue) {
       name: user.name,
       avatar: user.avatar ?? null,
       score,
-      bestSet: metric === 'pushup' ? user.bestSet ?? 0 : user.squatBestSet ?? 0,
+      bestSet: metric === 'pushup' ? user.bestSet ?? 0 : metric === 'squat' ? user.squatBestSet ?? 0 : 0,
       rating: user.rating ?? 1000,
       battles: user.battles ?? 0,
       wins: user.wins ?? 0,

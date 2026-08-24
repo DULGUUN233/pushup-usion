@@ -297,14 +297,15 @@
   .detailTop div{min-width:0}
   .detailTop h2{margin:0;font-size:22px;letter-spacing:-.025em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .detailTop p{margin:3px 0 0;color:var(--dim);font-size:12px}
-  #boardTabs{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:0;padding:0;
+  #boardTabs{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding:0;
     border:0;border-bottom:1px solid var(--board-border);border-radius:0;background:transparent;margin-bottom:12px;overflow:visible}
-  .boardTabsPill{position:absolute;z-index:0;left:0;bottom:-1px;width:33.333%;height:3px;
+  .boardTabsPill{position:absolute;z-index:0;left:0;bottom:-1px;width:25%;height:3px;
     border-radius:999px;background:linear-gradient(90deg,transparent 18%,var(--board-primary) 36%,var(--board-secondary) 64%,transparent 82%);
     box-shadow:0 0 12px rgba(249,115,22,.28);transform:translateX(0);
     transition:transform 250ms cubic-bezier(.22,1,.36,1);pointer-events:none}
   #boardTabs[data-active="squat"] .boardTabsPill{transform:translateX(100%)}
   #boardTabs[data-active="battle"] .boardTabsPill{transform:translateX(200%)}
+  #boardTabs[data-active="flappy"] .boardTabsPill{transform:translateX(300%)}
   #boardTabs button{position:relative;z-index:1;min-height:44px;padding:8px 5px;border-radius:0;background:transparent;
     color:#b2bac5;transition:color 200ms ease}
   #boardTabs button:active{transform:none;background:rgba(249,115,22,.045)}
@@ -961,6 +962,7 @@
         <button id="boardPush" class="active">Push-up</button>
         <button id="boardSquat">Squat</button>
         <button id="boardBattle">Battle ELO</button>
+        <button id="boardFlappy">Flappy</button>
       </div>
       <div id="podium"></div>
       <div id="rows"></div>
@@ -1236,6 +1238,7 @@ const gameCanvas = $("gameCanvas"), gameCtx = gameCanvas.getContext("2d");
 const sdk = () => (window.Usion && typeof window.Usion.init === "function") ? window.Usion : null;
 let profile = null;     // серверээс ирсэн бидний бүртгэл
 let launchCfg = null;   // Usion аппыг хэрхэн нээснийг хэлнэ (өрөө, тоглогчид)
+const FLAPPY_PENDING_KEY = "pushup:flappyPendingBest";
 
 /**
  * Usion хостын гадна (жишээ нь шууд Railway линкээр орвол) `init` хэзээ ч
@@ -1865,10 +1868,34 @@ function submitScore(){
   try { sdk()?.leaderboard?.submit?.(total); } catch { /* заавал биш */ }
 }
 
+function readPendingFlappyScore(){
+  try{
+    const score = Number(localStorage.getItem(FLAPPY_PENDING_KEY));
+    return Number.isInteger(score) && score > 0 ? score : 0;
+  }catch{ return 0; }
+}
+
+async function saveFlappyScore(score){
+  const value = Number(score);
+  if(!Number.isInteger(value) || value < 1) return;
+  const best = Math.max(value, readPendingFlappyScore());
+  try{ localStorage.setItem(FLAPPY_PENDING_KEY, String(best)); }catch{ /* storage optional */ }
+  try{
+    const result = await api("/flappy-score", { method:"POST", body:JSON.stringify({ score:best }) });
+    const saved = Number(result.bestScore) || best;
+    if(profile) profile.flappyBest = Math.max(profile.flappyBest ?? 0, saved);
+    leagueHubData = null;
+    if(readPendingFlappyScore() <= saved){
+      try{ localStorage.removeItem(FLAPPY_PENDING_KEY); }catch{ /* storage optional */ }
+    }
+  }catch{ /* дараагийн апп нээлтээр pending рекордыг дахин илгээнэ */ }
+}
+
 async function loadProfile(){
   try {
     profile = await api("/me");
     submitScore();
+    void saveFlappyScore(readPendingFlappyScore());
     note("");
   } catch(e) {
     note(`${friendlyError(e, "Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.")} Тоолуур офлайнаар ажиллана.`, "bad");
@@ -2964,6 +2991,7 @@ function finishPushGame(title = "Тоглоом дууслаа"){
   if(!pushGameState.active || pushGameState.over) return;
   pushGameState.over = true;
   cancelAnimationFrame(pushGameState.raf);
+  void saveFlappyScore(pushGameState.score);
   $("pushGameOverTitle").textContent = title;
   $("pushGameFinalScore").textContent = pushGameState.score;
   $("pushGameFinalReps").textContent = count;
@@ -4386,7 +4414,7 @@ let leagueHubData = null;
 let leagueHubPromise = null;
 const boardNumber = new Intl.NumberFormat("mn-MN");
 
-function boardUnit(){ return boardMetric === "battle" ? "ELO" : "REP"; }
+function boardUnit(){ return boardMetric === "battle" ? "ELO" : boardMetric === "flappy" ? "ОНОО" : "REP"; }
 
 function makeRankAvatar(user){
   let el;
@@ -4559,6 +4587,7 @@ async function loadBoard(metric){
   $("boardPush").classList.toggle("active", metric === "pushup");
   $("boardSquat").classList.toggle("active", metric === "squat");
   $("boardBattle").classList.toggle("active", metric === "battle");
+  $("boardFlappy").classList.toggle("active", metric === "flappy");
   const request = ++boardRequest;
   $("podium").innerHTML = '<div class="boardLoading" style="grid-column:1/-1"></div>';
   $("rows").innerHTML = '<div class="boardLoading"></div><div class="boardLoading"></div>';
@@ -4686,6 +4715,7 @@ $("navBoard").onclick = () => { prepareMainNavDestination(); openBoard(); };
 $("boardPush").onclick = () => loadBoard("pushup");
 $("boardSquat").onclick = () => loadBoard("squat");
 $("boardBattle").onclick = () => loadBoard("battle");
+$("boardFlappy").onclick = () => loadBoard("flappy");
 $("globalLeague").onclick = () => openLeagueBoard("", "Бүх тоглогч");
 $("leagueCode").oninput = () => {
   $("leagueCode").value = $("leagueCode").value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, "").slice(0, 6);

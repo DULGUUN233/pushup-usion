@@ -3,7 +3,7 @@ import { activityQueryWindow, dailyPushups, normalizeActivityDays, normalizeActi
 import { requireUser } from './auth.js'
 import { CHALLENGE_TEMPLATES, challengeSummary, createChallenge } from './challenge.js'
 import { findOrCreateUser, leagues, rankOf, sessions, users } from './db.js'
-import { gapToNext, makeLeagueCode, METRICS, normalizeMetric, rankUsers } from './league-rank.js'
+import { gapToNext, makeLeagueCode, METRICS, normalizeMetric, parseFlappyScore, rankUsers } from './league-rank.js'
 
 /**
  * Нэг сетэд хүлээн зөвшөөрөх дээд тоо. v1-д клиентийн тоонд итгэдэг тул
@@ -30,6 +30,7 @@ function publicUser(u, rank, squatRank) {
     bestSet: u.bestSet ?? 0,
     squatTotalReps: u.squatTotalReps ?? 0,
     squatBestSet: u.squatBestSet ?? 0,
+    flappyBest: u.flappyBest ?? 0,
     rating: u.rating,
     battles: u.battles,
     wins: u.wins,
@@ -131,6 +132,23 @@ router.post('/session', requireUser, async (req, res) => {
     rankOf(user.squatTotalReps ?? 0, 'squat'),
   ])
   res.json(publicUser(user, rank, squatRank))
+})
+
+router.post('/flappy-score', requireUser, async (req, res) => {
+  let score
+  try {
+    score = parseFlappyScore(req.body?.score)
+  } catch (error) {
+    return res.status(400).json({ error: error.message })
+  }
+
+  await findOrCreateUser(req.user)
+  const user = await users().findOneAndUpdate(
+    { _id: req.user.userId },
+    { $max: { flappyBest: score } },
+    { returnDocument: 'after' },
+  )
+  res.json({ bestScore: user.flappyBest ?? 0 })
 })
 
 /**

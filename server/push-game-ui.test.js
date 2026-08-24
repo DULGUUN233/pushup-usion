@@ -101,3 +101,10 @@ test('tracking тасрахад game pause хийж, camera хаахад loop ц
   assert.match(html, /function stopCamera\(\)\{[\s\S]*?stopPushGame\(\)/)
   assert.match(html, /if\(soloVariant === "game"\) startPushGame\(\)/)
 })
+
+test('Flappy game дуусахад хамгийн өндөр оноог серверт хадгалж, алдахад дахин илгээхээр үлдээнэ', () => {
+  assert.match(html, /finishPushGame[\s\S]*?saveFlappyScore\(pushGameState\.score\)/)
+  assert.match(html, /api\("\/flappy-score", \{ method:"POST", body:JSON\.stringify\(\{ score:best \}\) \}\)/)
+  assert.match(html, /FLAPPY_PENDING_KEY/)
+  assert.match(html, /loadProfile\(\)[\s\S]*?saveFlappyScore\(readPendingFlappyScore\(\)\)/)
+})

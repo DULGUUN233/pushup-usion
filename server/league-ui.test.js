@@ -57,10 +57,11 @@ test('hub дээр давхардсан тайлбар, хоосон лигий�
   assert.doesNotMatch(html, /id="leagueCount"/)
 })
 
-test('лиг дотор гурван төрлийн байрлал байна', () => {
+test('лиг дотор дөрвөн төрлийн байрлал байна', () => {
   assert.match(html, /id="boardPush"[^>]*>Push-up/)
   assert.match(html, /id="boardSquat"[^>]*>Squat/)
   assert.match(html, /id="boardBattle"[^>]*>Battle ELO/)
+  assert.match(html, /id="boardFlappy"[^>]*>Flappy/)
 })
 
 test('өөрийн байр зөвхөн үндсэн жагсаалтад байвал харагдана', () => {
@@ -111,9 +112,10 @@ test('leaderboard detail нь sliding metric pill болон compact мөрүү�
 
 test('leaderboard metric tab нь давхар card биш flat underline байна', () => {
   assert.match(html, /#boardTabs\{[^}]*border:0;border-bottom:1px solid var\(--board-border\);border-radius:0;background:transparent/)
-  assert.match(html, /\.boardTabsPill\{[^}]*bottom:-1px;width:33\.333%;height:3px/)
+  assert.match(html, /\.boardTabsPill\{[^}]*bottom:-1px;width:25%;height:3px/)
   assert.match(html, /#boardTabs button\.active\{background:transparent;color:var\(--board-primary\)\}/)
   assert.match(html, /#boardTabs\[data-active="battle"\] \.boardTabsPill\{transform:translateX\(200%\)\}/)
+  assert.match(html, /#boardTabs\[data-active="flappy"\] \.boardTabsPill\{transform:translateX\(300%\)\}/)
 })
 
 test('leaderboard detail podium ба мөрүүд staggered animation-тай', () => {

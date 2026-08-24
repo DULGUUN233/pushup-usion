@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { gapToNext, LEAGUE_CODE_ALPHABET, makeLeagueCode, normalizeMetric, rankUsers } from './league-rank.js'
+import { gapToNext, LEAGUE_CODE_ALPHABET, makeLeagueCode, normalizeMetric, parseFlappyScore, rankUsers } from './league-rank.js'
 
 test('лиг код 6 тэмдэгт бөгөөд будилах тэмдэг агуулахгүй', () => {
   const code = makeLeagueCode(() => 0.5)
@@ -12,6 +12,7 @@ test('лиг код 6 тэмдэгт бөгөөд будилах тэмдэг а
 test('танихгүй metric pushup болно', () => {
   assert.equal(normalizeMetric('other'), 'pushup')
   assert.equal(normalizeMetric('battle'), 'battle')
+  assert.equal(normalizeMetric('flappy'), 'flappy')
 })
 
 test('ижил үндсэн оноо ижил байр эзэлнэ', () => {
@@ -30,6 +31,23 @@ test('battle рейтингээр, squat нийт суултаар эрэмбэ�
   ]
   assert.equal(rankUsers(users, 'battle')[0].userId, 'b')
   assert.equal(rankUsers(users, 'squat')[0].userId, 'a')
+})
+
+test('Flappy нь хэрэглэгчийн хамгийн өндөр рекордоор эрэмбэлнэ', () => {
+  const rows = rankUsers([
+    { _id: 'a', name: 'A', flappyBest: 7 },
+    { _id: 'b', name: 'B', flappyBest: 19 },
+    { _id: 'c', name: 'C', flappyBest: 11 },
+  ], 'flappy')
+  assert.deepEqual(rows.map((row) => [row.userId, row.score]), [['b', 19], ['c', 11], ['a', 7]])
+})
+
+test('Flappy рекорд зөвхөн зөв бүхэл эерэг оноо авна', () => {
+  assert.equal(parseFlappyScore(12), 12)
+  assert.equal(parseFlappyScore('12'), 12)
+  assert.throws(() => parseFlappyScore(0))
+  assert.throws(() => parseFlappyScore(2.5))
+  assert.throws(() => parseFlappyScore(100_001))
 })
 
 test('дараагийн байрыг давахад хэрэгтэй зөрүүг олно', () => {

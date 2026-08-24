@@ -14,6 +14,7 @@ export async function connect() {
   await users().createIndex({ totalReps: -1 })
   await users().createIndex({ squatTotalReps: -1 })
   await users().createIndex({ rating: -1 })
+  await users().createIndex({ flappyBest: -1 })
   await leagues().createIndex({ code: 1 }, { unique: true })
   await leagues().createIndex({ memberIds: 1 })
   await sessions().createIndex({ userId: 1, finishedAt: -1 })
@@ -70,6 +71,7 @@ export async function findOrCreateUser({ userId, name, avatar = null }) {
         bestSet: 0,
         squatTotalReps: 0,
         squatBestSet: 0,
+        flappyBest: 0,
         rating: START_RATING,
         battles: 0,
         wins: 0,
@@ -103,6 +105,7 @@ export async function ensureUsers(userIds) {
             bestSet: 0,
             squatTotalReps: 0,
             squatBestSet: 0,
+            flappyBest: 0,
             rating: START_RATING,
             battles: 0,
             wins: 0,
