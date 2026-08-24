@@ -2207,55 +2207,6 @@ function kneeAngle(lm, world){
 }
 
 /**
- * Өвдөг шаланд хүрсэн эсэх.
- *
- * Камер ХҮРЭЛТИЙГ хардаггүй, зөвхөн байрлалыг хардаг. Тиймээс шалны түвшинг
- * биед аль хэдийн шаланд байгаа цэгүүдээс гаргана — бугуй, хөлийн үзүүр.
- * worldLandmarks-д y ДООШОО эерэг тул шал нь хамгийн ИХ y.
- *
- * ЗӨВХӨН Y-ээр бодно: monocular загварын Z нь таамаг, түүнд тулгуурлавал
- * хэдэн см-ийн алдаа шийдвэрийг эргүүлнэ.
- *
- * Өндөр ГАНЦААРАА хангалтгүй: push-up-ын ёроолд өвдөг үнэхээр шалнаас ердөө
- * 6 см дээр байдаг тул өвдөг дээр сууснаас ялгарахгүй. Тэр хоёрыг шилбэний
- * ӨНЦӨГ ялгана — ёроолд шилбэ шулуун (~175°), өвдөг дээр нугалагдсан (~90°).
- * Хоёуланг шаардвал ±3 см алдаанд ч 98% зөв ангилна.
- */
-const KNEE_DOWN_BENT = 140;   // шилбэ нугалагдсаны босго
-const KNEE_DOWN_HEIGHT = 0.28; // өвдгийн өндөр, шилбэний уртын хувиар
-/**
- * Rep ХАСАХ шийдвэрт шаардах итгэлцүүр — бусад шалгуурын 0.5-аас өндөр.
- *
- * Цээжиндээ хаагдсан хөлийг MediaPipe таамаглаж 0.5–0.6 итгэлцүүр өгдөг.
- * Тэр таамаг дээр хүний зөв хийсэн rep-ийг хасах нь хамгийн муу алдаа —
- * хөл харагдахгүй бол зүгээр тооллоо, зөвхөн ТОДОРХОЙ харагдаж байж хасна.
- */
-const KNEE_DOWN_SURE = 0.7;
-
-function kneeOnFloor(lm, world){
-  const floorIds = [15, 16, 31, 32];   // бугуй, хөлийн үзүүр
-  let floorY = null;
-  for(const i of floorIds){
-    if((lm[i].visibility ?? 1) <= KNEE_DOWN_SURE) continue;
-    if(floorY === null || world[i].y > floorY) floorY = world[i].y;
-  }
-  if(floorY === null) return null;
-
-  let best = null;
-  for(const [h, k, a] of LEGS){
-    const vis = Math.min(lm[h].visibility ?? 1, lm[k].visibility ?? 1, lm[a].visibility ?? 1);
-    if(vis <= KNEE_DOWN_SURE || (best && vis <= best.vis)) continue;
-    const shin = Math.hypot(world[k].x - world[a].x, world[k].y - world[a].y, world[k].z - world[a].z);
-    if(!shin) continue;
-    const deg = angle3(world[h], world[k], world[a]);
-    if(deg === null) continue;
-    best = { vis, deg, height: (floorY - world[k].y) / shin,
-             down: deg < KNEE_DOWN_BENT && (floorY - world[k].y) / shin < KNEE_DOWN_HEIGHT };
-  }
-  return best;
-}
-
-/**
  * Squat-д хоёр хөлийг дундажлахгүй: хажуугийн зурагт камерын цаадах хөл
  * халхлагдаж, landmark нь таамаг болдог. Хамгийн тод харагдсан нэг талыг
  * сонгож, зураг дээрх 2D өнцгийг aspect ratio-аар засаж хэмжинэ.
@@ -2443,20 +2394,11 @@ function positionCheck(lm, world, aspect){
     const { horiz, fore } = bodyAxis(lm, world, aspect);
     if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
   }
-  // Өвдөг ШАЛАНД ХҮРСЭН эсэх — хамгийн нарийн шалгуур тул эхэлж хардаг.
-  // Энэ нь Push-up, Battle, Game гурвуулаад үйлчилнэ: энэ функц саад өгвөл
-  // кадар эрт буцаж, rep ч тоологдохгүй, тоглоомын удирдлага ч шинэчлэгдэхгүй.
-  const floor = kneeOnFloor(lm, world);
-  if(floor?.down) return "Өвдөг шаланд хүрлээ — хөлөө өргө";
-  // Хүрээгүй ч нугалагдсан бол нөөц шалгуур. Аарцгийн явалтаар үүнийг барих
+  // Өвдөг шалан дээр бол хөл нугалагдана. Аарцгийн явалтаар үүнийг барих
   // боломжгүй: өвдөг дээр цээжээ буулгахад аарцаг өвдгөө тойрон эргэж хамт
   // бууна — өвдөг дээрх push-up-аас ялгарахгүй. Зөвхөн өнцөг ялгана.
-  //
-  // Итгэлцүүрийг дээд шалгуартай ижил түвшинд шаардана: цээжиндээ хаагдсан
-  // хөлийг таамагласан landmark дээр зөв хийсэн rep-ийг хасахгүй.
   const knee = kneeAngle(lm, world);
-  if(knee.deg !== null && knee.vis > KNEE_DOWN_SURE && knee.deg < KNEE_STRAIGHT)
-    return "Өвдгөө шалнаас өргө";
+  if(knee.deg !== null && knee.deg < KNEE_STRAIGHT) return "Өвдгөө шалнаас өргө";
   // Мөр–аарцаг–өвдөг өнцгөөр "бие шулуун уу" гэж шалгахыг больсон: камер
   // ойрхон, бие нь камераас хол чиглэсэн үед доод биеийн цэгүүд таамаглал
   // болж, өнцөг нь утгагүй гарч ирээд тоолохыг бүрмөсөн хаадаг байсан.
@@ -2782,9 +2724,6 @@ function loop(){
     // Rep дунд танилт хэдэн удаа тасалдсан бэ. 0 бол танилт биш, өөр
     // шүүлтүүр саад болж байна.
     + ` drop${midDrops} ${modelVariant}`
-    // Өвдөг шаланд хүрсэн үү: өндөр/шилбэ + доош бол ШАЛАНД гэж бичнэ
-    + (() => { const kf = kneeOnFloor(lm, world);
-        return kf ? ` knee${f2(kf.height)}${kf.down ? "▼ШАЛАНД" : ""}` : " knee–"; })()
     // Видео яагаад зогссоныг ялгах: миний тал зогсоов уу, холболт унав уу
     + (mode === "battle"
         ? ` vid:${VIDEO_PROFILES[videoProfileIndex].id} ${pc ? pc.connectionState : "–"} ${vidStats}`
