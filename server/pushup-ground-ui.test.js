@@ -50,6 +50,10 @@ test('өвдөг газарт 4 frame тогтвортой байж зөрчил
   assert.equal(state.contact, false)
   state = advance(state, .12)
   assert.equal(state.contact, true)
+  state = advance(state, null)
+  state = advance(state, Number.NaN)
+  state = advance(state, undefined)
+  assert.equal(state.contact, true, 'танилт тасрах нь өвдгөө өргөсөнд тооцогдохгүй')
   state = advance(state, .3)
   assert.equal(state.contact, true, 'hysteresis мужид төлөв савлахгүй')
   state = advance(state, .65)
@@ -59,15 +63,19 @@ test('өвдөг газарт 4 frame тогтвортой байж зөрчил
   assert.equal(state.contact, false)
 })
 
-test('шинэ газар шалгалт зөвхөн энгийн solo push-up дээр ажиллана', () => {
+test('газар шалгалт solo, Flappy, Battle push-up горимд ажиллана', () => {
   const enabled = new Function('mode', 'soloVariant', 'exercise', `
-    ${sourceOf('normalPushupGroundEnabled')}
-    return normalPushupGroundEnabled();
+    ${sourceOf('pushupGroundEnabled')}
+    return pushupGroundEnabled();
   `)
   assert.equal(enabled('solo', 'normal', 'pushup'), true)
-  assert.equal(enabled('solo', 'game', 'pushup'), false)
-  assert.equal(enabled('battle', 'normal', 'pushup'), false)
+  assert.equal(enabled('solo', 'game', 'pushup'), true)
+  assert.equal(enabled('battle', 'normal', 'pushup'), true)
   assert.equal(enabled('solo', 'normal', 'squat'), false)
-  assert.match(html, /if\(normalPushupGroundEnabled\(\)\)\{[\s\S]*?updatePushupGround/)
-  assert.match(html, /normalPushupGroundEnabled\(\) && pushupGroundViolation/)
+  assert.match(html, /if\(pushupGroundEnabled\(\)\)\{[\s\S]*?updatePushupGround/)
+  assert.match(html, /pushupGroundEnabled\(\) && pushupGroundViolation/)
+  assert.match(html, /if\(bad === GROUND_CONTACT_MESSAGE\)\{[\s\S]*?idle\(\);[\s\S]*?badFrames = 0;/,
+    'дундуур өвдөг хүрвэл rep cycle шууд цуцлагдана')
+  assert.match(html, /const flappyStarted = mode === "solo" && soloVariant === "game"[\s\S]*?if\(flappyStarted\) finishPushGame\("Өвдөг шаланд хүрлээ"\);/,
+    'Flappy эхэлсний дараа өвдөг хүрвэл шууд game over болно')
 })

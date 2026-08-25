@@ -517,7 +517,7 @@
   #gameCanvas{display:none;pointer-events:none}
   #play.push-game #gameCanvas{display:block}
   #play.push-game #canvas{opacity:.74;z-index:3;pointer-events:none}
-  #play.push-game #deepGlow,#play.push-game #meterWrap,#play.push-game #bottom{display:none}
+  #play.push-game #deepGlow,#play.push-game #bottom{display:none}
   #pushGameHud{display:none;position:absolute;z-index:4;left:12px;right:12px;
     top:calc(env(safe-area-inset-top) + 12px);align-items:center;justify-content:space-between;
     gap:8px;pointer-events:none}
@@ -576,6 +576,18 @@
   /* Хаана хүртэл буух ёстойг заана — үүнээс доош оруулбал л тоологдоно */
   #meterLine{position:absolute;left:0;right:0;height:3px;bottom:31%;background:#fff;
     box-shadow:0 0 0 1px rgba(0,0,0,.55)}
+  /* Game-д ижил meter-ийг тохойн бодит түвшин болгон ашиглана. Өнгөт цэг нь
+     шувуу, хөндлөн шугам нь дараагийн саадны нүхний төв. */
+  #play.push-game #meterWrap{display:block;z-index:5;right:15px;top:54%;width:14px;
+    height:min(44vh,340px);overflow:visible;background:rgba(3,8,15,.72);
+    box-shadow:0 0 0 1.5px rgba(255,255,255,.3),0 8px 24px rgba(0,0,0,.5)}
+  #play.push-game #meter{border-radius:999px;transition:none;box-shadow:0 0 12px currentColor}
+  #play.push-game #meter::after{content:"";position:absolute;left:50%;top:-8px;width:24px;height:16px;
+    transform:translateX(-50%);border-radius:999px;background:currentColor;border:2px solid #fff;
+    box-shadow:0 3px 12px rgba(0,0,0,.55)}
+  #play.push-game #meterLine{left:-7px;right:-7px;height:3px;border-radius:999px;
+    transition:none;box-shadow:0 0 0 1px rgba(0,0,0,.7),0 0 10px currentColor}
+  #play.push-game #meterWrap.locked #meter::after{box-shadow:0 0 0 4px rgba(57,217,138,.2),0 0 16px #39d98a}
 
   #bottom{display:flex;flex-direction:column;gap:12px;align-items:center}
   #msg{font-size:15px;font-weight:700;padding:8px 18px;border-radius:999px;
@@ -1126,7 +1138,10 @@
         <div id="repDiag">–</div>
       </div>
     </div>
-    <div id="meterWrap"><div id="meter"></div><div id="meterLine"></div></div>
+    <div id="meterWrap" role="meter" aria-label="Тохойн түвшин" aria-valuemin="0"
+         aria-valuemax="100" aria-valuenow="0">
+      <div id="meter"></div><div id="meterLine" aria-hidden="true"></div>
+    </div>
     <div id="bottom">
       <div id="msg" role="status" aria-live="polite" aria-atomic="true">Бэлдэж байна…</div>
       <div id="counter"><span id="count">0</span></div>
@@ -2071,7 +2086,7 @@ const KNEE_STRAIGHT = 150;
 // таамаглал болдог ба тэр таамаг дээр rep-ийг хаах нь буруу. 0.7 нь хэт
 // өндөр байсан — хөл бүтэн харагдаж байхад ч шалгуур асахгүй өнгөрдөг байв.
 const SURE = 0.5;
-// Зөвхөн энгийн solo push-up дээр хоёр бугуйг зурган дээрх шалны лавлагаа
+// Push-up-ийн бүх горимд хоёр бугуйг зурган дээрх шалны лавлагаа
 // болгож, өвдөг түүнээс хэр өндөр байгааг мөр–ташааны уртаар normalize хийнэ.
 // MediaPipe world Z болон өлмий шаарддаггүй: утас шаланд ойр үед эдгээр нь
 // халхлагдаж эсвэл depth нь эсрэг савладаг. Hysteresis нь нэг кадрын чимээг дарна.
@@ -2227,8 +2242,9 @@ function kneeAngle(lm, world){
   return { deg: vals.length ? vals.reduce((p,q) => p + q, 0)/vals.length : null, vis: best };
 }
 
-function normalPushupGroundEnabled(){
-  return mode === "solo" && soloVariant === "normal" && exercise === "pushup";
+function pushupGroundEnabled(){
+  return exercise === "pushup"
+    && (mode === "battle" || (mode === "solo" && (soloVariant === "normal" || soloVariant === "game")));
 }
 
 function groundPoseSnapshot(lm){
@@ -2270,7 +2286,7 @@ function startGroundWorker(){
       if(!groundPending || message.requestId !== groundPending.requestId) return;
       const pending = groundPending;
       groundPending = null;
-      if(message.type === "segment-error" || !normalPushupGroundEnabled()) return;
+      if(message.type === "segment-error" || !pushupGroundEnabled()) return;
       if(performance.now()-pending.requestedAt > GROUND_MODEL_STALE_MS) return;
       if(!message.found){
         groundModelMetric = null;
@@ -2300,7 +2316,7 @@ function resetGroundModelSession(){
 }
 
 function scheduleGroundSegmentation(lm, aspect, now = performance.now()){
-  if(!normalPushupGroundEnabled()) return;
+  if(!pushupGroundEnabled()) return;
   startGroundWorker();
   if(groundWorkerStatus !== "ready" || !groundWorker || groundPending) return;
   if(now-groundLastRequestAt < GROUND_MODEL_INTERVAL_MS) return;
@@ -2402,11 +2418,16 @@ function pushupGroundMetric(lm, aspect = 1){
 
 function advancePushupGround(state, ratio){
   let { contact, contactFrames, clearFrames } = state;
-  if(Number.isFinite(ratio) && ratio <= GROUND_CONTACT_RATIO){
+  if(!Number.isFinite(ratio)){
+    // Нэгэнт өвдөг газар хүрсэн бол landmark алга болохыг "өргөсөн" гэж
+    // үзэж болохгүй. Өвдөг шалнаас зайтай нь бодитоор харагдтал түгжээ үлдэнэ.
+    contactFrames = 0;
+    clearFrames = 0;
+  }else if(ratio <= GROUND_CONTACT_RATIO){
     contactFrames++;
     clearFrames = 0;
     if(contactFrames >= GROUND_CONFIRM_FRAMES) contact = true;
-  }else if(!Number.isFinite(ratio) || ratio >= GROUND_RELEASE_RATIO){
+  }else if(ratio >= GROUND_RELEASE_RATIO){
     contactFrames = 0;
     clearFrames++;
     if(clearFrames >= GROUND_RELEASE_FRAMES) contact = false;
@@ -2631,7 +2652,7 @@ function positionCheck(lm, world, aspect){
     const { horiz, fore } = bodyAxis(lm, world, aspect);
     if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
   }
-  if(normalPushupGroundEnabled()){
+  if(pushupGroundEnabled()){
     const ground = updatePushupGround(lm, aspect);
     if(ground.contact) return GROUND_CONTACT_MESSAGE;
   }
@@ -2789,7 +2810,7 @@ function countRep(deg, now, th, body){
     if(deg < dipMin) dipMin = deg;
     if(deepEnough(deg, th, body.arm)){
       phase = "down"; repStart = now; repMinAngle = deg; dipMin = 999;
-      if(normalPushupGroundEnabled() && !pushupGroundState.contact) pushupGroundViolation = false;
+      if(pushupGroundEnabled() && !pushupGroundState.contact) pushupGroundViolation = false;
       shBot = body.sh; hpBot = body.hp; armBest = body.arm ?? -99;
       bodyMinAngle = body.line ?? 180;
       bodyAngleSeen = body.line !== null;
@@ -2823,7 +2844,7 @@ function countRep(deg, now, th, body){
     phase = "up";
     if(now - repStart < MIN_REP_MS){
       setPoseMsg("Арай удаан, хөдөлгөөнөө бүтэн хий", "var(--bad)");
-    } else if(normalPushupGroundEnabled() && pushupGroundViolation){
+    } else if(pushupGroundEnabled() && pushupGroundViolation){
       setPoseMsg(GROUND_CONTACT_MESSAGE, "var(--bad)");
     } else if(!rigid()){
       setPoseMsg("Биеэ бүхэлд нь буулга", "var(--bad)");
@@ -2978,9 +2999,19 @@ function loop(){
   const bad = positionCheck(lm, world, asp);
   if(bad){
     setPoseMsg(bad, bad === GROUND_CONTACT_MESSAGE ? "var(--bad)" : "var(--dim)");
-    // Нэг муу кадарт rep-ийг цуцлахгүй — доод цэгт бугуй халхлагдахад
-    // цэгийн итгэлцүүр хэсэг зуур унадаг тул бүх rep алдагдаж байсан.
-    if(++badFrames >= BAD_FRAMES) idle();
+    if(bad === GROUND_CONTACT_MESSAGE){
+      const flappyStarted = mode === "solo" && soloVariant === "game"
+        && pushGameState.active && pushGameState.poseReady && now >= pushGameState.readyAt;
+      // Өвдөг газар хүрсэн нь батлагдсан бол эхэлсэн rep-ийг хүлээлгүй
+      // шууд цуцална. Өвдгөө өргөсний дараа шинэ cycle эхлэх ёстой.
+      idle();
+      badFrames = 0;
+      if(flappyStarted) finishPushGame("Өвдөг шаланд хүрлээ");
+    }else{
+      // Нэг муу кадарт rep-ийг цуцлахгүй — доод цэгт бугуй халхлагдахад
+      // цэгийн итгэлцүүр хэсэг зуур унадаг тул бүх rep алдагдаж байсан.
+      if(++badFrames >= BAD_FRAMES) idle();
+    }
     return;
   }
 
@@ -3059,6 +3090,7 @@ const pushGameState = {
   anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
   lastFrameAt:0, width:0
 };
+const pushGameReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
 function pushGameTargetY(deg, anchorAngle = 170, anchorY = .24){
   const downAngle = 98;
@@ -3082,6 +3114,35 @@ function pushGameStableY(current, next){
   if(Math.abs(delta) <= .015) return current;
   const alpha = Math.min(.94, .48 + Math.abs(delta) * 6);
   return current + delta * alpha;
+}
+
+function pushGameSmoothY(current, target, dt, reducedMotion = pushGameReducedMotion){
+  if(!Number.isFinite(current)) return target;
+  if(reducedMotion) return target;
+  // Pose update 20–30 fps байсан ч RAF бүрд 100ms орчимд зорилгодоо хүрнэ.
+  // Overshoot хийхгүй тул дэлгэцийн шувуу ба collision үргэлж нэг байрлалтай.
+  const alpha = 1 - Math.exp(-22 * Math.max(0, Math.min(.05, dt)));
+  const next = current + (target - current) * alpha;
+  return Math.abs(target - next) < .0015 ? target : next;
+}
+
+function updatePushGameLevelMeter(height, targetPipe){
+  const birdLevel = Math.max(0, Math.min(100, (1 - pushGameState.birdY) * 100));
+  const guideColor = pushGameState.locked ? "var(--accent)" : "var(--warn)";
+  $("meter").style.height = `${birdLevel}%`;
+  $("meter").style.background = guideColor;
+  $("meter").style.color = guideColor;
+  $("meterWrap").classList.toggle("locked", !!targetPipe && pushGameState.locked);
+  $("meterWrap").setAttribute("aria-valuenow", String(Math.round(birdLevel)));
+  if(targetPipe){
+    const targetLevel = Math.max(0, Math.min(100, (1 - targetPipe.gapY / height) * 100));
+    $("meterLine").style.bottom = `${targetLevel}%`;
+    $("meterLine").style.color = guideColor;
+    $("meterLine").style.background = guideColor;
+    $("meterLine").style.opacity = "1";
+  }else{
+    $("meterLine").style.opacity = "0";
+  }
 }
 
 function updatePushGameControl(deg, now, eyeY){
@@ -3261,12 +3322,13 @@ function pushGameFrame(now){
       lockPipe = pipe;
     }
   }
+  pushGameState.birdY = pushGameSmoothY(pushGameState.birdY, desiredY, dt);
   if(lockPipe){
     const gapCenter = lockPipe.gapY / height;
     const lockRange = Math.min(.055, (lockPipe.gap / height) * .18);
-    pushGameState.locked = Math.abs(desiredY - gapCenter) <= lockRange;
+    pushGameState.locked = Math.abs(pushGameState.birdY - gapCenter) <= lockRange;
   } else pushGameState.locked = false;
-  pushGameState.birdY = desiredY;
+  updatePushGameLevelMeter(height, lockPipe);
 
   if(started){
     const pipeWidth = Math.max(48, Math.min(76, width * .15));
@@ -3308,6 +3370,15 @@ function stopPushGame(){
   pushGameState.active = false; pushGameState.over = false; pushGameState.raf = 0;
   $("play").classList.remove("push-game");
   $("pushGameOver").classList.add("hidden");
+  $("meterWrap").classList.remove("locked");
+  $("meterWrap").setAttribute("aria-valuenow", "0");
+  $("meter").style.color = "";
+  $("meter").style.background = "";
+  $("meter").style.height = "0%";
+  $("meterLine").style.bottom = "31%";
+  $("meterLine").style.color = "";
+  $("meterLine").style.background = "";
+  $("meterLine").style.opacity = "";
   gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 }
 

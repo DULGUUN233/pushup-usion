@@ -50,8 +50,8 @@ test('floor mask өвдөгт тулсан болон зайтай байрла�
     'model шал таниагүй бол буруу таахгүй')
 })
 
-test('SegFormer зөвхөн normal solo push-up дээр асч, 2D fallback хэвээр байна', () => {
-  assert.match(html, /function scheduleGroundSegmentation[\s\S]*?if\(!normalPushupGroundEnabled\(\)\) return;/)
+test('SegFormer бүх push-up горимд асч, 2D fallback хэвээр байна', () => {
+  assert.match(html, /function scheduleGroundSegmentation[\s\S]*?if\(!pushupGroundEnabled\(\)\) return;/)
   assert.match(html, /const metric = aiFresh && !aiContradictsClearPose \? aiFresh : fallback;/)
   assert.match(html, /const fallback = pushupGroundMetric\(lm, aspect\)/)
   assert.match(html, /function stopCamera\(\)[\s\S]*?resetGroundModelSession\(\)/)

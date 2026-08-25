@@ -67,7 +67,21 @@ test('шувуу эхлэхдээ нүдний түвшинд таарч, adapti
   const stableY = new Function(`${source}\nreturn pushGameStableY`)()
   assert.equal(stableY(.5, .51), .5)
   assert.ok(stableY(.5, .7) > .68)
-  assert.match(html, /pushGameState\.birdY = desiredY/)
+  const smoothSource = html.match(/function pushGameSmoothY\(current, target, dt, reducedMotion = pushGameReducedMotion\)\{[\s\S]*?\n\}/)?.[0]
+  assert.ok(smoothSource, 'pushGameSmoothY source олдсонгүй')
+  const smoothY = new Function(`${smoothSource}\nreturn pushGameSmoothY`)()
+  const first = smoothY(.25, .7, 1 / 60, false)
+  assert.ok(first > .25 && first < .7, 'render frame бүрд зорилго руу зөөлөн ойртоно')
+  assert.equal(smoothY(.25, .7, 1 / 60, true), .7, 'reduced motion үед шууд байрлана')
+  assert.match(html, /pushGameState\.birdY = pushGameSmoothY\(pushGameState\.birdY, desiredY, dt\)/)
+})
+
+test('Flappy хажуугийн meter шувуу болон дараагийн нүхний түвшнийг харуулна', () => {
+  assert.doesNotMatch(html, /#play\.push-game #deepGlow,#play\.push-game #meterWrap/)
+  assert.match(html, /#play\.push-game #meterWrap\{display:block[^}]*height:min\(44vh,340px\)/)
+  assert.match(html, /function updatePushGameLevelMeter\(height, targetPipe\)[\s\S]*?\(1 - pushGameState\.birdY\) \* 100/)
+  assert.match(html, /\(1 - targetPipe\.gapY \/ height\) \* 100/)
+  assert.match(html, /updatePushGameLevelMeter\(height, lockPipe\)/)
 })
 
 test('Flappy source-ийн local bird, pipe asset-уудыг preload хийгээд canvas дээр зурна', () => {
@@ -89,7 +103,7 @@ test('саад хэт захад гарахгүй, дараагийн gap хүр
   assert.equal(gapY(800, 240, 400, 1), 544)
   assert.match(html, /pushGameState\.lastGapY = gapY/)
   assert.doesNotMatch(html, /nextLane/)
-  assert.match(html, /pushGameState\.locked = Math\.abs\(desiredY - gapCenter\) <= lockRange/)
+  assert.match(html, /pushGameState\.locked = Math\.abs\(pushGameState\.birdY - gapCenter\) <= lockRange/)
   assert.doesNotMatch(html, /ТҮВШИН ТОГТЛОО/)
   assert.doesNotMatch(html, /desiredY = gapCenter/)
   assert.match(html, /prefers-reduced-motion:\s*reduce/)
