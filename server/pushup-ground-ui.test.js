@@ -38,6 +38,35 @@ test('2D бугуйн шугам өвдөг хүрсэн ба өргөгдсөн
   assert.equal(metric(lm, 1), null, 'бугуйн лавлагаа найдваргүй бол таахгүй')
 })
 
+test('урдаас авсан kneeling байрлалыг хоёр хөлийн 2D нугаралтаар барина', () => {
+  const metric = new Function(`
+    const LEGS=[[23,25,27],[24,26,28]];
+    const GROUND_KNEE_VIS_MIN=.4, GROUND_KNEE_2D_CONTACT=145, GROUND_KNEE_2D_RELEASE=158;
+    const angle3=(a,b,c)=>{
+      const ux=a.x-b.x, uy=a.y-b.y, uz=a.z-b.z;
+      const vx=c.x-b.x, vy=c.y-b.y, vz=c.z-b.z;
+      const den=Math.hypot(ux,uy,uz)*Math.hypot(vx,vy,vz);
+      return den ? Math.acos(Math.max(-1,Math.min(1,(ux*vx+uy*vy+uz*vz)/den)))*180/Math.PI : null;
+    };
+    ${sourceOf('pushupKneePoseMetric')}
+    return pushupKneePoseMetric;
+  `)()
+  const lm = Array.from({ length:33 }, () => ({ x:.5, y:.5, visibility:1 }))
+  Object.assign(lm[23], { x:.48, y:.545 });
+  Object.assign(lm[25], { x:.245, y:.577 });
+  Object.assign(lm[27], { x:.139, y:.665 });
+  Object.assign(lm[24], { x:.63, y:.54 });
+  Object.assign(lm[26], { x:.83, y:.555 });
+  Object.assign(lm[28], { x:.883, y:.67 });
+  assert.equal(metric(lm, .56).ratio, 0, 'зураг дээрх kneeling байрлал contact болно')
+
+  Object.assign(lm[25], { x:.45, y:.66 });
+  Object.assign(lm[27], { x:.42, y:.78 });
+  Object.assign(lm[26], { x:.66, y:.655 });
+  Object.assign(lm[28], { x:.69, y:.77 });
+  assert.equal(metric(lm, .56).ratio, 1, 'хоёр хөл шулуун бол clear болно')
+})
+
 test('өвдөг газарт 4 frame тогтвортой байж зөрчил батлагдаад hysteresis-ээр гарна', () => {
   const advance = new Function(`
     const GROUND_CONTACT_RATIO=.24, GROUND_RELEASE_RATIO=.36;

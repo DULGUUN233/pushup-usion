@@ -52,7 +52,9 @@ test('floor mask өвдөгт тулсан болон зайтай байрла�
 
 test('SegFormer бүх push-up горимд асч, 2D fallback хэвээр байна', () => {
   assert.match(html, /function scheduleGroundSegmentation[\s\S]*?if\(!pushupGroundEnabled\(\)\) return;/)
-  assert.match(html, /const metric = aiFresh && !aiContradictsClearPose \? aiFresh : fallback;/)
+  assert.match(html, /let metric = aiFresh && !aiContradictsClearPose \? aiFresh : fallback;/)
+  assert.match(html, /const kneePose = pushupKneePoseMetric\(lm, aspect\)/)
   assert.match(html, /const fallback = pushupGroundMetric\(lm, aspect\)/)
+  assert.match(html, /groundModelMetric = metric \? \{ \.\.\.metric, at:pending\.requestedAt \} : null/)
   assert.match(html, /function stopCamera\(\)[\s\S]*?resetGroundModelSession\(\)/)
 })

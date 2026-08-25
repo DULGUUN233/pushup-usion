@@ -2095,6 +2095,9 @@ const GROUND_CONTACT_RATIO = 0.24;
 const GROUND_RELEASE_RATIO = 0.36;
 const GROUND_CONFIRM_FRAMES = 4;
 const GROUND_RELEASE_FRAMES = 3;
+const GROUND_KNEE_VIS_MIN = 0.4;
+const GROUND_KNEE_2D_CONTACT = 145;
+const GROUND_KNEE_2D_RELEASE = 158;
 const GROUND_CONTACT_MESSAGE = "Өвдөг шаланд хүрлээ — өргө";
 const GROUND_MODEL_FRAME_SIZE = 256;
 const GROUND_MODEL_INTERVAL_MS = 900;
@@ -2299,7 +2302,9 @@ function startGroundWorker(){
         message.width,
         message.height
       );
-      groundModelMetric = metric ? { ...metric, at:performance.now() } : null;
+      // Model inference-ийн дараах биш, яг авсан camera frame-ийн насыг хадгална.
+      // Удаан утсан дээр хуучин mask-ийг шинэ мэт ашиглахаас хамгаална.
+      groundModelMetric = metric ? { ...metric, at:pending.requestedAt } : null;
     };
     groundWorker.onerror = () => failGroundWorker();
     groundWorker.postMessage({ type:"load" });
@@ -2416,6 +2421,35 @@ function pushupGroundMetric(lm, aspect = 1){
   };
 }
 
+/**
+ * Урд, шаланд ойр камераар 3D depth эвдэрсэн ч зураг дээр хоёр шилбэ
+ * нугарсан нь тод үлддэг. Хоёр хөлийг зэрэг шаардах нь нэг халхлагдсан
+ * шагайн буруу таамгийг шууд contact болгохоос хамгаална.
+ */
+function pushupKneePoseMetric(lm, aspect = 1){
+  const angles = [];
+  const qualities = [];
+  for(const [hip,knee,ankle] of LEGS){
+    const ids = [hip,knee,ankle];
+    const quality = Math.min(...ids.map(i => lm[i]?.visibility ?? 0));
+    if(quality < GROUND_KNEE_VIS_MIN) continue;
+    const p = i => ({ x:lm[i].x*aspect, y:lm[i].y, z:0 });
+    const deg = angle3(p(hip), p(knee), p(ankle));
+    if(deg !== null){ angles.push(deg); qualities.push(quality); }
+  }
+  if(!angles.length) return null;
+  const average = angles.reduce((sum, value) => sum+value, 0)/angles.length;
+  const contact = angles.length >= 2
+    ? average <= GROUND_KNEE_2D_CONTACT && Math.max(...angles) <= 155
+    : average <= 120;
+  const clear = angles.length >= 2
+    ? Math.min(...angles) >= GROUND_KNEE_2D_RELEASE
+    : average >= 170;
+  if(contact) return { ratio:0, quality:Math.min(...qualities), source:"knee-2d" };
+  if(clear) return { ratio:1, quality:Math.min(...qualities), source:"knee-2d" };
+  return null;
+}
+
 function advancePushupGround(state, ratio){
   let { contact, contactFrames, clearFrames } = state;
   if(!Number.isFinite(ratio)){
@@ -2441,6 +2475,7 @@ function advancePushupGround(state, ratio){
 function updatePushupGround(lm, aspect){
   scheduleGroundSegmentation(lm, aspect);
   const fallback = pushupGroundMetric(lm, aspect);
+  const kneePose = pushupKneePoseMetric(lm, aspect);
   const aiFresh = groundModelMetric
     && performance.now()-groundModelMetric.at <= GROUND_MODEL_STALE_MS
     ? groundModelMetric
@@ -2449,8 +2484,14 @@ function updatePushupGround(lm, aspect){
   // өвдөг илт өргөгдсөн гэвэл AI-ийн contact үр дүнг ашиглахгүй.
   const aiContradictsClearPose = aiFresh?.ratio <= GROUND_CONTACT_RATIO
     && fallback?.ratio >= GROUND_RELEASE_RATIO;
-  const metric = aiFresh && !aiContradictsClearPose ? aiFresh : fallback;
-  groundMetricSource = metric?.source === "segformer" ? "ai" : "2d";
+  let metric = aiFresh && !aiContradictsClearPose ? aiFresh : fallback;
+  // Хоёр хөл зэрэг баттай нугарсан бол бугуйн шугамын perspective алдаанаас
+  // үл хамааран contact. Харин straight evidence нь spatial metric огт
+  // байхгүй үед л lock-ийг тайлахад ашиглагдана.
+  if(kneePose?.ratio <= GROUND_CONTACT_RATIO) metric = kneePose;
+  else if(!metric && kneePose) metric = kneePose;
+  groundMetricSource = metric?.source === "segformer"
+    ? "ai" : metric?.source === "knee-2d" ? "knee" : "2d";
   lastPushupGroundRatio = metric?.ratio ?? null;
   pushupGroundState = advancePushupGround(pushupGroundState, lastPushupGroundRatio);
   if(pushupGroundState.contact) pushupGroundViolation = true;
