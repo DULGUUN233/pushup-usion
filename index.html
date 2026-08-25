@@ -3129,7 +3129,7 @@ const pushGameState = {
   active:false, over:false, raf:0, score:0, pipes:[], nextPipeAt:0,
   birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
   anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
-  lastFrameAt:0, width:0
+  lastFrameAt:0, width:0, restartTimer:0
 };
 const pushGameReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
@@ -3335,16 +3335,25 @@ function drawPushGame(now, width, height){
     drawPushGameMessage(width, height, "Бэлэн", "Доош буухад шувуу доошилно");
 }
 
-function finishPushGame(title = "Тоглоом дууслаа"){
+function finishPushGame(title = "Тоглоом дууслаа", autoRestart = true){
   if(!pushGameState.active || pushGameState.over) return;
   pushGameState.over = true;
   cancelAnimationFrame(pushGameState.raf);
+  clearTimeout(pushGameState.restartTimer);
   void saveFlappyScore(pushGameState.score);
   $("pushGameOverTitle").textContent = title;
   $("pushGameFinalScore").textContent = pushGameState.score;
   $("pushGameFinalReps").textContent = count;
   $("pushGameOver").classList.remove("hidden");
   if(navigator.vibrate) navigator.vibrate([60, 45, 90]);
+  if(autoRestart){
+    pushGameState.restartTimer = setTimeout(() => {
+      if(!pushGameState.active || !pushGameState.over ||
+          mode !== "solo" || soloVariant !== "game") return;
+      reset();
+      startPushGame();
+    }, 5000);
+  }
 }
 
 function pushGameFrame(now){
@@ -3408,7 +3417,9 @@ function pushGameFrame(now){
 
 function stopPushGame(){
   cancelAnimationFrame(pushGameState.raf);
+  clearTimeout(pushGameState.restartTimer);
   pushGameState.active = false; pushGameState.over = false; pushGameState.raf = 0;
+  pushGameState.restartTimer = 0;
   $("play").classList.remove("push-game");
   $("pushGameOver").classList.add("hidden");
   $("meterWrap").classList.remove("locked");
@@ -5133,7 +5144,7 @@ $("pushGame").onclick = () => openSolo("pushup", "game");
 $("go").onclick      = startSolo;
 $("reset").onclick  = reset;
 $("done").onclick   = finish;
-$("gameEnd").onclick = () => finishPushGame("Тоглоом зогслоо");
+$("gameEnd").onclick = () => finishPushGame("Тоглоом зогслоо", false);
 $("pushGameRestart").onclick = () => { reset(); startPushGame(); };
 $("pushGameExit").onclick = finish;
 

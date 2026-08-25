@@ -122,3 +122,10 @@ test('Flappy game дуусахад хамгийн өндөр оноог серв
   assert.match(html, /FLAPPY_PENDING_KEY/)
   assert.match(html, /loadProfile\(\)[\s\S]*?saveFlappyScore\(readPendingFlappyScore\(\)\)/)
 })
+
+test('Flappy оноог 5 секунд харуулаад автоматаар дахин эхэлнэ', () => {
+  assert.match(html, /function finishPushGame\(title = "Тоглоом дууслаа", autoRestart = true\)/)
+  assert.match(html, /pushGameState\.restartTimer = setTimeout\(\(\) => \{[\s\S]*?reset\(\);[\s\S]*?startPushGame\(\);[\s\S]*?\}, 5000\)/)
+  assert.match(html, /function stopPushGame\(\)[\s\S]*?clearTimeout\(pushGameState\.restartTimer\)/)
+  assert.match(html, /\$\("gameEnd"\)\.onclick = \(\) => finishPushGame\("Тоглоом зогслоо", false\)/)
+})
