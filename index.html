@@ -2038,6 +2038,11 @@ let exercise = "pushup";                                  // solo дасгал
 let soloVariant = "normal";                               // энгийн эсвэл game
 let pushupGroundState = { contact:false, contactFrames:0, clearFrames:0 };
 let pushupGroundViolation = false, lastPushupGroundRatio = null;
+let groundWorker = null, groundWorkerStatus = "idle", groundPending = null;
+let groundRequestSeq = 0, groundLastRequestAt = 0, groundModelMetric = null;
+let groundMetricSource = "2d";
+const groundFrameCanvas = document.createElement("canvas");
+const groundFrameCtx = groundFrameCanvas.getContext("2d", { willReadFrequently:true });
 let squatReady = false, squatDepthFrames = 0, squatStandFrames = 0;
 let squatMinKnee = 180, squatMinHip = 180, squatMaxDepthDelta = -1;
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
@@ -2066,15 +2071,20 @@ const KNEE_STRAIGHT = 150;
 // таамаглал болдог ба тэр таамаг дээр rep-ийг хаах нь буруу. 0.7 нь хэт
 // өндөр байсан — хөл бүтэн харагдаж байхад ч шалгуур асахгүй өнгөрдөг байв.
 const SURE = 0.5;
-// Зөвхөн энгийн solo push-up дээр бугуй–өлмийн 3D тулгуур хавтгайгаас
-// өвдөгний зайг хэмжинэ. Биеийн хэмжээгээр normalize хийсэн тул камерын
-// зайнаас үл хамаарна; hysteresis нь landmark-ийн нэг кадрын савлагааг дарна.
+// Зөвхөн энгийн solo push-up дээр хоёр бугуйг зурган дээрх шалны лавлагаа
+// болгож, өвдөг түүнээс хэр өндөр байгааг мөр–ташааны уртаар normalize хийнэ.
+// MediaPipe world Z болон өлмий шаарддаггүй: утас шаланд ойр үед эдгээр нь
+// халхлагдаж эсвэл depth нь эсрэг савладаг. Hysteresis нь нэг кадрын чимээг дарна.
 const GROUND_VIS_MIN = 0.5;
-const GROUND_CONTACT_RATIO = 0.16;
-const GROUND_RELEASE_RATIO = 0.24;
-const GROUND_CONFIRM_FRAMES = 5;
+const GROUND_CONTACT_RATIO = 0.24;
+const GROUND_RELEASE_RATIO = 0.36;
+const GROUND_CONFIRM_FRAMES = 4;
 const GROUND_RELEASE_FRAMES = 3;
 const GROUND_CONTACT_MESSAGE = "Өвдөг шаланд хүрлээ — өргө";
+const GROUND_MODEL_FRAME_SIZE = 256;
+const GROUND_MODEL_INTERVAL_MS = 900;
+const GROUND_MODEL_STALE_MS = 3500;
+const GROUND_MODEL_MAX_SEARCH_RATIO = 1.2;
 
 // Зөвхөн бие. MediaPipe-ийн бэлэн POSE_CONNECTIONS нүүрэн дээр 11 цэг,
 // алга/ул дээр бас цэг зурдаг тул зураг эмх замбараагүй болдог.
@@ -2221,50 +2231,173 @@ function normalPushupGroundEnabled(){
   return mode === "solo" && soloVariant === "normal" && exercise === "pushup";
 }
 
-/**
- * Бугуй (15/16), өлмий (31/32) гэсэн дөрвөн тулгуураас 3D хавтгай гаргаж,
- * хамгийн ойр өвдөг хүртэлх перпендикуляр зайг мөр–ташааны уртаар хуваана.
- * World landmark-ийн масштаб төхөөрөмж бүрд бага зэрэг өөр байдаг тул шууд
- * метр босго хэрэглэхээс энэ ratio тогтвортой.
- */
-function pushupGroundMetric(lm, world){
-  const support = [15,16,31,32];
-  if(!world || support.some(i => !world[i] || (lm[i]?.visibility ?? 1) < GROUND_VIS_MIN)) return null;
-  const mid = (a,b) => ({ x:(a.x+b.x)/2, y:(a.y+b.y)/2, z:(a.z+b.z)/2 });
-  const sub = (a,b) => ({ x:a.x-b.x, y:a.y-b.y, z:a.z-b.z });
-  const len = v => Math.hypot(v.x,v.y,v.z);
-  const handMid = mid(world[15], world[16]);
-  const toeMid = mid(world[31], world[32]);
-  const wristSpan = sub(world[16], world[15]);
-  const toeSpan = sub(world[32], world[31]);
-  const lateral = {
-    x:(wristSpan.x+toeSpan.x)/2,
-    y:(wristSpan.y+toeSpan.y)/2,
-    z:(wristSpan.z+toeSpan.z)/2
-  };
-  const along = sub(toeMid, handMid);
-  const normal = {
-    x:lateral.y*along.z-lateral.z*along.y,
-    y:lateral.z*along.x-lateral.x*along.z,
-    z:lateral.x*along.y-lateral.y*along.x
-  };
-  const normalLength = len(normal);
-  const baseArea = len(lateral)*len(along);
-  if(!baseArea || normalLength/baseArea < 0.12) return null;
+function groundPoseSnapshot(lm){
+  const copy = Array(33);
+  for(const i of [11,12,23,24,25,26]){
+    if(lm[i]) copy[i] = {
+      x:lm[i].x,
+      y:lm[i].y,
+      visibility:lm[i].visibility ?? 1
+    };
+  }
+  return copy;
+}
 
-  const shoulderMid = mid(world[11], world[12]);
-  const hipMid = mid(world[23], world[24]);
-  const bodyScale = len(sub(shoulderMid, hipMid));
-  if(!Number.isFinite(bodyScale) || bodyScale < 0.08) return null;
-  const origin = mid(handMid, toeMid);
-  const distances = [25,26]
-    .filter(i => world[i] && (lm[i]?.visibility ?? 1) >= GROUND_VIS_MIN)
-    .map(i => {
-      const d = sub(world[i], origin);
-      return Math.abs(d.x*normal.x+d.y*normal.y+d.z*normal.z) / normalLength / bodyScale;
-    });
+function failGroundWorker(){
+  groundWorkerStatus = "failed";
+  groundPending = null;
+  groundModelMetric = null;
+  groundWorker?.terminate();
+  groundWorker = null;
+}
+
+function startGroundWorker(){
+  if(groundWorker || groundWorkerStatus === "failed") return;
+  try{
+    groundWorkerStatus = "loading";
+    groundWorker = new Worker("./assets/ground-segment-worker.js", { type:"module" });
+    groundWorker.onmessage = event => {
+      const message = event.data || {};
+      if(message.type === "ready"){
+        groundWorkerStatus = "ready";
+        return;
+      }
+      if(message.type === "error"){
+        failGroundWorker();
+        return;
+      }
+      if(message.type !== "mask" && message.type !== "segment-error") return;
+      if(!groundPending || message.requestId !== groundPending.requestId) return;
+      const pending = groundPending;
+      groundPending = null;
+      if(message.type === "segment-error" || !normalPushupGroundEnabled()) return;
+      if(performance.now()-pending.requestedAt > GROUND_MODEL_STALE_MS) return;
+      if(!message.found){
+        groundModelMetric = null;
+        return;
+      }
+      const metric = pushupGroundMaskMetric(
+        pending.landmarks,
+        pending.aspect,
+        new Uint8Array(message.mask),
+        message.width,
+        message.height
+      );
+      groundModelMetric = metric ? { ...metric, at:performance.now() } : null;
+    };
+    groundWorker.onerror = () => failGroundWorker();
+    groundWorker.postMessage({ type:"load" });
+  }catch{
+    failGroundWorker();
+  }
+}
+
+function resetGroundModelSession(){
+  groundPending = null;
+  groundModelMetric = null;
+  groundLastRequestAt = 0;
+  groundMetricSource = "2d";
+}
+
+function scheduleGroundSegmentation(lm, aspect, now = performance.now()){
+  if(!normalPushupGroundEnabled()) return;
+  startGroundWorker();
+  if(groundWorkerStatus !== "ready" || !groundWorker || groundPending) return;
+  if(now-groundLastRequestAt < GROUND_MODEL_INTERVAL_MS) return;
+  if(video.readyState < 2 || !groundFrameCtx) return;
+
+  groundFrameCanvas.width = GROUND_MODEL_FRAME_SIZE;
+  groundFrameCanvas.height = GROUND_MODEL_FRAME_SIZE;
+  groundFrameCtx.drawImage(video, 0, 0, GROUND_MODEL_FRAME_SIZE, GROUND_MODEL_FRAME_SIZE);
+  const frame = groundFrameCtx.getImageData(0, 0, GROUND_MODEL_FRAME_SIZE, GROUND_MODEL_FRAME_SIZE);
+  const requestId = ++groundRequestSeq;
+  groundPending = {
+    requestId,
+    requestedAt:now,
+    aspect,
+    landmarks:groundPoseSnapshot(lm)
+  };
+  groundLastRequestAt = now;
+  groundWorker.postMessage({
+    type:"segment",
+    requestId,
+    width:GROUND_MODEL_FRAME_SIZE,
+    height:GROUND_MODEL_FRAME_SIZE,
+    pixels:frame.data.buffer
+  }, [frame.data.buffer]);
+}
+
+/**
+ * SegFormer-ийн floor/rug mask дотор өвдөгний яг доороос газар эхлэх хүртэлх
+ * зайг олно. Mask тухайн газрыг огт таниагүй бол null — 2D fallback ажиллана.
+ */
+function pushupGroundMaskMetric(lm, aspect, mask, width, height){
+  const required = [11,12,23,24];
+  if(!mask || mask.length !== width*height
+    || required.some(i => !lm[i] || (lm[i].visibility ?? 1) < GROUND_VIS_MIN)) return null;
+  const knees = [25,26].filter(i => lm[i] && (lm[i].visibility ?? 1) >= GROUND_VIS_MIN);
+  if(!knees.length) return null;
+
+  const mid = (a,b) => ({ x:(a.x+b.x)/2, y:(a.y+b.y)/2 });
+  const shoulderMid = mid(lm[11], lm[12]);
+  const hipMid = mid(lm[23], lm[24]);
+  const bodyScale = Math.hypot((shoulderMid.x-hipMid.x)*aspect, shoulderMid.y-hipMid.y);
+  if(!Number.isFinite(bodyScale) || bodyScale < 0.04) return null;
+
+  const maxDistance = Math.max(2, Math.ceil(bodyScale*height*GROUND_MODEL_MAX_SEARCH_RATIO));
+  const radius = Math.max(1, Math.round(bodyScale*width*0.05));
+  const distances = [];
+  for(const i of knees){
+    const x = Math.max(0, Math.min(width-1, Math.round(lm[i].x*(width-1))));
+    const y = Math.max(0, Math.min(height-1, Math.round(lm[i].y*(height-1))));
+    let nearest = null;
+    for(let dy=0;dy<=maxDistance && y+dy<height;dy++){
+      for(let dx=-radius;dx<=radius;dx++){
+        const sx = x+dx;
+        if(sx >= 0 && sx < width && mask[(y+dy)*width+sx]){
+          nearest = dy;
+          break;
+        }
+      }
+      if(nearest !== null) break;
+    }
+    if(nearest !== null) distances.push(nearest/(bodyScale*height));
+  }
   if(!distances.length) return null;
-  return { ratio:Math.min(...distances), quality:normalLength/baseArea };
+  return { ratio:Math.min(...distances), quality:1, source:"segformer" };
+}
+
+/**
+ * Бугуйн хоёр цэгээр зурган дээрх шалны налууг авна. Өвдөг бүрийн X дээр
+ * тэр шугамын Y-г олж, өвдөг хүртэлх босоо зайг мөр–ташааны 2D уртад
+ * хуваана. Ratio бага байх тусам өвдөг гарын тулгууртай ижил түвшинд байна.
+ */
+function pushupGroundMetric(lm, aspect = 1){
+  const required = [11,12,15,16,23,24];
+  if(required.some(i => !lm[i] || (lm[i].visibility ?? 1) < GROUND_VIS_MIN)) return null;
+  const knees = [25,26].filter(i => lm[i] && (lm[i].visibility ?? 1) >= GROUND_VIS_MIN);
+  if(!knees.length) return null;
+
+  const mid = (a,b) => ({ x:(a.x+b.x)/2, y:(a.y+b.y)/2 });
+  const shoulderMid = mid(lm[11], lm[12]);
+  const hipMid = mid(lm[23], lm[24]);
+  const bodyScale = Math.hypot((shoulderMid.x-hipMid.x)*aspect, shoulderMid.y-hipMid.y);
+  if(!Number.isFinite(bodyScale) || bodyScale < 0.04) return null;
+
+  const leftWrist = lm[15], rightWrist = lm[16];
+  const wristDx = rightWrist.x-leftWrist.x;
+  const floorYAt = x => {
+    if(Math.abs(wristDx) < 0.04) return (leftWrist.y+rightWrist.y)/2;
+    // Өвдөг бугуйн хооронд байх ёстой. Нэг кадрын X үсрэлээр шугамыг
+    // хэт extrapolate хийхгүйн тулд багахан захтайгаар хязгаарлана.
+    const t = Math.max(-0.15, Math.min(1.15, (x-leftWrist.x)/wristDx));
+    return leftWrist.y + (rightWrist.y-leftWrist.y)*t;
+  };
+  const clearances = knees.map(i => (floorYAt(lm[i].x)-lm[i].y)/bodyScale);
+  return {
+    ratio:Math.min(...clearances),
+    quality:Math.min(...required.concat(knees).map(i => lm[i].visibility ?? 1))
+  };
 }
 
 function advancePushupGround(state, ratio){
@@ -2284,8 +2417,19 @@ function advancePushupGround(state, ratio){
   return { contact, contactFrames, clearFrames };
 }
 
-function updatePushupGround(lm, world){
-  const metric = pushupGroundMetric(lm, world);
+function updatePushupGround(lm, aspect){
+  scheduleGroundSegmentation(lm, aspect);
+  const fallback = pushupGroundMetric(lm, aspect);
+  const aiFresh = groundModelMetric
+    && performance.now()-groundModelMetric.at <= GROUND_MODEL_STALE_MS
+    ? groundModelMetric
+    : null;
+  // Хуучирсан mask зөв plank-ийг хорихоос хамгаална: одоогийн 2D хэмжилт
+  // өвдөг илт өргөгдсөн гэвэл AI-ийн contact үр дүнг ашиглахгүй.
+  const aiContradictsClearPose = aiFresh?.ratio <= GROUND_CONTACT_RATIO
+    && fallback?.ratio >= GROUND_RELEASE_RATIO;
+  const metric = aiFresh && !aiContradictsClearPose ? aiFresh : fallback;
+  groundMetricSource = metric?.source === "segformer" ? "ai" : "2d";
   lastPushupGroundRatio = metric?.ratio ?? null;
   pushupGroundState = advancePushupGround(pushupGroundState, lastPushupGroundRatio);
   if(pushupGroundState.contact) pushupGroundViolation = true;
@@ -2296,6 +2440,7 @@ function resetPushupGround(){
   pushupGroundState = { contact:false, contactFrames:0, clearFrames:0 };
   pushupGroundViolation = false;
   lastPushupGroundRatio = null;
+  resetGroundModelSession();
 }
 
 /**
@@ -2487,7 +2632,7 @@ function positionCheck(lm, world, aspect){
     if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
   }
   if(normalPushupGroundEnabled()){
-    const ground = updatePushupGround(lm, world);
+    const ground = updatePushupGround(lm, aspect);
     if(ground.contact) return GROUND_CONTACT_MESSAGE;
   }
   // Өвдөг шалан дээр бол хөл нугалагдана. Аарцгийн явалтаар үүнийг барих
@@ -3236,6 +3381,7 @@ async function openCamera(){
 function stopCamera(){
   camGen++;
   running = false;
+  resetGroundModelSession();
   stopPushGame();
   stream?.getTracks().forEach(t => t.stop());
   stream = null;
