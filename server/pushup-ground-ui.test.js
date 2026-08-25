@@ -42,6 +42,7 @@ test('урдаас авсан kneeling байрлалыг хоёр хөлийн 
   const metric = new Function(`
     const LEGS=[[23,25,27],[24,26,28]];
     const GROUND_KNEE_VIS_MIN=.4, GROUND_KNEE_2D_CONTACT=145, GROUND_KNEE_2D_RELEASE=158;
+    const GROUND_KNEE_LAYOUT_VIS_MIN=.35, GROUND_KNEE_LAYOUT_SPREAD=.55, GROUND_KNEE_LAYOUT_WIDTH_RATIO=1.6;
     const angle3=(a,b,c)=>{
       const ux=a.x-b.x, uy=a.y-b.y, uz=a.z-b.z;
       const vx=c.x-b.x, vy=c.y-b.y, vz=c.z-b.z;
@@ -65,6 +66,40 @@ test('урдаас авсан kneeling байрлалыг хоёр хөлийн 
   Object.assign(lm[26], { x:.66, y:.655 });
   Object.assign(lm[28], { x:.69, y:.77 });
   assert.equal(metric(lm, .56).ratio, 1, 'хоёр хөл шулуун бол clear болно')
+})
+
+test('Flappy дунд шагай халхлагдсан ч урд талын өвдөглөсөн хэлбэрийг барина', () => {
+  const metric = new Function(`
+    const LEGS=[[23,25,27],[24,26,28]];
+    const GROUND_KNEE_VIS_MIN=.4, GROUND_KNEE_2D_CONTACT=145, GROUND_KNEE_2D_RELEASE=158;
+    const GROUND_KNEE_LAYOUT_VIS_MIN=.35, GROUND_KNEE_LAYOUT_SPREAD=.55, GROUND_KNEE_LAYOUT_WIDTH_RATIO=1.6;
+    const angle3=(a,b,c)=>{
+      const ux=a.x-b.x, uy=a.y-b.y, uz=a.z-b.z;
+      const vx=c.x-b.x, vy=c.y-b.y, vz=c.z-b.z;
+      const den=Math.hypot(ux,uy,uz)*Math.hypot(vx,vy,vz);
+      return den ? Math.acos(Math.max(-1,Math.min(1,(ux*vx+uy*vy+uz*vz)/den)))*180/Math.PI : null;
+    };
+    ${sourceOf('pushupKneePoseMetric')}
+    return pushupKneePoseMetric;
+  `)()
+  const lm = Array.from({ length:33 }, () => ({ x:.5, y:.5, visibility:1 }))
+  Object.assign(lm[11], { x:.43, y:.48 });
+  Object.assign(lm[12], { x:.57, y:.48 });
+  Object.assign(lm[23], { x:.48, y:.56 });
+  Object.assign(lm[24], { x:.62, y:.56 });
+  Object.assign(lm[25], { x:.24, y:.61 });
+  Object.assign(lm[26], { x:.85, y:.60 });
+  lm[27].visibility = .12;
+  lm[28].visibility = .08;
+  assert.equal(metric(lm, .56).ratio, 0, 'шагайгүй ч хоёр өвдөг дэлгэгдсэн бол contact')
+
+  Object.assign(lm[25], { x:.47, y:.68 });
+  Object.assign(lm[26], { x:.64, y:.68 });
+  assert.equal(metric(lm, .56), null, 'шагайгүй зөв шулуун layout-ийг contact гэж таахгүй')
+
+  Object.assign(lm[25], { x:.40, y:.67 });
+  Object.assign(lm[26], { x:.70, y:.67 });
+  assert.equal(metric(lm, .56), null, 'өвдөг бага зэрэг зайтай зөв plank-ийг contact болгохгүй')
 })
 
 test('өвдөг газарт 4 frame тогтвортой байж зөрчил батлагдаад hysteresis-ээр гарна', () => {

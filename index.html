@@ -2098,6 +2098,9 @@ const GROUND_RELEASE_FRAMES = 3;
 const GROUND_KNEE_VIS_MIN = 0.4;
 const GROUND_KNEE_2D_CONTACT = 145;
 const GROUND_KNEE_2D_RELEASE = 158;
+const GROUND_KNEE_LAYOUT_VIS_MIN = 0.35;
+const GROUND_KNEE_LAYOUT_SPREAD = 0.55;
+const GROUND_KNEE_LAYOUT_WIDTH_RATIO = 1.6;
 const GROUND_CONTACT_MESSAGE = "Өвдөг шаланд хүрлээ — өргө";
 const GROUND_MODEL_FRAME_SIZE = 256;
 const GROUND_MODEL_INTERVAL_MS = 900;
@@ -2455,16 +2458,42 @@ function pushupKneePoseMetric(lm, aspect = 1){
     const deg = angle3(p(hip), p(knee), p(ankle));
     if(deg !== null){ angles.push(deg); qualities.push(quality); }
   }
-  if(!angles.length) return null;
-  const average = angles.reduce((sum, value) => sum+value, 0)/angles.length;
-  const contact = angles.length >= 2
+  const layoutIds = [11,12,23,24,25,26];
+  const layoutQuality = Math.min(...layoutIds.map(i => lm[i]?.visibility ?? 0));
+  let foldedFrontLayout = false;
+  if(layoutQuality >= GROUND_KNEE_LAYOUT_VIS_MIN){
+    const mid = (a,b) => ({ x:(a.x+b.x)/2*aspect, y:(a.y+b.y)/2 });
+    const shoulder = mid(lm[11], lm[12]);
+    const hip = mid(lm[23], lm[24]);
+    const torsoScale = Math.hypot(shoulder.x-hip.x, shoulder.y-hip.y);
+    if(torsoScale >= .04){
+      const torsoHoriz = Math.abs(shoulder.x-hip.x)/torsoScale;
+      const spreads = [[23,25],[24,26]].map(([h,k]) =>
+        Math.abs(lm[k].x-lm[h].x)*aspect/torsoScale);
+      const shoulderWidth = Math.abs(lm[11].x-lm[12].x)*aspect;
+      const hipWidth = Math.abs(lm[23].x-lm[24].x)*aspect;
+      const kneeWidth = Math.abs(lm[25].x-lm[26].x)*aspect;
+      const upperWidth = Math.max(shoulderWidth, hipWidth, .001);
+      // Урд камераар өвдөглөсөн үед шагай цээжний ард халхлагдаж болох ч
+      // хоёр өвдөг ташаанаасаа хоёр тийш тод дэлгэгддэг. Зөв plank-ийн
+      // өвдөг ташаатайгаа нэг шугамд байдаг тул энэ fallback асахгүй.
+      foldedFrontLayout = torsoHoriz <= .4
+        && spreads.every(value => value >= GROUND_KNEE_LAYOUT_SPREAD)
+        && kneeWidth/upperWidth >= GROUND_KNEE_LAYOUT_WIDTH_RATIO;
+    }
+  }
+  const average = angles.length
+    ? angles.reduce((sum, value) => sum+value, 0)/angles.length
+    : null;
+  const contact = foldedFrontLayout || (angles.length >= 2
     ? average <= GROUND_KNEE_2D_CONTACT && Math.max(...angles) <= 155
-    : average <= 120;
-  const clear = angles.length >= 2
+    : angles.length === 1 && average <= 125);
+  const clear = !foldedFrontLayout && (angles.length >= 2
     ? Math.min(...angles) >= GROUND_KNEE_2D_RELEASE
-    : average >= 170;
-  if(contact) return { ratio:0, quality:Math.min(...qualities), source:"knee-2d" };
-  if(clear) return { ratio:1, quality:Math.min(...qualities), source:"knee-2d" };
+    : angles.length === 1 && average >= 170);
+  const quality = qualities.length ? Math.min(...qualities) : layoutQuality;
+  if(contact) return { ratio:0, quality, source:"knee-2d" };
+  if(clear) return { ratio:1, quality, source:"knee-2d" };
   return null;
 }
 
