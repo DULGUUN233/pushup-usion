@@ -50,11 +50,19 @@ test('floor mask өвдөгт тулсан болон зайтай байрла�
     'model шал таниагүй бол буруу таахгүй')
 })
 
-test('SegFormer бүх push-up горимд асч, 2D fallback хэвээр байна', () => {
-  assert.match(html, /function scheduleGroundSegmentation[\s\S]*?if\(!pushupGroundEnabled\(\)\) return;/)
+test('SegFormer зөвхөн энгийн solo push-up дээр асч, Flappy/Battle 2D fallback ашиглана', () => {
+  const enabled = new Function('mode', 'soloVariant', 'exercise', `
+    ${sourceOf('pushupGroundModelEnabled')}
+    return pushupGroundModelEnabled();
+  `)
+  assert.equal(enabled('solo', 'normal', 'pushup'), true)
+  assert.equal(enabled('solo', 'game', 'pushup'), false)
+  assert.equal(enabled('battle', 'normal', 'pushup'), false)
+  assert.match(html, /function scheduleGroundSegmentation[\s\S]*?if\(!pushupGroundModelEnabled\(\)\)/)
   assert.match(html, /let metric = aiFresh && !aiContradictsClearPose \? aiFresh : fallback;/)
   assert.match(html, /const kneePose = pushupKneePoseMetric\(lm, aspect\)/)
   assert.match(html, /const fallback = pushupGroundMetric\(lm, aspect\)/)
   assert.match(html, /groundModelMetric = metric \? \{ \.\.\.metric, at:pending\.requestedAt \} : null/)
-  assert.match(html, /function stopCamera\(\)[\s\S]*?resetGroundModelSession\(\)/)
+  assert.match(html, /function stopCamera\(\)[\s\S]*?stopGroundWorker\(\)/)
+  assert.match(html, /function stopGroundWorker\(\)[\s\S]*?groundWorker\?\.terminate\(\)/)
 })

@@ -2250,6 +2250,13 @@ function pushupGroundEnabled(){
     && (mode === "battle" || (mode === "solo" && (soloVariant === "normal" || soloVariant === "game")));
 }
 
+// SegFormer нь pose model-оос тусдаа том WASM model тул mobile WebView дээр
+// Flappy canvas-тай зэрэг ажиллуулахгүй. Game/Battle-д доорх 2D өвдөг +
+// бугуйн шалны хэмжилт хэвээр ажиллана.
+function pushupGroundModelEnabled(){
+  return exercise === "pushup" && mode === "solo" && soloVariant === "normal";
+}
+
 function groundPoseSnapshot(lm){
   const copy = Array(33);
   for(const i of [11,12,23,24,25,26]){
@@ -2268,6 +2275,14 @@ function failGroundWorker(){
   groundModelMetric = null;
   groundWorker?.terminate();
   groundWorker = null;
+}
+
+function stopGroundWorker(){
+  groundWorker?.terminate();
+  groundWorker = null;
+  groundWorkerStatus = "idle";
+  groundPending = null;
+  groundModelMetric = null;
 }
 
 function startGroundWorker(){
@@ -2289,7 +2304,7 @@ function startGroundWorker(){
       if(!groundPending || message.requestId !== groundPending.requestId) return;
       const pending = groundPending;
       groundPending = null;
-      if(message.type === "segment-error" || !pushupGroundEnabled()) return;
+      if(message.type === "segment-error" || !pushupGroundModelEnabled()) return;
       if(performance.now()-pending.requestedAt > GROUND_MODEL_STALE_MS) return;
       if(!message.found){
         groundModelMetric = null;
@@ -2321,7 +2336,10 @@ function resetGroundModelSession(){
 }
 
 function scheduleGroundSegmentation(lm, aspect, now = performance.now()){
-  if(!pushupGroundEnabled()) return;
+  if(!pushupGroundModelEnabled()){
+    if(groundWorker || groundWorkerStatus !== "idle") stopGroundWorker();
+    return;
+  }
   startGroundWorker();
   if(groundWorkerStatus !== "ready" || !groundWorker || groundPending) return;
   if(now-groundLastRequestAt < GROUND_MODEL_INTERVAL_MS) return;
@@ -3505,6 +3523,7 @@ function stopCamera(){
   camGen++;
   running = false;
   resetGroundModelSession();
+  stopGroundWorker();
   stopPushGame();
   stream?.getTracks().forEach(t => t.stop());
   stream = null;
