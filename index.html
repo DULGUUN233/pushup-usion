@@ -2036,6 +2036,8 @@ let armBest = -99;                      // rep дотор мөр тохойд х
 let bodyMinAngle = 180, bodyAngleSeen = false; // rep доторх хамгийн муу биеийн шугам
 let exercise = "pushup";                                  // solo дасгал
 let soloVariant = "normal";                               // энгийн эсвэл game
+let pushupGroundState = { contact:false, contactFrames:0, clearFrames:0 };
+let pushupGroundViolation = false, lastPushupGroundRatio = null;
 let squatReady = false, squatDepthFrames = 0, squatStandFrames = 0;
 let squatMinKnee = 180, squatMinHip = 180, squatMaxDepthDelta = -1;
 let mode = "solo", ws = null, duel = null, tick = null;   // тулааны төлөв
@@ -2064,6 +2066,15 @@ const KNEE_STRAIGHT = 150;
 // таамаглал болдог ба тэр таамаг дээр rep-ийг хаах нь буруу. 0.7 нь хэт
 // өндөр байсан — хөл бүтэн харагдаж байхад ч шалгуур асахгүй өнгөрдөг байв.
 const SURE = 0.5;
+// Зөвхөн энгийн solo push-up дээр бугуй–өлмийн 3D тулгуур хавтгайгаас
+// өвдөгний зайг хэмжинэ. Биеийн хэмжээгээр normalize хийсэн тул камерын
+// зайнаас үл хамаарна; hysteresis нь landmark-ийн нэг кадрын савлагааг дарна.
+const GROUND_VIS_MIN = 0.5;
+const GROUND_CONTACT_RATIO = 0.16;
+const GROUND_RELEASE_RATIO = 0.24;
+const GROUND_CONFIRM_FRAMES = 5;
+const GROUND_RELEASE_FRAMES = 3;
+const GROUND_CONTACT_MESSAGE = "Өвдөг шаланд хүрлээ — өргө";
 
 // Зөвхөн бие. MediaPipe-ийн бэлэн POSE_CONNECTIONS нүүрэн дээр 11 цэг,
 // алга/ул дээр бас цэг зурдаг тул зураг эмх замбараагүй болдог.
@@ -2204,6 +2215,87 @@ function kneeAngle(lm, world){
     }
   }
   return { deg: vals.length ? vals.reduce((p,q) => p + q, 0)/vals.length : null, vis: best };
+}
+
+function normalPushupGroundEnabled(){
+  return mode === "solo" && soloVariant === "normal" && exercise === "pushup";
+}
+
+/**
+ * Бугуй (15/16), өлмий (31/32) гэсэн дөрвөн тулгуураас 3D хавтгай гаргаж,
+ * хамгийн ойр өвдөг хүртэлх перпендикуляр зайг мөр–ташааны уртаар хуваана.
+ * World landmark-ийн масштаб төхөөрөмж бүрд бага зэрэг өөр байдаг тул шууд
+ * метр босго хэрэглэхээс энэ ratio тогтвортой.
+ */
+function pushupGroundMetric(lm, world){
+  const support = [15,16,31,32];
+  if(!world || support.some(i => !world[i] || (lm[i]?.visibility ?? 1) < GROUND_VIS_MIN)) return null;
+  const mid = (a,b) => ({ x:(a.x+b.x)/2, y:(a.y+b.y)/2, z:(a.z+b.z)/2 });
+  const sub = (a,b) => ({ x:a.x-b.x, y:a.y-b.y, z:a.z-b.z });
+  const len = v => Math.hypot(v.x,v.y,v.z);
+  const handMid = mid(world[15], world[16]);
+  const toeMid = mid(world[31], world[32]);
+  const wristSpan = sub(world[16], world[15]);
+  const toeSpan = sub(world[32], world[31]);
+  const lateral = {
+    x:(wristSpan.x+toeSpan.x)/2,
+    y:(wristSpan.y+toeSpan.y)/2,
+    z:(wristSpan.z+toeSpan.z)/2
+  };
+  const along = sub(toeMid, handMid);
+  const normal = {
+    x:lateral.y*along.z-lateral.z*along.y,
+    y:lateral.z*along.x-lateral.x*along.z,
+    z:lateral.x*along.y-lateral.y*along.x
+  };
+  const normalLength = len(normal);
+  const baseArea = len(lateral)*len(along);
+  if(!baseArea || normalLength/baseArea < 0.12) return null;
+
+  const shoulderMid = mid(world[11], world[12]);
+  const hipMid = mid(world[23], world[24]);
+  const bodyScale = len(sub(shoulderMid, hipMid));
+  if(!Number.isFinite(bodyScale) || bodyScale < 0.08) return null;
+  const origin = mid(handMid, toeMid);
+  const distances = [25,26]
+    .filter(i => world[i] && (lm[i]?.visibility ?? 1) >= GROUND_VIS_MIN)
+    .map(i => {
+      const d = sub(world[i], origin);
+      return Math.abs(d.x*normal.x+d.y*normal.y+d.z*normal.z) / normalLength / bodyScale;
+    });
+  if(!distances.length) return null;
+  return { ratio:Math.min(...distances), quality:normalLength/baseArea };
+}
+
+function advancePushupGround(state, ratio){
+  let { contact, contactFrames, clearFrames } = state;
+  if(Number.isFinite(ratio) && ratio <= GROUND_CONTACT_RATIO){
+    contactFrames++;
+    clearFrames = 0;
+    if(contactFrames >= GROUND_CONFIRM_FRAMES) contact = true;
+  }else if(!Number.isFinite(ratio) || ratio >= GROUND_RELEASE_RATIO){
+    contactFrames = 0;
+    clearFrames++;
+    if(clearFrames >= GROUND_RELEASE_FRAMES) contact = false;
+  }else{
+    contactFrames = 0;
+    clearFrames = 0;
+  }
+  return { contact, contactFrames, clearFrames };
+}
+
+function updatePushupGround(lm, world){
+  const metric = pushupGroundMetric(lm, world);
+  lastPushupGroundRatio = metric?.ratio ?? null;
+  pushupGroundState = advancePushupGround(pushupGroundState, lastPushupGroundRatio);
+  if(pushupGroundState.contact) pushupGroundViolation = true;
+  return { contact:pushupGroundState.contact, ratio:lastPushupGroundRatio };
+}
+
+function resetPushupGround(){
+  pushupGroundState = { contact:false, contactFrames:0, clearFrames:0 };
+  pushupGroundViolation = false;
+  lastPushupGroundRatio = null;
 }
 
 /**
@@ -2394,6 +2486,10 @@ function positionCheck(lm, world, aspect){
     const { horiz, fore } = bodyAxis(lm, world, aspect);
     if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
   }
+  if(normalPushupGroundEnabled()){
+    const ground = updatePushupGround(lm, world);
+    if(ground.contact) return GROUND_CONTACT_MESSAGE;
+  }
   // Өвдөг шалан дээр бол хөл нугалагдана. Аарцгийн явалтаар үүнийг барих
   // боломжгүй: өвдөг дээр цээжээ буулгахад аарцаг өвдгөө тойрон эргэж хамт
   // бууна — өвдөг дээрх push-up-аас ялгарахгүй. Зөвхөн өнцөг ялгана.
@@ -2548,6 +2644,7 @@ function countRep(deg, now, th, body){
     if(deg < dipMin) dipMin = deg;
     if(deepEnough(deg, th, body.arm)){
       phase = "down"; repStart = now; repMinAngle = deg; dipMin = 999;
+      if(normalPushupGroundEnabled() && !pushupGroundState.contact) pushupGroundViolation = false;
       shBot = body.sh; hpBot = body.hp; armBest = body.arm ?? -99;
       bodyMinAngle = body.line ?? 180;
       bodyAngleSeen = body.line !== null;
@@ -2581,6 +2678,8 @@ function countRep(deg, now, th, body){
     phase = "up";
     if(now - repStart < MIN_REP_MS){
       setPoseMsg("Арай удаан, хөдөлгөөнөө бүтэн хий", "var(--bad)");
+    } else if(normalPushupGroundEnabled() && pushupGroundViolation){
+      setPoseMsg(GROUND_CONTACT_MESSAGE, "var(--bad)");
     } else if(!rigid()){
       setPoseMsg("Биеэ бүхэлд нь буулга", "var(--bad)");
     } else if(bodyAngleSeen && bodyMinAngle < BODY_STRAIGHT_MIN){
@@ -2615,6 +2714,7 @@ function countRep(deg, now, th, body){
     shTop = hpTop = shBot = hpBot = null;
     armBest = -99;
     bodyMinAngle = 180; bodyAngleSeen = false;
+    pushupGroundViolation = false;
   }
 }
 
@@ -2642,6 +2742,7 @@ function idle(){
   }
   if(phase === "down") midDrops++;
   phase = "up"; repMinAngle = 180; smooth = null;
+  pushupGroundViolation = false;
   shTop = hpTop = shBot = hpBot = null; armBest = -99;
   bodyMinAngle = 180; bodyAngleSeen = false;
   $("angle").textContent = "–";
@@ -2731,7 +2832,7 @@ function loop(){
 
   const bad = positionCheck(lm, world, asp);
   if(bad){
-    setPoseMsg(bad, "var(--dim)");
+    setPoseMsg(bad, bad === GROUND_CONTACT_MESSAGE ? "var(--bad)" : "var(--dim)");
     // Нэг муу кадарт rep-ийг цуцлахгүй — доод цэгт бугуй халхлагдахад
     // цэгийн итгэлцүүр хэсэг зуур унадаг тул бүх rep алдагдаж байсан.
     if(++badFrames >= BAD_FRAMES) idle();
@@ -3079,6 +3180,7 @@ function startPushGame(){
 
 function reset(){
   resetPoseFeedback();
+  resetPushupGround();
   count = 0; phase = "up"; repMinAngle = 180; bestDepth = null; smooth = null;
   loSeen = null; hiSeen = null; badFrames = 0; dipMin = 999;
   shTop = hpTop = shBot = hpBot = null; armBest = -99; midDrops = 0;
