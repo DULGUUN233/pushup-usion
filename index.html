@@ -2249,15 +2249,17 @@ function kneeAngle(lm, world){
 }
 
 function pushupGroundEnabled(){
-  return exercise === "pushup"
-    && (mode === "battle" || (mode === "solo" && (soloVariant === "normal" || soloVariant === "game")));
+  // Газар/өвдөгний автомат шалгалтыг бүрэн зогсоосон. Энгийн Push Up,
+  // Flappy, Battle бүгд өмнөх pose-based rep тооллоороо ажиллана.
+  return false;
 }
 
-// SegFormer нь pose model-оос тусдаа том WASM model тул mobile WebView дээр
-// Flappy canvas-тай зэрэг ажиллуулахгүй. Game/Battle-д доорх 2D өвдөг +
-// бугуйн шалны хэмжилт хэвээр ажиллана.
+// SegFormer нь pose model-оос тусдаа том WASM model. Mobile WebView дээр
+// хэдэн минут camera frame дамжуулсны дараа renderer харлах эрсдэлтэй тул
+// одоогоор production flow-д асаахгүй. Доорх pose landmark-ын өвдөг +
+// бугуйн шалны хэмжилт бүх горимд ажиллана.
 function pushupGroundModelEnabled(){
-  return exercise === "pushup" && mode === "solo" && soloVariant === "normal";
+  return false;
 }
 
 function groundPoseSnapshot(lm){

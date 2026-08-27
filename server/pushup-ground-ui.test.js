@@ -127,14 +127,14 @@ test('өвдөг газарт 4 frame тогтвортой байж зөрчил
   assert.equal(state.contact, false)
 })
 
-test('газар шалгалт solo, Flappy, Battle push-up горимд ажиллана', () => {
+test('газар шалгалт унтраалттай үед solo, Flappy, Battle-д нөлөөлөхгүй', () => {
   const enabled = new Function('mode', 'soloVariant', 'exercise', `
     ${sourceOf('pushupGroundEnabled')}
     return pushupGroundEnabled();
   `)
-  assert.equal(enabled('solo', 'normal', 'pushup'), true)
-  assert.equal(enabled('solo', 'game', 'pushup'), true)
-  assert.equal(enabled('battle', 'normal', 'pushup'), true)
+  assert.equal(enabled('solo', 'normal', 'pushup'), false)
+  assert.equal(enabled('solo', 'game', 'pushup'), false)
+  assert.equal(enabled('battle', 'normal', 'pushup'), false)
   assert.equal(enabled('solo', 'normal', 'squat'), false)
   assert.match(html, /if\(pushupGroundEnabled\(\)\)\{[\s\S]*?updatePushupGround/)
   assert.match(html, /pushupGroundEnabled\(\) && pushupGroundViolation/)

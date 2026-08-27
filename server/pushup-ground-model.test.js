@@ -50,12 +50,12 @@ test('floor mask өвдөгт тулсан болон зайтай байрла�
     'model шал таниагүй бол буруу таахгүй')
 })
 
-test('SegFormer зөвхөн энгийн solo push-up дээр асч, Flappy/Battle 2D fallback ашиглана', () => {
+test('SegFormer mobile WebView тогтвортой болох хүртэл асаахгүй, бүх горим 2D fallback ашиглана', () => {
   const enabled = new Function('mode', 'soloVariant', 'exercise', `
     ${sourceOf('pushupGroundModelEnabled')}
     return pushupGroundModelEnabled();
   `)
-  assert.equal(enabled('solo', 'normal', 'pushup'), true)
+  assert.equal(enabled('solo', 'normal', 'pushup'), false)
   assert.equal(enabled('solo', 'game', 'pushup'), false)
   assert.equal(enabled('battle', 'normal', 'pushup'), false)
   assert.match(html, /function scheduleGroundSegmentation[\s\S]*?if\(!pushupGroundModelEnabled\(\)\)/)
