@@ -538,7 +538,7 @@
     border:1px solid rgba(255,183,46,.38);box-shadow:0 8px 24px rgba(0,0,0,.34),
     inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(12px);color:#fff;
     font-size:18px;font-weight:950;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .pushGameStreak img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 4px 7px rgba(0,0,0,.36))}
+  .pushGameStreak img{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 4px 7px rgba(0,0,0,.36))}
   .pushGameStreakMultiplier{color:#ffbe33;text-shadow:0 0 14px rgba(255,176,32,.4)}
   .pushGameStreak.gained{animation:pushGameStreakGain 360ms cubic-bezier(.34,1.36,.64,1)}
   .pushGameStreak.gained img{animation:pushGameFruitGain 360ms cubic-bezier(.34,1.36,.64,1)}
@@ -1146,7 +1146,7 @@
     </div>
     <div id="pushGameStreak" class="pushGameStreak" role="status" aria-live="polite"
          aria-label="Жимсний streak 0">
-      <img src="./assets/flappy/fruit-orange-v1.webp" alt="" aria-hidden="true" width="38" height="38">
+      <img src="./assets/flappy/fruit-orange-v1.webp" alt="" aria-hidden="true" width="44" height="44">
       <span class="pushGameStreakMultiplier">×<b id="pushGameStreakValue" class="t-digit-group"><span class="t-digit">0</span></b></span>
     </div>
     <button id="gameEnd" type="button" aria-label="Тоглоом дуусгах">
@@ -3551,7 +3551,7 @@ function pushGameFrame(now){
       pushGameState.nextPipeAt = now + 2050;
     }
     // Урагшлах мэдрэмжийг pipe-ийн дэлгэц дээгүүр шилжих хурдаар өгнө.
-    const speed = Math.max(106, width * .29);
+    const speed = Math.max(112, width * .31);
     const birdY = pushGameState.birdY * height;
     const radius = Math.max(13, Math.min(20, Math.min(width, height) * .038));
     const fruitRadius = pushGameFruitRadius(width, height);

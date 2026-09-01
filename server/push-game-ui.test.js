@@ -83,7 +83,7 @@ test('шувуу эхлэхдээ нүдний түвшинд таарч, adapti
 })
 
 test('Flappy урагшлах хурд өмнөхөөс бага зэрэг нэмэгдсэн', () => {
-  assert.match(html, /const speed = Math\.max\(106, width \* \.29\)/)
+  assert.match(html, /const speed = Math\.max\(112, width \* \.31\)/)
 })
 
 test('Flappy түвшин тогтсоны дараах анхны тохой нугаралтаар эхэлнэ', () => {
@@ -116,6 +116,7 @@ test('саадны голын target нь generated жимс болж, дээд 
   assert.match(html, /fruit:pushGameImage\("\.\/assets\/flappy\/fruit-orange-v1\.webp"\)/)
   assert.match(html, /id="pushGameStreak" class="pushGameStreak" role="status" aria-live="polite"/)
   assert.match(html, /\.pushGameStreak\{position:absolute;left:50%;top:1px;transform:translateX\(-50%\)/)
+  assert.match(html, /\.pushGameStreak img\{width:44px;height:44px/)
   assert.match(html, /drawImage\(pushGameAssets\.fruit, targetX - fruitRadius/)
   assert.doesNotMatch(html, /gameCtx\.arc\(targetX, nextPipe\.gapY, 8/)
 })
