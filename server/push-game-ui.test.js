@@ -109,6 +109,25 @@ test('Flappy source-ийн local bird, pipe asset-уудыг preload хийгэ�
   assert.doesNotMatch(html, /Math\.sin\(now \/ 105\)/)
 })
 
+test('саадны голын target нь generated жимс болж, дээд голд streak харагдана', () => {
+  assert.match(html, /preload" as="image" href="\.\/assets\/flappy\/fruit-orange-v1\.webp"/)
+  assert.match(html, /fruit:pushGameImage\("\.\/assets\/flappy\/fruit-orange-v1\.webp"\)/)
+  assert.match(html, /id="pushGameStreak" class="pushGameStreak" role="status" aria-live="polite"/)
+  assert.match(html, /\.pushGameStreak\{position:absolute;left:50%;top:1px;transform:translateX\(-50%\)/)
+  assert.match(html, /drawImage\(pushGameAssets\.fruit, targetX - fruitRadius/)
+  assert.doesNotMatch(html, /gameCtx\.arc\(targetX, nextPipe\.gapY, 8/)
+})
+
+test('жимс авбал streak нэмэгдэж, алдвал тэг болно', () => {
+  assert.match(html, /score:0, streak:0/)
+  assert.match(html, /fruitDistance <= radius \+ fruitRadius \* \.72/)
+  assert.match(html, /updatePushGameStreak\(pushGameState\.streak \+ 1, "gained"\)/)
+  assert.match(html, /fruitX \+ fruitRadius < birdX - radius/)
+  assert.match(html, /updatePushGameStreak\(0, "missed"\)/)
+  assert.match(html, /@keyframes pushGameStreakGain/)
+  assert.match(html, /\.t-digit-group \.t-digit \{ animation: none !important; \}/)
+})
+
 test('саад хэт захад гарахгүй, дараагийн gap хүрч болох зайд random байрлана', () => {
   const source = html.match(/function pushGameGapY\(height, gap, previous = null, random = Math\.random\(\)\)\{[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'pushGameGapY source олдсонгүй')
