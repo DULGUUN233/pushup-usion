@@ -50,7 +50,7 @@ test('Game дээр тохой болон биеийн skeleton тоглоомы
   assert.doesNotMatch(html, /soloVariant !== "game" \|\| mode === "battle"/)
 })
 
-test('тохой нугарахад шувуу доош, тэнийхэд дээш явна', () => {
+test('бүтэн тэнийлт шувууны дээд, 90 градус доод endpoint байна', () => {
   const source = html.match(/function pushGameTargetY\(deg, anchorAngle = 170, anchorY = \.24\)\{[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'pushGameTargetY source олдсонгүй')
   const target = new Function(`${source}\nreturn pushGameTargetY`)()
@@ -59,7 +59,9 @@ test('тохой нугарахад шувуу доош, тэнийхэд дээ
   assert.equal(target(155, 155, 0.43), 0.43)
   assert.ok(target(95, 155, 0.43) > 0.7)
   assert.equal(target(166, 170, 0.3), 0.3)
-  assert.equal(target(98, 170, 0.3), target(80, 170, 0.3))
+  assert.equal(target(90, 170, 0.3), 0.78)
+  assert.equal(target(92, 170, 0.3), target(80, 170, 0.3))
+  assert.ok(target(98, 170, 0.3) < target(90, 170, 0.3))
 })
 
 test('шувуу эхлэхдээ нүдний түвшинд таарч, adaptive dead-zone чичиргээг дарна', () => {
@@ -129,7 +131,7 @@ test('жимс авбал streak нэмэгдэж, алдвал тэг болн�
 })
 
 test('саад хэт захад гарахгүй, дараагийн gap хүрч болох зайд random байрлана', () => {
-  const source = html.match(/function pushGameGapY\(height, gap, previous = null, random = Math\.random\(\)\)\{[\s\S]*?\n\}/)?.[0]
+  const source = html.match(/function pushGameGapY\(height, gap, previous = null, random = Math\.random\(\),[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'pushGameGapY source олдсонгүй')
   const gapY = new Function(`${source}\nreturn pushGameGapY`)()
   assert.equal(gapY(800, 240, null, 0), 240)
@@ -137,6 +139,33 @@ test('саад хэт захад гарахгүй, дараагийн gap хүр
   assert.equal(gapY(800, 240, null, .5), 400)
   assert.equal(gapY(800, 240, 400, 0), 256)
   assert.equal(gapY(800, 240, 400, 1), 544)
+  assert.equal(gapY(800, 240, null, 0, .43, .78), 344)
+  assert.equal(gapY(800, 240, null, 1, .43, .78), 560)
+  assert.equal(gapY(800, 240, null, 0, .22, .61), 240)
+  assert.equal(gapY(800, 240, null, 1, .22, .61), 488)
+  assert.equal(gapY(200, 154, null, .5, .5, .78), 120)
+  const targetSource = html.match(/function pushGameTargetY\(deg, anchorAngle = 170, anchorY = \.24\)\{[\s\S]*?\n\}/)?.[0]
+  const target = new Function(`${targetSource}\nreturn pushGameTargetY`)()
+  for(const anchorAngle of [155, 170, 180]){
+    for(const anchorY of [.22, .35, .5]){
+      const top = target(anchorAngle, anchorAngle, anchorY)
+      const bottom = target(90, anchorAngle, anchorY)
+      const minReach = Math.max(.3, Math.min(top, bottom))
+      const maxReach = Math.min(.7, Math.max(top, bottom))
+      for(const random of [0, .25, .5, .75, 1]){
+        const y = gapY(800, 240, null, random, top, bottom) / 800
+        assert.ok(y >= minReach && y <= maxReach,
+          `gap ${y} нь ${minReach}–${maxReach} хүрээнээс гарлаа`)
+      }
+      const previous = 800 * ((minReach + maxReach) / 2)
+      const stepped = gapY(800, 240, previous, 1, top, bottom)
+      assert.ok(Math.abs(stepped - previous) <= 800 * .18)
+      assert.ok(stepped / 800 >= minReach && stepped / 800 <= maxReach)
+    }
+  }
+  assert.match(html, /const reachableTop = pushGameTargetY\(pushGameState\.anchorAngle/)
+  assert.match(html, /const reachableBottom = pushGameTargetY\(90, pushGameState\.anchorAngle/)
+  assert.match(html, /reachableTop, reachableBottom\)/)
   assert.match(html, /pushGameState\.lastGapY = gapY/)
   assert.doesNotMatch(html, /nextLane/)
   assert.match(html, /pushGameState\.locked = Math\.abs\(pushGameState\.birdY - gapCenter\) <= lockRange/)

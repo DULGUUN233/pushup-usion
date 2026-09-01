@@ -3272,14 +3272,13 @@ function pushGameFruitRadius(width, height){
 }
 
 function pushGameTargetY(deg, anchorAngle = 170, anchorY = .24){
-  const downAngle = 98;
+  const downAngle = 90;
   const upY = Math.max(.22, Math.min(.5, anchorY));
-  const naturalTravel = (anchorAngle - downAngle) * .0052;
-  const downY = Math.min(.78, upY + Math.max(.28, naturalTravel));
-  // Endpoint-үүдийг тогтмол lane-д snap хийнэ. Завсарт smoothstep ашигласнаар
-  // гэнэт үсрэхгүй ч гараа бүрэн тэнийлгэх/нугалахад pixel-level тогтвортой.
-  if(deg >= anchorAngle - 7) return upY;
-  if(deg <= downAngle + 7) return downY;
+  const downY = .78;
+  // Тухайн хүний анх хэмжсэн бүтэн тэнийлтийг дээд endpoint, 90°-ийг доод
+  // endpoint болгоно. Завсарт smoothstep ашигласнаар хөдөлгөөн огцом үсрэхгүй.
+  if(deg >= anchorAngle - 5) return upY;
+  if(deg <= downAngle + 2) return downY;
   const progress = Math.max(0, Math.min(1,
     (anchorAngle - deg) / Math.max(1, anchorAngle - downAngle)));
   const eased = progress * progress * (3 - 2 * progress);
@@ -3335,7 +3334,7 @@ function updatePushGameControl(deg, now, eyeY){
     pushGameState.targetY = pushGameState.anchorY;
   } else {
     const rawTarget = pushGameTargetY(deg, pushGameState.anchorAngle, pushGameState.anchorY);
-    const atStableLane = deg >= pushGameState.anchorAngle - 7 || deg <= 105;
+    const atStableLane = deg >= pushGameState.anchorAngle - 5 || deg <= 92;
     pushGameState.targetY = atStableLane
       ? rawTarget
       : pushGameStableY(pushGameState.targetY, rawTarget);
@@ -3351,10 +3350,16 @@ function updatePushGameControl(deg, now, eyeY){
   }
 }
 
-function pushGameGapY(height, gap, previous = null, random = Math.random()){
+function pushGameGapY(height, gap, previous = null, random = Math.random(),
+                      reachableTop = .3, reachableBottom = .7){
   const edgeMargin = gap / 2 + Math.max(28, height * .05);
-  const minY = Math.max(edgeMargin, height * .3);
-  const maxY = Math.min(height - edgeMargin, height * .7);
+  // Саадыг 30–70%-ийн safe zone болон тухайн тоглогчийн бодитоор хүрч чадах
+  // дээд–доод endpoint-ийн огтлолцолд л үүсгэнэ.
+  const minReach = Math.max(.3, Math.min(reachableTop, reachableBottom));
+  const maxReach = Math.min(.7, Math.max(reachableTop, reachableBottom));
+  const minY = Math.max(edgeMargin, height * minReach);
+  const maxY = Math.min(height - edgeMargin, height * maxReach);
+  if(maxY <= minY) return height * ((minReach + maxReach) / 2);
   const rawY = minY + Math.max(0, Math.min(1, random)) * (maxY - minY);
   if(!Number.isFinite(previous)) return rawY;
   const maxStep = height * .18;
@@ -3534,7 +3539,12 @@ function pushGameFrame(now){
     const pipeWidth = Math.max(48, Math.min(76, width * .15));
     const gap = Math.max(154, Math.min(height * .38, 260));
     if(now >= pushGameState.nextPipeAt){
-      const gapY = pushGameGapY(height, gap, pushGameState.lastGapY);
+      const reachableTop = pushGameTargetY(pushGameState.anchorAngle,
+        pushGameState.anchorAngle, pushGameState.anchorY);
+      const reachableBottom = pushGameTargetY(90, pushGameState.anchorAngle,
+        pushGameState.anchorY);
+      const gapY = pushGameGapY(height, gap, pushGameState.lastGapY, Math.random(),
+        reachableTop, reachableBottom);
       pushGameState.lastGapY = gapY;
       pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap, gapY, scored:false,
         fruitResolved:false });
