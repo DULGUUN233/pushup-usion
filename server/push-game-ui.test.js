@@ -80,6 +80,19 @@ test('шувуу эхлэхдээ нүдний түвшинд таарч, adapti
   assert.match(html, /pushGameState\.birdY = pushGameSmoothY\(pushGameState\.birdY, desiredY, dt\)/)
 })
 
+test('Flappy урагшлах хурд өмнөхөөс бага зэрэг нэмэгдсэн', () => {
+  assert.match(html, /const speed = Math\.max\(106, width \* \.29\)/)
+})
+
+test('Flappy түвшин тогтсоны дараах анхны тохой нугаралтаар эхэлнэ', () => {
+  assert.match(html, /poseReady:false, started:false/)
+  assert.match(html, /deg <= Math\.min\(145, pushGameState\.anchorAngle - 18\)/)
+  assert.match(html, /pushGameState\.started = true/)
+  assert.match(html, /const started = tracked && pushGameState\.started/)
+  assert.match(html, /"Тохойгоо нугал", "Анхны push-up хийхэд тоглоом эхэлнэ"/)
+  assert.doesNotMatch(html, /readyAt = now \+ 1200/)
+})
+
 test('Flappy хажуугийн meter шувуу болон дараагийн нүхний түвшнийг харуулна', () => {
   assert.doesNotMatch(html, /#play\.push-game #deepGlow,#play\.push-game #meterWrap/)
   assert.match(html, /#play\.push-game #meterWrap\{display:block[^}]*height:min\(44vh,340px\)/)

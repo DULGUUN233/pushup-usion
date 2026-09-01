@@ -3085,7 +3085,7 @@ function loop(){
     setPoseMsg(bad, bad === GROUND_CONTACT_MESSAGE ? "var(--bad)" : "var(--dim)");
     if(bad === GROUND_CONTACT_MESSAGE){
       const flappyStarted = mode === "solo" && soloVariant === "game"
-        && pushGameState.active && pushGameState.poseReady && now >= pushGameState.readyAt;
+        && pushGameState.active && pushGameState.poseReady && pushGameState.started;
       // Өвдөг газар хүрсэн нь батлагдсан бол эхэлсэн rep-ийг хүлээлгүй
       // шууд цуцална. Өвдгөө өргөсний дараа шинэ cycle эхлэх ёстой.
       idle();
@@ -3170,7 +3170,7 @@ const pushGameAssets = {
 };
 const pushGameState = {
   active:false, over:false, raf:0, score:0, pipes:[], nextPipeAt:0,
-  birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
+  birdY:.5, targetY:.5, poseReady:false, started:false, lastPoseAt:0,
   anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
   lastFrameAt:0, width:0, restartTimer:0
 };
@@ -3249,7 +3249,10 @@ function updatePushGameControl(deg, now, eyeY){
   if(!pushGameState.poseReady){
     pushGameState.poseReady = true;
     pushGameState.birdY = pushGameState.targetY;
-    pushGameState.readyAt = now + 1200;
+  }else if(!pushGameState.started && deg <= Math.min(145, pushGameState.anchorAngle - 18)){
+    // Түвшин тогтсоныхоо дараа анхны push-up хөдөлгөөнөөр тоглолтыг эхлүүлнэ.
+    pushGameState.started = true;
+    pushGameState.nextPipeAt = now;
   }
 }
 
@@ -3374,8 +3377,8 @@ function drawPushGame(now, width, height){
     drawPushGameMessage(width, height, "Гараа бүрэн тэнийлгэ", "Шувуу харааны түвшинд таарна");
   else if(now - pushGameState.lastPoseAt > 900)
     drawPushGameMessage(width, height, "Түр зогслоо", "Биеэ камерт бүтэн багтаана уу");
-  else if(now < pushGameState.readyAt)
-    drawPushGameMessage(width, height, "Бэлэн", "Доош буухад шувуу доошилно");
+  else if(!pushGameState.started)
+    drawPushGameMessage(width, height, "Тохойгоо нугал", "Анхны push-up хийхэд тоглоом эхэлнэ");
 }
 
 function finishPushGame(title = "Тоглоом дууслаа", autoRestart = true){
@@ -3403,7 +3406,7 @@ function pushGameFrame(now){
   if(!pushGameState.active || pushGameState.over) return;
   const { width, height } = sizePushGameCanvas();
   const tracked = pushGameState.poseReady && now - pushGameState.lastPoseAt <= 900;
-  const started = tracked && now >= pushGameState.readyAt;
+  const started = tracked && pushGameState.started;
   const dt = Math.min(.05, Math.max(0, (now - (pushGameState.lastFrameAt || now)) / 1000));
   pushGameState.lastFrameAt = now;
   let desiredY = pushGameState.targetY;
@@ -3432,7 +3435,8 @@ function pushGameFrame(now){
       pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap, gapY, scored:false });
       pushGameState.nextPipeAt = now + 2050;
     }
-    const speed = Math.max(92, width * .25);
+    // Урагшлах мэдрэмжийг pipe-ийн дэлгэц дээгүүр шилжих хурдаар өгнө.
+    const speed = Math.max(106, width * .29);
     const birdY = pushGameState.birdY * height;
     const radius = Math.max(13, Math.min(20, Math.min(width, height) * .038));
     for(const pipe of pushGameState.pipes){
@@ -3480,7 +3484,7 @@ function stopPushGame(){
 function startPushGame(){
   stopPushGame();
   Object.assign(pushGameState, { active:true, over:false, score:0, pipes:[], nextPipeAt:0,
-    birdY:.5, targetY:.5, poseReady:false, readyAt:0, lastPoseAt:0,
+    birdY:.5, targetY:.5, poseReady:false, started:false, lastPoseAt:0,
     anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
     lastFrameAt:performance.now(), width:0 });
   $("pushGameScore").textContent = "0";
