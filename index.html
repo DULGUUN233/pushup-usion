@@ -821,6 +821,8 @@
     #start p,#start #go,#start #err{grid-column:2}
     #start #go{justify-self:center}
   }
+  #howtoGame{aspect-ratio:5/3;object-fit:cover;padding:0;border-radius:22px;
+    border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 46px rgba(0,0,0,.34)}
   @media (prefers-reduced-motion:reduce){
     #pushChoice:not(.hidden) .pushChoiceHead,#pushChoice:not(.hidden) .pushChoiceCard,
     #start:not(.hidden)>h2,#start:not(.hidden)>.howto:not(.hidden),#start:not(.hidden)>p,
@@ -1191,16 +1193,8 @@
       <text x="140" y="162" text-anchor="middle" font-size="13" font-weight="700"
             fill="#ffd21e">ташаа өвдөгний түвшинд хүрнэ</text>
     </svg>
-    <svg id="howtoGame" class="howto hidden" viewBox="0 0 280 168" aria-label="Тохойгоор шувуу удирдах зураг">
-      <defs><linearGradient id="gameHowtoSky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#10283a"/><stop offset="1" stop-color="#0b171f"/></linearGradient></defs>
-      <rect x="1" y="1" width="278" height="166" rx="24" fill="url(#gameHowtoSky)" stroke="rgba(255,255,255,.12)"/>
-      <rect x="212" y="0" width="32" height="50" rx="8" fill="#39d98a"/><rect x="212" y="116" width="32" height="52" rx="8" fill="#39d98a"/>
-      <circle cx="96" cy="82" r="23" fill="#ffd21e"/><path d="M75 80 58 72l15-8" fill="#ff8a20"/>
-      <circle cx="103" cy="75" r="4" fill="#111827"/><path d="M93 88c10 7 19 5 24-3" fill="none" stroke="#d88d00" stroke-width="5" stroke-linecap="round"/>
-      <path d="M35 118c28 19 57 18 82 0M35 51c28-18 57-18 82 0" fill="none" stroke="#20b8ff" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 7"/>
-      <text x="154" y="80" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">ДЭЭШ</text>
-      <text x="154" y="101" text-anchor="middle" font-size="12" font-weight="800" fill="#9aa6b5">ДООШ</text>
-    </svg>
+    <img id="howtoGame" class="howto hidden" src="./assets/flappy/game-howto-v2.webp"
+         width="840" height="504" alt="Шувууг дээш доош хөдөлгөн хоолойн завсраар гаргах заавар">
     <p id="startHint">Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга — биедээ
        наавал халхлагдаж, өнцөг буруу уншина.</p>
     <button class="primary" id="go">Камер асаах</button>

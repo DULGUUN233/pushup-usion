@@ -40,6 +40,10 @@ test('Game нь camera overlay canvas, score, rep, restart controls-той', () 
   assert.match(html, /#gameEnd\{width:48px;height:48px/)
 })
 
+test('Flappy эхлэх дэлгэц project-local шинэ onboarding зураг ашиглана', () => {
+  assert.match(html, /id="howtoGame"[\s\S]*?src="\.\/assets\/flappy\/game-howto-v2\.webp"/)
+})
+
 test('Game дээр тохой болон биеийн skeleton тоглоомын дээр тод харагдана', () => {
   assert.match(html, /#play\.push-game #canvas\{opacity:\.74;z-index:3;pointer-events:none\}/)
   assert.match(html, /\n  drawSkeleton\(lm\);\n  if\(mode === "solo" && soloVariant === "game"/)
