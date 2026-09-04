@@ -5,11 +5,11 @@ import test from 'node:test'
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 
 test('Нүүрийн activity өдөр, 7 хоног, сарын гурван харагдацтай', () => {
-  assert.match(html, /id="dailyPushups"[^>]*aria-label="Дасгалын статистик"/)
+  assert.match(html, /id="dailyPushups"[^>]*data-i18n-aria-label="activityStatsLabel"/)
   assert.match(html, /class="activityRangeSwitch"[^>]*role="group"/)
-  assert.match(html, /id="activityDay"[^>]*aria-pressed="true">D</)
-  assert.match(html, /id="activityWeek"[^>]*aria-pressed="false">W</)
-  assert.match(html, /id="activityMonth"[^>]*aria-pressed="false">M</)
+  assert.match(html, /id="activityDay"[^>]*data-i18n="activityDayShort"[^>]*aria-pressed="true"/)
+  assert.match(html, /id="activityWeek"[^>]*data-i18n="activityWeekShort"[^>]*aria-pressed="false"/)
+  assert.match(html, /id="activityMonth"[^>]*data-i18n="activityMonthShort"[^>]*aria-pressed="false"/)
   assert.match(html, /id="dailyRingValue"/)
   assert.match(html, /#activityDayView \.dailyRing\{transform:translateY\(8px\)\}/)
   assert.match(html, /id="activityWeekChart"/)
@@ -18,10 +18,11 @@ test('Нүүрийн activity өдөр, 7 хоног, сарын гурван х
 })
 
 test('доод trend график D, W, M бүрээр сүүлийн 7 хугацааг нэгтгэнэ', () => {
-  assert.match(html, /id="activityTrendTitle">СҮҮЛИЙН 7 ӨДӨР</)
+  assert.match(html, /id="activityTrendTitle"/)
+  assert.match(html, /let title = t\("activityTrendLast7Days"\)/)
   assert.match(html, /if\(activityRange === "day"\)[\s\S]*?Array\.from\(\{ length:7 \}/)
-  assert.match(html, /title = "СҮҮЛИЙН 7 ДОЛОО ХОНОГ"[\s\S]*?\(index - 6\) \* 7/)
-  assert.match(html, /title = "СҮҮЛИЙН 7 САР"[\s\S]*?selectedMonth\.getMonth\(\) \+ index - 6/)
+  assert.match(html, /title = t\("activityTrendLast7Weeks"\)[\s\S]*?\(index - 6\) \* 7/)
+  assert.match(html, /title = t\("activityTrendLast7Months"\)[\s\S]*?selectedMonth\.getMonth\(\) \+ index - 6/)
   assert.match(html, /group\.dates\.reduce\(\(sum, date\) => sum \+ \(values\.get\(date\) \|\| 0\), 0\)/)
   assert.match(html, /id="activityTrendLine" class="activityTrendLine"/)
   assert.match(html, /id="activityTrendDescription" class="srOnly"/)
@@ -32,9 +33,9 @@ test('өдрийн тойрог дасгалын нэрийн оронд огн�
   assert.match(html, /<time id="dailyActivityDate" datetime=""><\/time>/)
   assert.doesNotMatch(html, /id="dailyPushupsTitle"/)
   assert.doesNotMatch(html, /const exerciseLabel =/)
-  assert.match(html, /const exerciseA11yLabel = isSquat \? "суулт" : "суниалт"/)
-  assert.equal((html.match(/\$\{exerciseA11yLabel\}/g) || []).length, 2)
-  assert.match(html, /function activityDateDisplay\(dateKey\)\{[\s\S]*?if\(dateKey === activityDateKey\(\)\) return "Өнөөдөр";[\s\S]*?return `\$\{year\}\.\$\{month\}\.\$\{day\}`/)
+  assert.match(html, /const exerciseA11yLabel = t\(isSquat \? "activitySquatCount" : "activityPushupCount"\)/)
+  assert.equal((html.match(/t\("activityDayAria"/g) || []).length, 2)
+  assert.match(html, /function activityDateDisplay\(dateKey\)\{[\s\S]*?if\(dateKey === activityDateKey\(\)\) return t\("activityDateToday"\);[\s\S]*?return `\$\{year\}\.\$\{month\}\.\$\{day\}`/)
   assert.match(html, /\$\("dailyActivityDate"\)\.dateTime = activityAnchor/)
   assert.match(html, /id="activityPeriodLabel" class="srOnly"/)
   assert.match(html, /\.activityPeriodNav\{display:none\}/)
@@ -42,8 +43,8 @@ test('өдрийн тойрог дасгалын нэрийн оронд огн�
 
 test('activity үзүүлэлт Суниалт ба Суулт compact switch-тэй', () => {
   assert.match(html, /class="activitySwitch"[^>]*role="group"/)
-  assert.match(html, /id="activityPush"[^>]*aria-pressed="true">Суниалт/)
-  assert.match(html, /id="activitySquat"[^>]*aria-pressed="false">Суулт/)
+  assert.match(html, /id="activityPush"[^>]*data-i18n="exercisePushup"[^>]*aria-pressed="true"/)
+  assert.match(html, /id="activitySquat"[^>]*data-i18n="exerciseSquat"[^>]*aria-pressed="false"/)
   assert.match(html, /\$\("activityPush"\)\.onclick = \(\) => selectActivity\("pushup"\)/)
   assert.match(html, /\$\("activitySquat"\)\.onclick = \(\) => selectActivity\("squat"\)/)
   const cardHeader = html.match(/<div id="activityViewport"[\s\S]*?<div class="activityPeriodNav">/)?.[0] ?? ''
@@ -70,8 +71,8 @@ test('өдрийн activity хэрэглэгчийн timezone-аар серве�
 })
 
 test('activity-г swipe болон суман товчоор өмнөх хугацаа руу шилжүүлнэ', () => {
-  assert.match(html, /id="activityPrev"[^>]*aria-label="Өмнөх хугацаа"/)
-  assert.match(html, /id="activityNext"[^>]*aria-label="Дараагийн хугацаа"[^>]*disabled/)
+  assert.match(html, /id="activityPrev"[^>]*data-i18n-aria-label="activityPrevLabel"/)
+  assert.match(html, /id="activityNext"[^>]*data-i18n-aria-label="activityNextLabel"[^>]*disabled/)
   assert.match(html, /touch-action:pan-y/)
   assert.match(html, /addEventListener\("pointerdown"/)
   assert.match(html, /Math\.abs\(deltaX\) < 52/)
@@ -97,7 +98,7 @@ test('7 хоног нь bar chart, сар нь өдрийн progress calendar х
   assert.match(html, /button\.onclick = \(\) => openActivityDay\(day\.date\)/)
   assert.match(html, /const DAILY_GOALS = \{ pushup:20, squat:20 \}/)
   assert.match(html, /Math\.min\(100, day\.reps \/ DAILY_GOALS\[activityExercise\] \* 100\)/)
-  assert.match(html, /id="activityMonthAverage" class="activityAverage">0<\/strong><small>ӨДРИЙН ДУНДАЖ/)
+  assert.match(html, /id="activityMonthAverage" class="activityAverage">0<\/strong><small data-i18n="activityDailyAverageLabel"/)
   assert.match(html, /\.activitySummary \.activityAverage\{color:var\(--fg\);font-size:29px;font-weight:900\}/)
   assert.match(html, /\.activityMonthDay\.complete::before\{[^}]*linear-gradient/s)
   assert.match(html, /\.activityMonthDay\.complete::after\{display:none\}/)

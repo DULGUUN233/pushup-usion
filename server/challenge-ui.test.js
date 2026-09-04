@@ -13,9 +13,11 @@ test('challenge түр нууж, initial ачааллаас салгасан', (
 
 test('default болон custom challenge UI байна', () => {
   assert.match(html, /id="challengeTemplates"/)
-  assert.match(html, /id="challengeCustomToggle"[^>]*>Өөрөө үүсгэх/)
+  assert.match(html, /id="challengeCustomToggle"[^>]*data-i18n="challengeCustomToggle"/)
   assert.match(html, /id="challengeExercise"/)
-  assert.match(html, /<option value="pushup">Push Up<\/option><option value="squat">Суулт<\/option><option value="combined">Хосолсон<\/option>/)
+  assert.match(html, /<option value="pushup"[^>]*data-i18n="exercisePushupName"/)
+  assert.match(html, /<option value="squat"[^>]*data-i18n="exerciseSquat"/)
+  assert.match(html, /<option value="combined"[^>]*data-i18n="exerciseCombined"/)
   assert.match(html, /id="challengeDailyTarget"[^>]*min="1" max="1000"/)
   assert.match(html, /id="challengeDailyTarget"[^>]*value="20"/)
   assert.match(html, /id="challengeDays"[^>]*min="1" max="365"/)

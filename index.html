@@ -14,6 +14,7 @@
 <link rel="preload" as="image" href="./assets/modes/pushup-mode-v1.png" type="image/png">
 <link rel="preload" as="image" href="./assets/modes/game-mode-v1.png" type="image/png">
 <script src="https://usions.com/usion-sdk.js"></script>
+<script src="./assets/i18n-v1.js"></script>
 <style>
   :root{
     --bg:#070b11; --fg:#f3f7fb; --dim:#8795a6;
@@ -900,35 +901,35 @@
     <img class="bootArtwork" src="./assets/pushup-battle-splash-v2.webp" width="941" height="1672"
          alt="" aria-hidden="true" fetchpriority="high" decoding="async">
     <div class="aiLoadingCard">
-      <strong>БЭЛТГЭЖ БАЙНА...</strong>
+      <strong data-i18n="bootPreparing">БЭЛТГЭЖ БАЙНА...</strong>
       <div class="modelProgress" data-model-progress role="progressbar"
-           aria-label="Апп ачаалалт" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+           aria-label="Апп ачаалалт" data-i18n-aria-label="bootProgressLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="modelProgressTrack" aria-hidden="true"><div class="modelProgressBar"></div></div>
       </div>
-      <span class="srOnly">Үндсэн мэдээллүүдийг ачаалж байна.</span>
+      <span class="srOnly" data-i18n="bootLoadingDescription">Үндсэн мэдээллүүдийг ачаалж байна.</span>
     </div>
   </div>
 </section>
 
 <!-- ================= ЦЭС ================= -->
 <section id="menu" class="screen hidden">
-  <section id="dailyPushups" aria-label="Дасгалын статистик">
-    <div class="activityRangeSwitch" role="group" aria-label="Хугацааны төрөл">
+  <section id="dailyPushups" aria-label="Дасгалын статистик" data-i18n-aria-label="activityStatsLabel">
+    <div class="activityRangeSwitch" role="group" aria-label="Хугацааны төрөл" data-i18n-aria-label="activityRangeLabel">
       <span class="activityTabsPill" aria-hidden="true"></span>
-      <button id="activityDay" type="button" aria-label="Өдөр" aria-pressed="true">D</button>
-      <button id="activityWeek" type="button" aria-label="Долоо хоног" aria-pressed="false">W</button>
-      <button id="activityMonth" type="button" aria-label="Сар" aria-pressed="false">M</button>
+      <button id="activityDay" type="button" aria-label="Өдөр" data-i18n="activityDayShort" data-i18n-aria-label="activityDayLabel" aria-pressed="true">D</button>
+      <button id="activityWeek" type="button" aria-label="Долоо хоног" data-i18n="activityWeekShort" data-i18n-aria-label="activityWeekLabel" aria-pressed="false">W</button>
+      <button id="activityMonth" type="button" aria-label="Сар" data-i18n="activityMonthShort" data-i18n-aria-label="activityMonthLabel" aria-pressed="false">M</button>
     </div>
     <div id="activityViewport" class="dailyRingCard">
-      <div class="activitySwitch" role="group" aria-label="Статистикийн дасгал">
+      <div class="activitySwitch" role="group" aria-label="Статистикийн дасгал" data-i18n-aria-label="activityExerciseLabel">
         <span class="activityTabsPill" aria-hidden="true"></span>
-        <button id="activityPush" type="button" aria-pressed="true">Суниалт</button>
-        <button id="activitySquat" type="button" aria-pressed="false">Суулт</button>
+        <button id="activityPush" type="button" data-i18n="exercisePushup" aria-pressed="true">Суниалт</button>
+        <button id="activitySquat" type="button" data-i18n="exerciseSquat" aria-pressed="false">Суулт</button>
       </div>
       <div class="activityPeriodNav">
-        <button id="activityPrev" type="button" aria-label="Өмнөх хугацаа"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button id="activityPrev" type="button" aria-label="Өмнөх хугацаа" data-i18n-aria-label="activityPrevLabel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
         <span id="activityPeriodLabel" class="srOnly" aria-live="polite">Өнөөдөр</span>
-        <button id="activityNext" type="button" aria-label="Дараагийн хугацаа" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button id="activityNext" type="button" aria-label="Дараагийн хугацаа" data-i18n-aria-label="activityNextLabel" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
       </div>
       <div id="activityDayView" class="activityPanel">
         <div class="dailyRing">
@@ -945,14 +946,14 @@
         </div>
       </div>
       <div id="activityWeekView" class="activityPanel hidden">
-        <div style="width:100%"><div class="activitySummary"><div><strong id="activityWeekTotal">0</strong><small>НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityWeekAverage" class="activityAverage">0</strong><small>ӨДРИЙН ДУНДАЖ</small></div></div><div id="activityWeekChart" class="activityWeekChart" role="group" aria-label="Долоо хоногийн дасгал"></div></div>
+        <div style="width:100%"><div class="activitySummary"><div><strong id="activityWeekTotal">0</strong><small data-i18n="activityTotalLabel">НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityWeekAverage" class="activityAverage">0</strong><small data-i18n="activityDailyAverageLabel">ӨДРИЙН ДУНДАЖ</small></div></div><div id="activityWeekChart" class="activityWeekChart" role="group" aria-label="Долоо хоногийн дасгал" data-i18n-aria-label="activityWeekChartLabel"></div></div>
       </div>
       <div id="activityMonthView" class="activityPanel hidden">
-        <div class="activityMonth"><time id="activityMonthTitle" class="activityMonthTitle" datetime=""></time><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small>НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityMonthAverage" class="activityAverage">0</strong><small>ӨДРИЙН ДУНДАЖ</small></div></div><div class="activityMonthWeekdays" aria-hidden="true"><span>ДА</span><span>МЯ</span><span>ЛХ</span><span>ПҮ</span><span>БА</span><span>БЯ</span><span>НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал"></div></div>
+        <div class="activityMonth"><time id="activityMonthTitle" class="activityMonthTitle" datetime=""></time><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small data-i18n="activityTotalLabel">НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityMonthAverage" class="activityAverage">0</strong><small data-i18n="activityDailyAverageLabel">ӨДРИЙН ДУНДАЖ</small></div></div><div class="activityMonthWeekdays" aria-hidden="true"><span data-i18n="weekdayMonShort">ДА</span><span data-i18n="weekdayTueShort">МЯ</span><span data-i18n="weekdayWedShort">ЛХ</span><span data-i18n="weekdayThuShort">ПҮ</span><span data-i18n="weekdayFriShort">БА</span><span data-i18n="weekdaySatShort">БЯ</span><span data-i18n="weekdaySunShort">НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал" data-i18n-aria-label="activityMonthChartLabel"></div></div>
       </div>
     </div>
     <section class="activityTrendCard" aria-labelledby="activityTrendTitle">
-      <div class="activityTrendHead"><h3 id="activityTrendTitle">СҮҮЛИЙН 7 ӨДӨР</h3><strong><span id="activityTrendTotal">0</span><small>REP</small></strong></div>
+      <div class="activityTrendHead"><h3 id="activityTrendTitle">СҮҮЛИЙН 7 ӨДӨР</h3><strong><span id="activityTrendTotal">0</span><small data-i18n="unitRep">REP</small></strong></div>
       <svg id="activityTrendChart" class="activityTrendChart" viewBox="0 0 320 126" role="img" aria-describedby="activityTrendDescription">
         <defs><linearGradient id="activityTrendGradient" x1="0" y1="0" x2="0" y2="1"><stop class="dailyGradientStart" stop-opacity=".28"></stop><stop class="dailyGradientEnd" offset="1" stop-opacity="0"></stop></linearGradient></defs>
         <line class="activityTrendGrid" x1="18" y1="35" x2="302" y2="35"></line>
@@ -969,35 +970,35 @@
 
   <section id="challengeSection" class="challengeSection hidden" aria-labelledby="challengeTitle" aria-hidden="true">
     <div class="challengeHead">
-      <h2 id="challengeTitle">Challenge</h2>
-      <button id="challengeCustomToggle" type="button" aria-expanded="false">Өөрөө үүсгэх</button>
+      <h2 id="challengeTitle" data-i18n="challengeTitle">Challenge</h2>
+      <button id="challengeCustomToggle" type="button" data-i18n="challengeCustomToggle" aria-expanded="false">Өөрөө үүсгэх</button>
     </div>
     <div id="challengeTemplates">
       <article id="activeChallenge" class="challengeCard active hidden" aria-live="polite">
         <div class="challengeTop"><h3 id="activeChallengeTitle"></h3><span id="activeChallengeBadge" class="challengeBadge"></span></div>
-        <div class="challengeProgress" role="progressbar" aria-label="Challenge ахиц" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="activeChallengeBar"></span></div>
+        <div class="challengeProgress" role="progressbar" aria-label="Challenge ахиц" data-i18n-aria-label="challengeProgressLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="activeChallengeBar"></span></div>
         <div class="challengeNumbers"><span id="activeChallengeProgress"></span><span id="activeChallengeDays"></span></div>
         <div id="challengeDayDots" class="challengeDays"></div>
-        <div class="challengeActions"><button id="challengeStop" type="button">Зогсоох</button></div>
+        <div class="challengeActions"><button id="challengeStop" type="button" data-i18n="challengeStop">Зогсоох</button></div>
       </article>
     </div>
     <form id="challengeForm" class="challengeForm hidden">
-      <label>Төрөл
-        <select id="challengeExercise"><option value="pushup">Push Up</option><option value="squat">Суулт</option><option value="combined">Хосолсон</option></select>
+      <label><span data-i18n="challengeTypeLabel">Төрөл</span>
+        <select id="challengeExercise"><option value="pushup" data-i18n="exercisePushupName">Push Up</option><option value="squat" data-i18n="exerciseSquat">Суулт</option><option value="combined" data-i18n="exerciseCombined">Хосолсон</option></select>
       </label>
-      <label>Өдрийн зорилго
+      <label><span data-i18n="challengeDailyGoalLabel">Өдрийн зорилго</span>
         <input id="challengeDailyTarget" type="number" min="1" max="1000" value="20" inputmode="numeric" required>
       </label>
-      <label>Хэдэн өдөр
+      <label><span data-i18n="challengeDurationLabel">Хэдэн өдөр</span>
         <input id="challengeDays" type="number" min="1" max="365" value="7" inputmode="numeric" required>
       </label>
-      <button type="submit">Challenge эхлүүлэх</button>
+      <button type="submit" data-i18n="challengeStartFull">Challenge эхлүүлэх</button>
     </form>
     <div id="challengeStatus" role="status" aria-live="polite"></div>
   </section>
 
   <div id="note" role="status" aria-live="polite" aria-atomic="true"></div>
-  <button id="retrySave" class="hidden">Дахин хадгалах</button>
+  <button id="retrySave" class="hidden" data-i18n="retrySave">Дахин хадгалах</button>
 </section>
 
 <!-- ================= ЛИГ БА БАЙР ================= -->
@@ -1005,40 +1006,40 @@
   <div class="boardShell">
     <div id="boardHub">
       <header class="boardHead">
-        <h2>Лиг ба байр</h2>
+        <h2 data-i18n="boardTitle">Лиг ба байр</h2>
       </header>
       <form id="createLeagueForm" class="leagueForm">
-        <span class="leagueFormTitle">Шинэ лиг үүсгэх</span>
-        <label class="srOnly" for="leagueName">Лигийн нэр</label>
+        <span class="leagueFormTitle" data-i18n="leagueCreateTitle">Шинэ лиг үүсгэх</span>
+        <label class="srOnly" for="leagueName" data-i18n="leagueNameLabel">Лигийн нэр</label>
         <div class="leagueFormRow">
-          <input id="leagueName" maxlength="30" autocomplete="off" placeholder="Жишээ: Office Crew">
-          <button type="submit">Үүсгэх</button>
+          <input id="leagueName" maxlength="30" autocomplete="off" placeholder="Жишээ: Office Crew" data-i18n-placeholder="leagueNamePlaceholder">
+          <button type="submit" data-i18n="leagueCreateAction">Үүсгэх</button>
         </div>
         <div id="createLeagueStatus" class="formStatus" role="status"></div>
       </form>
       <form id="joinLeagueForm" class="leagueForm">
-        <span class="leagueFormTitle">Лигт нэгдэх</span>
-        <label class="srOnly" for="leagueCode">6 тэмдэгт лигийн код</label>
+        <span class="leagueFormTitle" data-i18n="leagueJoinTitle">Лигт нэгдэх</span>
+        <label class="srOnly" for="leagueCode" data-i18n="leagueCodeLabel">6 тэмдэгт лигийн код</label>
         <div class="leagueFormRow">
-          <input id="leagueCode" maxlength="6" inputmode="text" autocomplete="off" autocapitalize="characters" placeholder="AB23CD">
-          <button type="submit">Нэгдэх</button>
+          <input id="leagueCode" maxlength="6" inputmode="text" autocomplete="off" autocapitalize="characters" placeholder="AB23CD" data-i18n-placeholder="leagueCodePlaceholder">
+          <button type="submit" data-i18n="leagueJoinAction">Нэгдэх</button>
         </div>
         <div id="joinLeagueStatus" class="formStatus" role="status"></div>
       </form>
-      <div class="leagueTitleRow"><h3>Лигүүд</h3></div>
-      <button id="globalLeague" class="leagueCard global" aria-label="Бүх тоглогчийн жагсаалт"></button>
+      <div class="leagueTitleRow"><h3 data-i18n="leaguesTitle">Лигүүд</h3></div>
+      <button id="globalLeague" class="leagueCard global" aria-label="Бүх тоглогчийн жагсаалт" data-i18n-aria-label="globalLeaderboardLabel"></button>
       <div id="leagueList"><div class="boardLoading"></div><div class="boardLoading"></div></div>
     </div>
     <div id="boardDetail" class="hidden">
       <div class="detailTop">
-        <div><h2 id="detailName">Бүх тоглогч</h2><p id="detailMeta"></p></div>
+        <div><h2 id="detailName" data-i18n="allPlayers">Бүх тоглогч</h2><p id="detailMeta"></p></div>
       </div>
       <div id="boardTabs" data-active="pushup">
         <span class="boardTabsPill" aria-hidden="true"></span>
-        <button id="boardPush" class="active">Push-up</button>
-        <button id="boardSquat">Squat</button>
-        <button id="boardBattle">Battle ELO</button>
-        <button id="boardFlappy">Flappy</button>
+        <button id="boardPush" class="active" data-i18n="leaderboardPushup">Push-up</button>
+        <button id="boardSquat" data-i18n="leaderboardSquat">Squat</button>
+        <button id="boardBattle" data-i18n="leaderboardBattle">Battle ELO</button>
+        <button id="boardFlappy" data-i18n="leaderboardFlappy">Flappy</button>
       </div>
       <div id="podium"></div>
       <div id="rows"></div>
@@ -1046,13 +1047,13 @@
   </div>
 </section>
 
-<nav id="mainNav" class="hidden" aria-label="Үндсэн цэс">
+<nav id="mainNav" class="hidden" aria-label="Үндсэн цэс" data-i18n-aria-label="mainNavLabel">
   <span id="mainNavPill" class="mainNavPill" aria-hidden="true"></span>
-  <button id="navHome" type="button" aria-label="Нүүр">
+  <button id="navHome" type="button" aria-label="Нүүр" data-i18n-aria-label="navHome">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>
-    <span>Нүүр</span>
+    <span data-i18n="navHome">Нүүр</span>
   </button>
-  <button id="navPush" type="button" aria-label="Push Up">
+  <button id="navPush" type="button" aria-label="Push Up" data-i18n-aria-label="navPushup">
     <svg class="navExerciseIcon navPushIcon" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="18.5" cy="6" r="2"></circle>
       <path d="m16.6 8.4-6.6 2-4.5 3-2.8-.1"></path>
@@ -1060,26 +1061,26 @@
       <path d="m10 10.4-3.9 6.8H2.7"></path>
       <path d="M2.4 20h17.3"></path>
     </svg>
-    <span>Push Up</span>
+    <span data-i18n="navPushup">Push Up</span>
   </button>
-  <button id="navBattle" type="button" aria-label="Battle Friend">
+  <button id="navBattle" type="button" aria-label="Battle Friend" data-i18n-aria-label="navBattleLabel">
     <span class="navBattleOrb" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6Z"></path><path d="m13 7-4 6h3l-1 4 4-6h-3Z"></path></svg>
     </span>
-    <span class="navBattleLabel">Battle</span>
+    <span class="navBattleLabel" data-i18n="navBattle">Battle</span>
   </button>
-  <button id="navSquat" type="button" aria-label="Суулт">
+  <button id="navSquat" type="button" aria-label="Суулт" data-i18n-aria-label="navSquat">
     <svg class="navExerciseIcon navSquatIcon" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="3.7" r="2"></circle>
       <path d="M12 5.7v6.5M10.6 8l-3.8 3H3.9M13.4 8l3.8 3h2.9"></path>
       <path d="M8.8 12.2h6.4M8.8 12.2l-3 4.1-2.7 3M15.2 12.2l3 4.1 2.7 3"></path>
       <path d="M2.5 20h3.3m12.4 0h3.3"></path>
     </svg>
-    <span>Суулт</span>
+    <span data-i18n="navSquat">Суулт</span>
   </button>
-  <button id="navBoard" type="button" aria-label="Жагсаалт">
+  <button id="navBoard" type="button" aria-label="Жагсаалт" data-i18n-aria-label="navLeaderboard">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v4a5 5 0 0 1-10 0Z"></path><path d="M7 6H4v1a4 4 0 0 0 4 4"></path><path d="M17 6h3v1a4 4 0 0 1-4 4"></path></svg>
-    <span>Жагсаалт</span>
+    <span data-i18n="navLeaderboard">Жагсаалт</span>
   </button>
 </nav>
 
@@ -1087,21 +1088,21 @@
 <section id="pushChoice" class="screen hidden" aria-labelledby="pushChoiceTitle">
   <div class="pushChoiceShell">
     <header class="pushChoiceHead">
-      <h2 id="pushChoiceTitle">Push Up</h2>
-      <p>Хийх горимоо сонгоно уу</p>
+      <h2 id="pushChoiceTitle" data-i18n="pushChoiceTitle">Push Up</h2>
+      <p data-i18n="pushChoiceSubtitle">Хийх горимоо сонгоно уу</p>
     </header>
     <button id="pushNormal" class="pushChoiceCard" type="button">
       <span class="pushChoiceIcon" aria-hidden="true">
         <img src="./assets/modes/pushup-mode-v1.png" alt="" width="52" height="52" decoding="async">
       </span>
-      <span class="pushChoiceText"><strong>Энгийн</strong><small>Зөв push-up бүрийг AI тоолно</small></span>
+      <span class="pushChoiceText"><strong data-i18n="pushModeNormalTitle">Энгийн</strong><small data-i18n="pushModeNormalDescription">Зөв push-up бүрийг AI тоолно</small></span>
       <svg class="pushChoiceArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
     </button>
     <button id="pushGame" class="pushChoiceCard game" type="button">
       <span class="pushChoiceIcon" aria-hidden="true">
         <img src="./assets/modes/game-mode-v1.png" alt="" width="52" height="52" decoding="async">
       </span>
-      <span class="pushChoiceText"><strong>Game</strong><small>Тохойгоороо шувууг удирдаж саадыг давна</small></span>
+      <span class="pushChoiceText"><strong data-i18n="pushModeGameTitle">Game</strong><small data-i18n="pushModeGameDescription">Тохойгоороо шувууг удирдаж саадыг давна</small></span>
       <svg class="pushChoiceArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
     </button>
   </div>
@@ -1109,26 +1110,26 @@
 
 <!-- ================= ХҮЛЭЭЛГИЙН ӨРӨӨ ================= -->
 <section id="hall" class="screen hidden">
-  <h2 id="hallTitle">Хүлээлгийн өрөө</h2>
+  <h2 id="hallTitle" data-i18n="hallTitle">Хүлээлгийн өрөө</h2>
   <div id="hallSeats">
     <div class="seat" id="seatYou"></div>
-    <div id="hallVs">VS</div>
+    <div id="hallVs" data-i18n="hallVersus">VS</div>
     <div class="seat away" id="seatOpp"></div>
   </div>
   <div id="hallHint" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="battleTypes" data-active="pushup">
-    <span>Тулааны төрөл · Эзэн сонгоно</span>
+    <span data-i18n="hallBattleTypeLabel">Тулааны төрөл · Эзэн сонгоно</span>
     <div id="battleTypeBtns">
       <span class="battleTypePill" aria-hidden="true"></span>
-      <button class="battleType active" data-battle-type="pushup">Push-up<br>30 сек</button>
-      <button class="battleType" data-battle-type="squat">Squat<br>30 сек</button>
-      <button class="battleType" data-battle-type="combined">Хосолсон<br>30 + 10 + 30</button>
+      <button class="battleType active" data-battle-type="pushup" data-i18n-html="hallBattlePushup">Push-up<br>30 сек</button>
+      <button class="battleType" data-battle-type="squat" data-i18n-html="hallBattleSquat">Squat<br>30 сек</button>
+      <button class="battleType" data-battle-type="combined" data-i18n-html="hallBattleCombined">Хосолсон<br>30 + 10 + 30</button>
     </div>
   </div>
   <div id="hallBtns">
-    <button class="primary hidden" id="hallReady">Бэлэн</button>
-    <button class="primary hidden" id="hallStart">Эхлүүлэх</button>
-    <button id="hallBack">← Гарах</button>
+    <button class="primary hidden" id="hallReady" data-i18n="hallReady">Бэлэн</button>
+    <button class="primary hidden" id="hallStart" data-i18n="hallStart">Эхлүүлэх</button>
+    <button id="hallBack" data-i18n="hallExit">← Гарах</button>
   </div>
 </section>
 
@@ -1139,17 +1140,17 @@
   <canvas id="canvas"></canvas>
   <div id="deepGlow"></div>
   <canvas id="gameCanvas" aria-hidden="true"></canvas>
-  <div id="pushGameHud" aria-label="Тоглоомын оноо">
+  <div id="pushGameHud" aria-label="Тоглоомын оноо" data-i18n-aria-label="pushGameHudLabel">
     <div class="pushGameScore">
-      <span>Оноо <b id="pushGameScore">0</b></span>
-      <span>Push Up <b id="pushGameReps">0</b></span>
+      <span data-i18n-html="pushGameScoreLabel">Оноо <b id="pushGameScore">0</b></span>
+      <span data-i18n-html="pushGameRepsLabel">Push Up <b id="pushGameReps">0</b></span>
     </div>
     <div id="pushGameStreak" class="pushGameStreak" role="status" aria-live="polite"
-         aria-label="Жимсний streak 0">
+         aria-label="Жимсний streak 0" data-i18n-aria-label="pushGameStreakLabel">
       <img src="./assets/flappy/fruit-orange-v1.webp" alt="" aria-hidden="true" width="44" height="44">
       <span class="pushGameStreakMultiplier">×<b id="pushGameStreakValue" class="t-digit-group"><span class="t-digit">0</span></b></span>
     </div>
-    <button id="gameEnd" type="button" aria-label="Тоглоом дуусгах">
+    <button id="gameEnd" type="button" aria-label="Тоглоом дуусгах" data-i18n-aria-label="pushGameEndLabel">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"></path></svg>
     </button>
   </div>
@@ -1157,13 +1158,13 @@
   <div id="aiLoading" class="hidden" role="status" aria-live="polite" aria-atomic="true">
     <div class="aiLoadingCard">
       <div class="aiLoadingRing" aria-hidden="true"></div>
-      <strong>AI танилт бэлтгэж байна</strong>
+      <strong data-i18n="aiPreparing">AI танилт бэлтгэж байна</strong>
       <div class="modelProgress" data-model-progress role="progressbar"
-           aria-label="AI model ачаалалт" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+           aria-label="AI model ачаалалт" data-i18n-aria-label="aiProgressLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="modelProgressValue" aria-hidden="true">0%</div>
         <div class="modelProgressTrack" aria-hidden="true"><div class="modelProgressBar"></div></div>
       </div>
-      <span>Анхны ачаалалт арай удаан байж болно. Дараагийн нээлт ихэвчлэн хурдан.</span>
+      <span data-i18n="aiFirstLoadHint">Анхны ачаалалт арай удаан байж болно. Дараагийн нээлт ихэвчлэн хурдан.</span>
     </div>
   </div>
 
@@ -1178,19 +1179,19 @@
             <span class="dElo" id="oppElo">–</span>
           </div>
         </div>
-        <div class="dTime"><span id="roundName">TIME</span><div id="clock">…</div></div>
+        <div class="dTime"><span id="roundName" data-i18n="battleTimeLabel">TIME</span><div id="clock">…</div></div>
         <div class="dSide you">
           <div id="youAv" class="pfp"></div>
           <div class="dTxt">
             <b id="youReps" class="sYou">0</b>
-            <span class="dNm" id="youName">Чи</span>
+            <span class="dNm" id="youName" data-i18n="you">Чи</span>
             <span class="dElo" id="youElo">–</span>
           </div>
         </div>
       </div>
       <div id="tug"><div id="tugYou"></div></div>
     </div>
-    <div id="battleCountdown" class="hidden" role="timer" aria-label="Тулаан эхлэх тоолуур">
+    <div id="battleCountdown" class="hidden" role="timer" aria-label="Тулаан эхлэх тоолуур" data-i18n-aria-label="battleCountdownLabel">
       <span id="battleCountdownNum">10</span>
     </div>
     <div id="top" class="hidden" aria-hidden="true">
@@ -1207,26 +1208,26 @@
         <div id="repDiag">–</div>
       </div>
     </div>
-    <div id="meterWrap" role="meter" aria-label="Тохойн түвшин" aria-valuemin="0"
+    <div id="meterWrap" role="meter" aria-label="Тохойн түвшин" data-i18n-aria-label="elbowLevelLabel" aria-valuemin="0"
          aria-valuemax="100" aria-valuenow="0">
       <div id="meter"></div><div id="meterLine" aria-hidden="true"></div>
     </div>
     <div id="bottom">
-      <div id="msg" role="status" aria-live="polite" aria-atomic="true">Бэлдэж байна…</div>
+      <div id="msg" role="status" aria-live="polite" aria-atomic="true" data-i18n="getReady">Бэлдэж байна…</div>
       <div id="counter"><span id="count">0</span></div>
       <div id="btns">
-        <button id="reset">Тэглэх</button>
-        <button id="done">Дуусгах</button>
+        <button id="reset" data-i18n="resetAction">Тэглэх</button>
+        <button id="done" data-i18n="finishAction">Дуусгах</button>
         <!-- Хостын ✕ товч аппыг бүхэлд нь хаадаг тул тулаанаас гарах
              өөрийн зам хэрэгтэй -->
-        <button id="quit" class="hidden">Гарах</button>
+        <button id="quit" class="hidden" data-i18n="exitAction">Гарах</button>
       </div>
     </div>
   </div>
 
   <div id="start">
-    <h2 id="startTitle">Push Up</h2>
-    <svg id="howtoPush" class="howto" viewBox="0 0 280 168" aria-label="Тохойгоо задгай байлгах зураг">
+    <h2 id="startTitle" data-i18n="startTitlePushup">Push Up</h2>
+    <svg id="howtoPush" class="howto" viewBox="0 0 280 168" aria-label="Тохойгоо задгай байлгах зураг" data-i18n-aria-label="pushupInstructionImageLabel">
       <line x1="18" y1="132" x2="262" y2="132" stroke="rgba(255,255,255,.28)" stroke-width="3"/>
       <path d="M140,70 L140,106" stroke="#ff6a3d" stroke-width="6" stroke-linecap="round"/>
       <path d="M110,70 L170,70" stroke="#ff6a3d" stroke-width="6" stroke-linecap="round"/>
@@ -1240,10 +1241,10 @@
       <circle cx="58" cy="80" r="5" fill="#fff"/><circle cx="222" cy="80" r="5" fill="#fff"/>
       <circle cx="58" cy="80" r="14" fill="none" stroke="#ffd21e" stroke-width="2.5"/>
       <circle cx="222" cy="80" r="14" fill="none" stroke="#ffd21e" stroke-width="2.5"/>
-      <text x="140" y="160" text-anchor="middle" font-size="13" font-weight="700"
+      <text x="140" y="160" text-anchor="middle" font-size="13" font-weight="700" data-i18n="pushupInstructionCaption"
             fill="#ffd21e">тохой хоёулаа ил, задгай</text>
     </svg>
-    <svg id="howtoSquat" class="howto hidden" viewBox="0 0 280 168" aria-label="Хажуугаас бүтэн суулт хийх зураг">
+    <svg id="howtoSquat" class="howto hidden" viewBox="0 0 280 168" aria-label="Хажуугаас бүтэн суулт хийх зураг" data-i18n-aria-label="squatInstructionImageLabel">
       <line x1="18" y1="140" x2="262" y2="140" stroke="rgba(255,255,255,.28)" stroke-width="3"/>
       <circle cx="100" cy="34" r="17" fill="#ff6a3d"/>
       <path d="M105,52 L132,82 L174,90" stroke="#ff6a3d" stroke-width="7" fill="none"
@@ -1257,39 +1258,40 @@
       <circle cx="100" cy="115" r="5" fill="#fff"/><circle cx="204" cy="140" r="5" fill="#fff"/>
       <circle cx="78" cy="140" r="5" fill="#fff"/>
       <line x1="125" y1="106" x2="184" y2="106" stroke="#ffd21e" stroke-width="2.5" stroke-dasharray="6 5"/>
-      <text x="140" y="162" text-anchor="middle" font-size="13" font-weight="700"
+      <text x="140" y="162" text-anchor="middle" font-size="13" font-weight="700" data-i18n="squatInstructionCaption"
             fill="#ffd21e">ташаа өвдөгний түвшинд хүрнэ</text>
     </svg>
     <img id="howtoGame" class="howto hidden" src="./assets/flappy/game-howto-v2.webp"
-         width="840" height="504" alt="Шувууг дээш доош хөдөлгөн хоолойн завсраар гаргах заавар">
-    <p id="startHint">Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга — биедээ
+         width="840" height="504" alt="Шувууг дээш доош хөдөлгөн хоолойн завсраар гаргах заавар" data-i18n-alt="flappyInstructionImageLabel"
+         aria-label="Шувууг дээш доош хөдөлгөн хоолойн завсраар гаргах заавар" data-i18n-aria-label="flappyInstructionImageLabel">
+    <p id="startHint" data-i18n-html="pushupStartHint">Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга — биедээ
        наавал халхлагдаж, өнцөг буруу уншина.</p>
-    <button class="primary" id="go">Камер асаах</button>
+    <button class="primary" id="go" data-i18n="cameraStartAction">Камер асаах</button>
     <div id="err" class="hidden" role="alert" aria-live="assertive" aria-atomic="true"></div>
   </div>
 
   <div id="pushGameOver" class="hidden" role="dialog" aria-modal="true" aria-labelledby="pushGameOverTitle">
-    <h2 id="pushGameOverTitle">Тоглоом дууслаа</h2>
+    <h2 id="pushGameOverTitle" data-i18n="pushGameOverTitle">Тоглоом дууслаа</h2>
     <div id="pushGameFinalScore">0</div>
-    <p><span id="pushGameFinalReps">0</span> зөв push-up</p>
+    <p><span id="pushGameFinalReps">0</span> <span data-i18n="pushGameCorrectPushups">зөв push-up</span></p>
     <div class="pushGameOverBtns">
-      <button id="pushGameRestart" type="button">Дахин тоглох</button>
-      <button id="pushGameExit" type="button">Дүнгээ хадгалаад гарах</button>
+      <button id="pushGameRestart" type="button" data-i18n="pushGameRestart">Дахин тоглох</button>
+      <button id="pushGameExit" type="button" data-i18n="pushGameSaveExit">Дүнгээ хадгалаад гарах</button>
     </div>
   </div>
 
   <div id="seek" class="hidden">
-    <h2 id="seekTitle">Өрсөлдөгч хайж байна…</h2>
-    <p>Энэ зуур байрлалаа тохируулаарай. Нөгөө тал ормогц 10 секунд тоолоод эхэлнэ.</p>
-    <button id="seekCancel">Болих</button>
+    <h2 id="seekTitle" data-i18n="seekTitle">Өрсөлдөгч хайж байна…</h2>
+    <p data-i18n="seekHint">Энэ зуур байрлалаа тохируулаарай. Нөгөө тал ормогц 10 секунд тоолоод эхэлнэ.</p>
+    <button id="seekCancel" data-i18n="cancelAction">Болих</button>
   </div>
 
   <div id="roundBreak" class="hidden">
-    <small>1-Р ROUND ДУУСЛАА</small>
+    <small data-i18n="roundOneComplete">1-Р ROUND ДУУСЛАА</small>
     <h2 id="breakTitle">—</h2>
     <div id="breakScore">—</div>
     <div id="breakClock">10</div>
-    <div id="breakNext">Дараагийн round: Squat</div>
+    <div id="breakNext" data-i18n="roundNextSquat">Дараагийн round: Squat</div>
   </div>
 
   <div id="over" class="hidden">
@@ -1297,7 +1299,7 @@
     <div id="oScore">—</div>
     <div id="oElo">—</div>
     <div id="oRounds"></div>
-    <button class="primary" id="oBack">Цэс рүү</button>
+    <button class="primary" id="oBack" data-i18n="backToMenuAction">Цэс рүү</button>
   </div>
 </section>
 
@@ -1312,6 +1314,33 @@ const gameCanvas = $("gameCanvas"), gameCtx = gameCanvas.getContext("2d");
 // ======================= Usion + сервер =======================
 
 const sdk = () => (window.Usion && typeof window.Usion.init === "function") ? window.Usion : null;
+const i18n = window.PushupI18n.createI18n("mn");
+const t = (key, ...args) => i18n.t(key, ...args);
+
+function detectLang(config){
+  try{
+    const language = config?.language || sdk()?.getLanguage?.();
+    if(language) return window.PushupI18n.normalizeLanguage(language);
+  }catch{ /* browser fallback */ }
+  try{ return window.PushupI18n.normalizeLanguage(navigator.language || "mn"); }
+  catch{ return "mn"; }
+}
+
+function applyLang(language){
+  const lang = i18n.setLanguage(language);
+  document.documentElement.lang = lang;
+  document.title = t("appTitle");
+  for(const el of document.querySelectorAll("[data-i18n]")) el.textContent = t(el.dataset.i18n);
+  for(const el of document.querySelectorAll("[data-i18n-html]")) el.innerHTML = t(el.dataset.i18nHtml);
+  for(const el of document.querySelectorAll("[data-i18n-aria-label]")) el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel));
+  for(const el of document.querySelectorAll("[data-i18n-placeholder]")) el.setAttribute("placeholder", t(el.dataset.i18nPlaceholder));
+  for(const el of document.querySelectorAll("[data-i18n-alt]")) el.setAttribute("alt", t(el.dataset.i18nAlt));
+  const locale = lang === "mn" ? "mn-MN" : "en-US";
+  activityNumber = new Intl.NumberFormat(locale);
+  boardNumber = new Intl.NumberFormat(locale);
+  return lang;
+}
+
 let profile = null;     // серверээс ирсэн бидний бүртгэл
 let launchCfg = null;   // Usion аппыг хэрхэн нээснийг хэлнэ (өрөө, тоглогчид)
 const FLAPPY_PENDING_KEY = "pushup:flappyPendingBest";
@@ -1382,23 +1411,23 @@ async function api(path, opts = {}){
 }
 
 /** Техникийн/серверийн алдааг богино, буруутгалгүй, засах алхамтай текст болгоно. */
-function friendlyError(error, fallback = "Үйлдэл амжилтгүй. Дахин оролдоно уу."){
+function friendlyError(error, fallback = t("errorGeneric")){
   const raw = String(error?.message ?? error ?? "").toLowerCase();
   const name = String(error?.name ?? "").toLowerCase();
-  if(name === "notallowederror" || raw.includes("permission") || raw.includes("denied")) return "Камерын зөвшөөрөл хаалттай байна. Тохиргооноос камерын зөвшөөрлийг нээгээд дахин оролдоно уу.";
-  if(name === "modelloaderror") return "AI танилт ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.";
-  if(name === "notfounderror") return "Камер олдсонгүй. Камертай төхөөрөмжөөр дахин оролдоно уу.";
-  if(name === "notreadableerror") return "Камерыг өөр апп ашиглаж байна. Тэр аппыг хаагаад дахин оролдоно уу.";
-  if(name === "aborterror" || raw.includes("камер цуцлагдсан")) return "Камерын хүсэлт цуцлагдлаа. Дахин оролдоно уу.";
-  if(raw.includes("урилга хүчингүй")) return "Энэ урилга хүчингүй болсон. Найзаасаа шинэ урилга аваарай.";
-  if(raw.includes("өрөө дүүрэн")) return "Өрөө дүүрсэн байна. Найзаасаа шинэ урилга аваарай.";
-  if(raw.includes("төрлийг зөвхөн эзэн")) return "Тулааны төрлийг зөвхөн өрөөний эзэн сонгоно.";
-  if(raw.includes("хоёулаа өрөөнд")) return "Найзыгаа өрөөнд орж иртэл хүлээнэ үү.";
-  if(raw.includes("эхлүүлэх боломжгүй")) return "Найз Ready өгсөн эсэхийг шалгаад дахин эхлүүлнэ үү.";
-  if(raw.includes("usion олдсонгүй") || raw.includes("хэрэглэгч тодорхойгүй")) return "Тоглоомын холболт бэлэн биш байна. Аппаа хааж дахин нээнэ үү.";
-  if(raw.includes("http 401") || raw.includes("token")) return "Нэвтрэх хугацаа дууссан байна. Аппаа хааж дахин нээнэ үү.";
-  if(raw.includes("http 429")) return "Хэт олон хүсэлт илгээлээ. Түр хүлээгээд дахин оролдоно уу.";
-  if(raw.includes("fetch") || raw.includes("network") || raw.includes("http 5") || raw.includes("service_id") || raw.includes("үйлчилгээ хүрэхгүй")) return "Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.";
+  if(name === "notallowederror" || raw.includes("permission") || raw.includes("denied")) return t("errorCameraPermission");
+  if(name === "modelloaderror") return t("errorModelLoad");
+  if(name === "notfounderror") return t("errorCameraMissing");
+  if(name === "notreadableerror") return t("errorCameraBusy");
+  if(name === "aborterror" || raw.includes("камер цуцлагдсан")) return t("errorCameraCanceled");
+  if(raw.includes("урилга хүчингүй")) return t("errorInviteInvalid");
+  if(raw.includes("өрөө дүүрэн")) return t("errorRoomFull");
+  if(raw.includes("төрлийг зөвхөн эзэн")) return t("errorHostOnlyType");
+  if(raw.includes("хоёулаа өрөөнд")) return t("errorWaitForFriend");
+  if(raw.includes("эхлүүлэх боломжгүй")) return t("errorCannotStart");
+  if(raw.includes("usion олдсонгүй") || raw.includes("хэрэглэгч тодорхойгүй")) return t("errorConnectionNotReady");
+  if(raw.includes("http 401") || raw.includes("token")) return t("errorSessionExpired");
+  if(raw.includes("http 429")) return t("errorTooManyRequests");
+  if(raw.includes("fetch") || raw.includes("network") || raw.includes("http 5") || raw.includes("service_id") || raw.includes("үйлчилгээ хүрэхгүй")) return t("errorNetwork");
   return fallback;
 }
 
@@ -1423,7 +1452,7 @@ function note(text, kind){
 let submitted = -1;
 const DAILY_GOALS = { pushup:20, squat:20 };
 const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-const activityNumber = new Intl.NumberFormat("mn-MN");
+let activityNumber = new Intl.NumberFormat("mn-MN");
 let activityExercise = localStorage.getItem("pushup:activityExercise") === "squat" ? "squat" : "pushup";
 let activityRange = ["day","week","month"].includes(localStorage.getItem("pushup:activityRange")) ? localStorage.getItem("pushup:activityRange") : "day";
 let activityAnchor = activityDateKey();
@@ -1514,17 +1543,17 @@ function activityValues(period){
 
 function activityTrendState(period = activityPeriodState()){
   const today = activityDateKey();
-  let title = "СҮҮЛИЙН 7 ӨДӨР";
+  let title = t("activityTrendLast7Days");
   let groups;
 
   if(activityRange === "day"){
-    const weekdays = ["НЯ","ДА","МЯ","ЛХ","ПҮ","БА","БЯ"];
+    const weekdays = ["weekdaySunShort","weekdayMonShort","weekdayTueShort","weekdayWedShort","weekdayThuShort","weekdayFriShort","weekdaySatShort"].map(key => t(key));
     groups = Array.from({ length:7 }, (_, index) => {
       const date = activityShiftDate(activityAnchor, index - 6);
       return { dates:[date], label:weekdays[activityDateFromKey(date).getDay()] };
     });
   }else if(activityRange === "week"){
-    title = "СҮҮЛИЙН 7 ДОЛОО ХОНОГ";
+    title = t("activityTrendLast7Weeks");
     const selectedWeekStart = period.dates[0];
     groups = Array.from({ length:7 }, (_, index) => {
       const start = activityShiftDate(selectedWeekStart, (index - 6) * 7);
@@ -1535,14 +1564,14 @@ function activityTrendState(period = activityPeriodState()){
       };
     });
   }else{
-    title = "СҮҮЛИЙН 7 САР";
+    title = t("activityTrendLast7Months");
     const selectedMonth = activityDateFromKey(period.dates[0]);
     groups = Array.from({ length:7 }, (_, index) => {
       const first = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + index - 6, 1, 12);
       const dayCount = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
       return {
         dates:Array.from({ length:dayCount }, (_value, dayIndex) => activityDateKey(new Date(first.getFullYear(), first.getMonth(), dayIndex + 1, 12))),
-        label:`${first.getMonth() + 1}-р`,
+        label:t("activityTrendMonthLabel", first.getMonth() + 1),
       };
     });
   }
@@ -1589,7 +1618,7 @@ function renderActivityTrend(period){
   $("activityTrendTotal").textContent = activityNumber.format(total);
   $("activityTrendArea").setAttribute("d", areaPath);
   $("activityTrendLine").setAttribute("d", linePath);
-  $("activityTrendChart").setAttribute("aria-label", `${trend.title}: нийт ${total} ${activityExercise === "squat" ? "суулт" : "суниалт"}`);
+  $("activityTrendChart").setAttribute("aria-label", t("activityTrendAria", trend.title, activityNumber.format(total), t(activityExercise === "squat" ? "activitySquatCount" : "activityPushupCount")));
   $("activityTrendDescription").textContent = points.map(point => `${point.label}: ${point.reps}`).join(", ");
 
   const pointGroup = $("activityTrendPoints");
@@ -1624,14 +1653,14 @@ function activityPeriodTitle(period){
   const today = activityDateKey();
   const start = activityDateFromKey(period.dates[0]);
   const end = activityDateFromKey(period.dates.at(-1));
-  if(activityRange === "day") return period.dates[0] === today ? "Өнөөдөр" : `${start.getMonth() + 1}-р сарын ${start.getDate()}`;
-  if(activityRange === "month") return `${start.getFullYear()} оны ${start.getMonth() + 1}-р сар`;
-  if(start.getMonth() === end.getMonth()) return `${start.getMonth() + 1}-р сарын ${start.getDate()} – ${end.getDate()}`;
-  return `${start.getMonth() + 1}-р сарын ${start.getDate()} – ${end.getMonth() + 1}-р сарын ${end.getDate()}`;
+  if(activityRange === "day") return period.dates[0] === today ? t("activityDateToday") : t("activityDateDay", start.getMonth() + 1, start.getDate());
+  if(activityRange === "month") return t("activityDateMonth", start.getFullYear(), start.getMonth() + 1);
+  if(start.getMonth() === end.getMonth()) return t("activityDateRangeSameMonth", start.getMonth() + 1, start.getDate(), end.getDate());
+  return t("activityDateRangeDifferentMonths", start.getMonth() + 1, start.getDate(), end.getMonth() + 1, end.getDate());
 }
 
 function activityDateDisplay(dateKey){
-  if(dateKey === activityDateKey()) return "Өнөөдөр";
+  if(dateKey === activityDateKey()) return t("activityDateToday");
   const [year, month, day] = dateKey.split("-");
   return `${year}.${month}.${day}`;
 }
@@ -1678,7 +1707,7 @@ function renderDailyActivity(){
   const days = activityValues(period);
   const todayKey = activityDateKey();
   const isSquat = activityExercise === "squat";
-  const exerciseA11yLabel = isSquat ? "суулт" : "суниалт";
+  const exerciseA11yLabel = t(isSquat ? "activitySquatCount" : "activityPushupCount");
   $("dailyPushups").classList.toggle("squat", isSquat);
   $("activityPush").setAttribute("aria-pressed", String(!isSquat));
   $("activitySquat").setAttribute("aria-pressed", String(isSquat));
@@ -1697,7 +1726,7 @@ function renderDailyActivity(){
   $("dailyActivityDate").dateTime = activityAnchor;
   $("dailyActivityDate").textContent = activityDateDisplay(activityAnchor);
   $("dailyCount").textContent = activityNumber.format(selected);
-  $("dailyGoal").textContent = `${activityNumber.format(DAILY_GOALS[activityExercise])} зорилго`;
+  $("dailyGoal").textContent = t("activityDailyGoal", activityNumber.format(DAILY_GOALS[activityExercise]));
   $("dailyRingValue").style.strokeDasharray = `${progress} 100`;
 
   const completedDays = days.filter(day => day.date <= todayKey);
@@ -1711,13 +1740,13 @@ function renderDailyActivity(){
   const weekChart = $("activityWeekChart");
   weekChart.textContent = "";
   const weekMax = Math.max(DAILY_GOALS[activityExercise], ...days.map(day => day.reps));
-  const weekLabels = ["ДА","МЯ","ЛХ","ПҮ","БА","БЯ","НЯ"];
+  const weekLabels = ["weekdayMonShort","weekdayTueShort","weekdayWedShort","weekdayThuShort","weekdayFriShort","weekdaySatShort","weekdaySunShort"].map(key => t(key));
   days.slice(0,7).forEach((day, index) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "activityWeekDay";
     button.disabled = day.date > todayKey;
-    button.setAttribute("aria-label", `${day.date}: ${day.reps} ${exerciseA11yLabel}`);
+    button.setAttribute("aria-label", t("activityDayAria", day.date, activityNumber.format(day.reps), exerciseA11yLabel));
     button.onclick = () => openActivityDay(day.date);
     const label = document.createElement("span");
     label.className = "activityWeekLabel";
@@ -1762,7 +1791,7 @@ function renderDailyActivity(){
       if(dayProgress >= 100) button.classList.add("complete");
       else if(day.reps > 0) button.classList.add("partial");
       else button.classList.add("empty");
-      button.setAttribute("aria-label", `${day.date}: ${day.reps} ${exerciseA11yLabel}`);
+      button.setAttribute("aria-label", t("activityDayAria", day.date, activityNumber.format(day.reps), exerciseA11yLabel));
       button.onclick = () => openActivityDay(day.date);
       const number = document.createElement("span");
       number.textContent = String(activityDateFromKey(day.date).getDate());
@@ -1832,9 +1861,9 @@ const CHALLENGES_ENABLED = false;
 let challengeState = { templates:[], active:null };
 
 function challengeExerciseLabel(exercise){
-  if(exercise === "squat") return "Суулт";
-  if(exercise === "combined") return "Хосолсон";
-  return "Push Up";
+  if(exercise === "squat") return t("exerciseSquat");
+  if(exercise === "combined") return t("exerciseCombined");
+  return t("exercisePushupName");
 }
 
 function renderChallenges(){
@@ -1848,18 +1877,18 @@ function renderChallenges(){
   templates.classList.remove("hidden");
   if(active){
     const statusText = active.status === "completed"
-      ? "Амжилттай"
-      : active.status === "failed" ? "Амжилтгүй" : `Өдөр ${active.currentDay}/${active.days}`;
+      ? t("challengeStatusCompleted")
+      : active.status === "failed" ? t("challengeStatusFailed") : t("challengeStatusDay", activityNumber.format(active.currentDay), activityNumber.format(active.days));
     $("activeChallengeTitle").textContent = active.title;
     $("activeChallengeBadge").textContent = statusText;
     $("activeChallengeProgress").textContent = `${activityNumber.format(active.progress)} / ${activityNumber.format(active.target)}`;
-    $("activeChallengeDays").textContent = active.status === "active" ? `${active.remainingDays} өдөр үлдсэн` : "";
+    $("activeChallengeDays").textContent = active.status === "active" ? t("challengeRemainingDays", activityNumber.format(active.remainingDays)) : "";
     $("activeChallengeBar").style.width = `${active.percent}%`;
     const progressBar = activeCard.querySelector('[role="progressbar"]');
     const usesDayDots = Number.isInteger(active.days) && active.days > 0 && active.days <= 14;
     progressBar.classList.toggle("hidden", usesDayDots);
     progressBar.setAttribute("aria-valuenow", active.percent);
-    $("challengeStop").textContent = active.status === "active" ? "Зогсоох" : "Хаах";
+    $("challengeStop").textContent = active.status === "active" ? t("challengeStop") : t("challengeClose");
     const dots = $("challengeDayDots");
     dots.textContent = "";
     dots.classList.toggle("hidden", !usesDayDots);
@@ -1870,7 +1899,7 @@ function renderChallenges(){
         if(reps >= active.dailyTarget) dot.classList.add("done");
         else if(index < active.currentDay - 1) dot.classList.add("missed");
         else if(index === active.currentDay - 1 && active.status === "active") dot.classList.add("current");
-        dot.setAttribute("aria-label", `${index + 1}-р өдөр: ${reps}/${active.dailyTarget}`);
+        dot.setAttribute("aria-label", t("challengeDayAria", index + 1, activityNumber.format(reps), activityNumber.format(active.dailyTarget)));
         dots.appendChild(dot);
       });
     }
@@ -1886,15 +1915,15 @@ function renderChallenges(){
     title.textContent = item.title;
     const badge = document.createElement("span");
     badge.className = "challengeBadge";
-    badge.textContent = `${activityNumber.format(item.dailyTarget * item.days)} REP`;
+    badge.textContent = t("challengeRepBadge", activityNumber.format(item.dailyTarget * item.days), t("unitRep"));
     top.append(title, badge);
     const meta = document.createElement("p");
     meta.className = "challengeMeta";
-    meta.textContent = `${challengeExerciseLabel(item.exercise)} · Өдөр бүр ${activityNumber.format(item.dailyTarget)} · ${item.days} өдөр`;
+    meta.textContent = t("challengeMeta", challengeExerciseLabel(item.exercise), activityNumber.format(item.dailyTarget), activityNumber.format(item.days));
     const button = document.createElement("button");
     button.className = "challengeStart";
     button.type = "button";
-    button.textContent = "Эхлүүлэх";
+    button.textContent = t("challengeStart");
     button.disabled = challengeRunning;
     button.onclick = () => startChallenge({ templateId:item.id }, button);
     card.append(top, meta, button);
@@ -1909,7 +1938,7 @@ async function loadChallenges(){
     renderChallenges();
   }catch(e){
     $("challengeStatus").className = "bad";
-    $("challengeStatus").textContent = friendlyError(e, "Challenge ачаалсангүй. Дахин оролдоно уу.");
+    $("challengeStatus").textContent = friendlyError(e, t("challengeLoadError"));
   }
 }
 
@@ -1928,12 +1957,12 @@ async function startChallenge(payload, button){
     $("challengeForm").classList.add("hidden");
     $("challengeCustomToggle").setAttribute("aria-expanded", "false");
     $("challengeStatus").className = "";
-    $("challengeStatus").textContent = "Challenge эхэллээ.";
+    $("challengeStatus").textContent = t("challengeStarted");
     renderChallenges();
     resetChallengeView();
   }catch(e){
     $("challengeStatus").className = "bad";
-    $("challengeStatus").textContent = friendlyError(e, e.message || "Challenge эхлүүлж чадсангүй.");
+    $("challengeStatus").textContent = friendlyError(e, t("challengeStartError"));
   }finally{ button.disabled = false; }
 }
 
@@ -1974,7 +2003,7 @@ async function loadProfile(){
     void saveFlappyScore(readPendingFlappyScore());
     note("");
   } catch(e) {
-    note(`${friendlyError(e, "Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.")} Тоолуур офлайнаар ажиллана.`, "bad");
+    note(t("offlineCounter", friendlyError(e, t("errorNetwork"))), "bad");
   }
 }
 
@@ -2162,7 +2191,7 @@ const GROUND_KNEE_2D_RELEASE = 158;
 const GROUND_KNEE_LAYOUT_VIS_MIN = 0.35;
 const GROUND_KNEE_LAYOUT_SPREAD = 0.55;
 const GROUND_KNEE_LAYOUT_WIDTH_RATIO = 1.6;
-const GROUND_CONTACT_MESSAGE = "Өвдөг шаланд хүрлээ — өргө";
+const GROUND_CONTACT_MESSAGE = "groundContact";
 const GROUND_MODEL_FRAME_SIZE = 256;
 const GROUND_MODEL_INTERVAL_MS = 900;
 const GROUND_MODEL_STALE_MS = 3500;
@@ -2648,9 +2677,9 @@ function squatPositionCheck(lm, metrics){
   // Squat-ын өнцөгт толгой оролцдоггүй. Толгой кадрын захад хүрэхэд бүрэн
   // батлагдсан down → standing cycle-ийг reset хийж, зөв rep-ийг алдаж байв.
   // Сонгосон талын мөр–ташаа–өвдөг–шагай харагдаж байвал тоолоход хангалттай.
-  if(!metrics) return "Камераа холдуул — мөрнөөс шагай хүртэл багтаа";
+  if(!metrics) return t("squatFrameBody");
   if(metrics.shoulderY < -SQUAT_FRAME_MARGIN || metrics.ankleY > 1 + SQUAT_FRAME_MARGIN)
-    return "Камераа холдуул — мөрнөөс шагай хүртэл кадарт багтаа";
+    return t("squatFrameBodyFully");
   return null;
 }
 
@@ -2680,7 +2709,7 @@ function countSquatRep(){
   resetPoseFeedback();
   // Push-up-тэй адил battle-ийн оноог сервер л баталгаажуулна.
   if(mode === "battle") sendRep();
-  else setMsg(`${count} — сайн суулт!`, "var(--accent)");
+  else setMsg(t("squatRepGood", count), "var(--accent)");
   resetSquatCycle(true);
 }
 
@@ -2730,12 +2759,12 @@ function processSquatFrame(lm, world, aspect, now){
       if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
         squatReady = true;
         squatStandFrames = SQUAT_CONFIRM_FRAMES;
-        setPoseMsg("Бэлэн — доошоо суу");
+        setPoseMsg(t("squatReady"));
       }
     } else squatStandFrames = 0;
 
     if(!squatReady){
-      setPoseMsg("Өвдөг, ташаагаа бүрэн тэнийлгэ", "var(--dim)");
+      setPoseMsg(t("squatStandFully"), "var(--dim)");
       return;
     }
     if(gateKnee < SQUAT_DESCENT_KNEE){
@@ -2745,7 +2774,7 @@ function processSquatFrame(lm, world, aspect, now){
       squatMinHip = m.hip;
       squatMaxDepthDelta = depthDelta;
       squatDepthFrames = squatStandFrames = 0;
-      setPoseMsg("Доошоо — ташаагаа өвдөгний түвшинд хүргэ", "var(--warn)");
+      setPoseMsg(t("squatGoDown"), "var(--warn)");
     }
     return;
   }
@@ -2760,18 +2789,18 @@ function processSquatFrame(lm, world, aspect, now){
         phase = "down";
         squatDepthFrames = 0;
         if(navigator.vibrate) navigator.vibrate(12);
-        setPoseMsg("Гүн ✓ Одоо бүрэн бос", "var(--warn)");
+        setPoseMsg(t("squatDepthReached"), "var(--warn)");
       }
     } else {
       squatDepthFrames = 0;
       if(gateKnee <= SQUAT_DEPTH_KNEE)
-        setPoseMsg("Илүү гүн суу — ташаа өвдөгний түвшинд хүрнэ", "var(--bad)");
+        setPoseMsg(t("squatGoDeeper"), "var(--bad)");
     }
 
     if(standing){
       if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
         resetSquatCycle(true);
-        setPoseMsg("Илүү гүн суу — ташаа өвдөгний түвшинд хүрнэ", "var(--bad)");
+        setPoseMsg(t("squatGoDeeper"), "var(--bad)");
       }
     } else squatStandFrames = 0;
     return;
@@ -2782,13 +2811,13 @@ function processSquatFrame(lm, world, aspect, now){
       if(++squatStandFrames >= SQUAT_CONFIRM_FRAMES){
         if(now - repStart < SQUAT_MIN_REP_MS){
           resetSquatCycle(true);
-          setPoseMsg("Арай удаан, хөдөлгөөнөө бүтэн хий", "var(--bad)");
+          setPoseMsg(t("moveSlower"), "var(--bad)");
         } else countSquatRep();
       }
     } else {
       squatStandFrames = 0;
       if(gateKnee > SQUAT_DEPTH_KNEE + 10)
-        setPoseMsg("Өвдөг, ташаагаа бүрэн тэнийлгэ", "var(--bad)");
+        setPoseMsg(t("squatStandFully"), "var(--bad)");
     }
   }
 }
@@ -2796,22 +2825,22 @@ function processSquatFrame(lm, world, aspect, now){
 function positionCheck(lm, world, aspect){
   const wristY = mean(lm, [15,16]);
   const hipY   = mean(lm, [23,24]);
-  if(wristY === null || hipY === null) return "Бүтэн биеэ камерт багтаа";
+  if(wristY === null || hipY === null) return t("cameraFullBody");
   // зурган дээр y доошоо өснө: гар шалан дээр бол бугуй аарцгаас доогуур байна
-  if(wristY <= hipY) return "Гараа шалан дээр тавь";
+  if(wristY <= hipY) return t("placeHandsOnFloor");
   if(seen(lm,11) && seen(lm,12) && seen(lm,23) && seen(lm,24)){
     const { horiz, fore } = bodyAxis(lm, world, aspect);
-    if(horiz < 0.5 && fore > 0.7) return "Push-up байрлалд ор";
+    if(horiz < 0.5 && fore > 0.7) return t("enterPushupPosition");
   }
   if(pushupGroundEnabled()){
     const ground = updatePushupGround(lm, aspect);
-    if(ground.contact) return GROUND_CONTACT_MESSAGE;
+    if(ground.contact) return t(GROUND_CONTACT_MESSAGE);
   }
   // Өвдөг шалан дээр бол хөл нугалагдана. Аарцгийн явалтаар үүнийг барих
   // боломжгүй: өвдөг дээр цээжээ буулгахад аарцаг өвдгөө тойрон эргэж хамт
   // бууна — өвдөг дээрх push-up-аас ялгарахгүй. Зөвхөн өнцөг ялгана.
   const knee = kneeAngle(lm, world);
-  if(knee.deg !== null && knee.deg < KNEE_STRAIGHT) return "Өвдгөө шалнаас өргө";
+  if(knee.deg !== null && knee.deg < KNEE_STRAIGHT) return t("liftKnees");
   // Мөр–аарцаг–өвдөг өнцгөөр "бие шулуун уу" гэж шалгахыг больсон: камер
   // ойрхон, бие нь камераас хол чиглэсэн үед доод биеийн цэгүүд таамаглал
   // болж, өнцөг нь утгагүй гарч ирээд тоолохыг бүрмөсөн хаадаг байсан.
@@ -2966,11 +2995,11 @@ function countRep(deg, now, th, body){
       bodyMinAngle = body.line ?? 180;
       bodyAngleSeen = body.line !== null;
       if(navigator.vibrate) navigator.vibrate(12);
-      setPoseMsg("Доошоо ✓", "var(--warn)");
+      setPoseMsg(t("pushDown"), "var(--warn)");
     }
     // Буусан ч гүнд хүрээгүй бол яагаад тоологдоогүйг хэлнэ
     else if(deg > th.up && dipMin < th.up - 5){
-      setPoseMsg("Илүү гүн буу — мөр тохойн түвшинд хүрнэ", "var(--bad)");
+      setPoseMsg(t("pushGoDeeper"), "var(--bad)");
       dipMin = 999;
     }
     return;
@@ -2988,22 +3017,22 @@ function countRep(deg, now, th, body){
 
   const upGate = Math.max(th.up, LOCKOUT_ANGLE);
   if(phase === "down" && deg > th.up && deg <= upGate){
-    setPoseMsg("Гараа бүрэн тэнийлгэ", "var(--bad)");
+    setPoseMsg(t("extendArmsFully"), "var(--bad)");
   }
 
   if(phase === "down" && deg > upGate){
     phase = "up";
     if(now - repStart < MIN_REP_MS){
-      setPoseMsg("Арай удаан, хөдөлгөөнөө бүтэн хий", "var(--bad)");
+      setPoseMsg(t("moveSlower"), "var(--bad)");
     } else if(pushupGroundEnabled() && pushupGroundViolation){
-      setPoseMsg(GROUND_CONTACT_MESSAGE, "var(--bad)");
+      setPoseMsg(t(GROUND_CONTACT_MESSAGE), "var(--bad)");
     } else if(!rigid()){
-      setPoseMsg("Биеэ бүхэлд нь буулга", "var(--bad)");
+      setPoseMsg(t("lowerWholeBody"), "var(--bad)");
     } else if(bodyAngleSeen && bodyMinAngle < BODY_STRAIGHT_MIN){
-      setPoseMsg("Биеэ шулуун байлга", "var(--bad)");
+      setPoseMsg(t("keepBodyStraight"), "var(--bad)");
     } else if(armBest > -90 && armBest < ARM_LEVEL){
       // Хэмжиж чадсан үед л шаардана — цэг нь харагдаагүй бол алгасна
-      setPoseMsg("Илүү гүн буу — мөр тохойн түвшинд хүрнэ", "var(--bad)");
+      setPoseMsg(t("pushGoDeeper"), "var(--bad)");
     } else {
       count++;
       $("count").textContent = count;
@@ -3024,7 +3053,7 @@ function countRep(deg, now, th, body){
         + ` arm${armBest > -90 ? armBest.toFixed(2) : "–"}`
         + ` line${bodyAngleSeen ? Math.round(bodyMinAngle) : "–"}`;
       resetPoseFeedback();
-      if(mode === "battle") sendRep(); else setMsg(`${count} — сайн байна!`, "var(--accent)");
+      if(mode === "battle") sendRep(); else setMsg(t("pushRepGood", count), "var(--accent)");
     }
     repMinAngle = 180;
     // Дараагийн rep өөрийн дээд цэгээ шинээр олно
@@ -3098,7 +3127,7 @@ function loop(){
   const lm = res.landmarks && res.landmarks[0];
   const world = res.worldLandmarks && res.worldLandmarks[0];
   if(!lm || !world){
-    setPoseMsg("Камераа холдуул — бүтэн биеэ багтаа", "var(--dim)");
+    setPoseMsg(t("cameraMoveBack"), "var(--dim)");
     if(++badFrames >= BAD_FRAMES) idle();
     return;
   }
@@ -3149,15 +3178,15 @@ function loop(){
 
   const bad = positionCheck(lm, world, asp);
   if(bad){
-    setPoseMsg(bad, bad === GROUND_CONTACT_MESSAGE ? "var(--bad)" : "var(--dim)");
-    if(bad === GROUND_CONTACT_MESSAGE){
+    setPoseMsg(bad, bad === t(GROUND_CONTACT_MESSAGE) ? "var(--bad)" : "var(--dim)");
+    if(bad === t(GROUND_CONTACT_MESSAGE)){
       const flappyStarted = mode === "solo" && soloVariant === "game"
         && pushGameState.active && pushGameState.poseReady && pushGameState.started;
       // Өвдөг газар хүрсэн нь батлагдсан бол эхэлсэн rep-ийг хүлээлгүй
       // шууд цуцална. Өвдгөө өргөсний дараа шинэ cycle эхлэх ёстой.
       idle();
       badFrames = 0;
-      if(flappyStarted) finishPushGame("Өвдөг шаланд хүрлээ");
+      if(flappyStarted) finishPushGame(t("groundContactShort"));
     }else{
       // Нэг муу кадарт rep-ийг цуцлахгүй — доод цэгт бугуй халхлагдахад
       // цэгийн итгэлцүүр хэсэг зуур унадаг тул бүх rep алдагдаж байсан.
@@ -3168,7 +3197,7 @@ function loop(){
 
   const raw = meanAngle(world, lm, ARMS);
   if(raw === null){
-    setPoseMsg("Гараа камерт бүтэн багтаа", "var(--dim)");
+    setPoseMsg(t("armsInFrame"), "var(--dim)");
     if(++badFrames >= BAD_FRAMES) idle();
     return;
   }
@@ -3197,7 +3226,7 @@ function loop(){
 
   const th = envelope(deg);
   if(!th){
-    setPoseMsg("Нэг удаа бүтэн хийж тохируулна уу", "var(--dim)");
+    setPoseMsg(t("calibrateFullRep"), "var(--dim)");
     $("meter").style.height = "0%";
     return;
   }
@@ -3264,7 +3293,7 @@ function updatePushGameStreak(value, effect = ""){
   void group.offsetHeight;
   group.classList.add("is-animating");
   if(effect) badge.classList.add(effect);
-  badge.setAttribute("aria-label", `Жимсний streak ${streak}`);
+  badge.setAttribute("aria-label", t("fruitStreak", streak));
 }
 
 function pushGameFruitRadius(width, height){
@@ -3483,14 +3512,14 @@ function drawPushGame(now, width, height){
   gameCtx.restore();
 
   if(!pushGameState.poseReady)
-    drawPushGameMessage(width, height, "Гараа бүрэн тэнийлгэ", "Шувуу харааны түвшинд таарна");
+    drawPushGameMessage(width, height, t("extendArmsFully"), t("birdMatchesEyeLevel"));
   else if(now - pushGameState.lastPoseAt > 900)
-    drawPushGameMessage(width, height, "Түр зогслоо", "Биеэ камерт бүтэн багтаана уу");
+    drawPushGameMessage(width, height, t("paused"), t("keepBodyInFrame"));
   else if(!pushGameState.started)
-    drawPushGameMessage(width, height, "Тохойгоо нугал", "Анхны push-up хийхэд тоглоом эхэлнэ");
+    drawPushGameMessage(width, height, t("bendElbows"), t("gameStartsFirstPushup"));
 }
 
-function finishPushGame(title = "Тоглоом дууслаа", autoRestart = true){
+function finishPushGame(title = t("gameOver"), autoRestart = true){
   if(!pushGameState.active || pushGameState.over) return;
   pushGameState.over = true;
   cancelAnimationFrame(pushGameState.raf);
@@ -3639,8 +3668,8 @@ function reset(){
   $("repDiag").textContent = "–";
   $("time").textContent = "0:00";
   setMsg(exercise === "squat"
-    ? "Цэх зогсоод бүтэн биеэ камерт багтаа"
-    : "Эхлэхэд бэлэн");
+    ? t("standFullBody")
+    : t("readyToStart"));
 }
 
 // Зөвхөн урд камер: хэрэглэгч дэлгэцээ хараад тоолуур, цагаа харах ёстой тул
@@ -3921,11 +3950,11 @@ async function startSolo(){
   const err = $("err");
   try{
     $("go").disabled = true;
-    $("go").textContent = "Ачаалж байна…";
+    $("go").textContent = t("loading");
     await startEngine(() => {
       $("start").classList.add("hidden");
       setMainNavActive(null);
-      setMsg("AI танилт бэлтгэж байна…", "var(--dim)");
+      setMsg(t("aiPreparing"), "var(--dim)");
     });
     $("start").classList.add("hidden");
     if(soloVariant === "game") startPushGame();
@@ -3933,9 +3962,9 @@ async function startSolo(){
     $("start").classList.remove("hidden");
     setMainNavActive(exercise === "squat" ? "navSquat" : "navPush");
     err.classList.remove("hidden");
-    err.textContent = friendlyError(e, "Камер ассангүй. Дахин оролдоно уу.");
+    err.textContent = friendlyError(e, t("errorCameraStart"));
     $("go").disabled = false;
-    $("go").textContent = "Дахин оролдох";
+    $("go").textContent = t("retry");
   }
 }
 
@@ -3946,8 +3975,8 @@ async function startSolo(){
 let pendingSet = null;
 
 async function saveSet(reps, seconds, kind = exercise){
-  const label = kind === "squat" ? "squat" : "push-up";
-  note(`${reps} ${label} бүртгэж байна…`, "");
+  const label = t(kind === "squat" ? "squatLower" : "pushupLower");
+  note(t("savingReps", reps, label), "");
   try{
     profile = await api("/session", {
       method: "POST",
@@ -3962,11 +3991,11 @@ async function saveSet(reps, seconds, kind = exercise){
     if(CHALLENGES_ENABLED) loadChallenges();
     const total = kind === "squat" ? profile.squatTotalReps : profile.totalReps;
     const rank = kind === "squat" ? profile.squatRank : profile.rank;
-    note(`+${reps} ${label} бүртгэгдлээ. Нийт ${total}, #${rank}`, "ok");
+    note(t("savedReps", reps, label, total, rank), "ok");
   }catch(e){
     pendingSet = { reps, seconds, exercise:kind };
     $("retrySave").classList.remove("hidden");
-    note(`${friendlyError(e, "Дүн хадгалагдсангүй. “Дахин хадгалах” товчийг дарна уу.")} Тоо алдагдаагүй.`, "bad");
+    note(t("saveFailedSafe", friendlyError(e, t("errorSaveResult"))), "bad");
   }
 }
 
@@ -3975,8 +4004,8 @@ async function finish(){
   const reps = count, seconds = elapsed();
   stopCamera();
   show("menu");
-  const label = exercise === "squat" ? "squat" : "push-up";
-  if(reps < 1){ note(`Тоологдсон ${label} алга.`, ""); return; }
+  const label = t(exercise === "squat" ? "squatLower" : "pushupLower");
+  if(reps < 1){ note(t("noCountedReps", label), ""); return; }
   await saveSet(reps, seconds, exercise);
 }
 
@@ -4164,7 +4193,7 @@ async function findOpponent(onInvited){
      */
     const haveRoom = async (rid, inviteCanceled = false) => {
       if(invitedRoom === rid){
-        if(inviteCanceled) $("hallHint").textContent = "Та өрөөндөө үлдлээ. Дээд талын Share товчоор найзаа урьж болно.";
+        if(inviteCanceled) $("hallHint").textContent = t("stayedInRoom");
         return;
       }
       invitedRoom = rid;
@@ -4177,7 +4206,7 @@ async function findOpponent(onInvited){
       // Өрөөндөө ЗААВАЛ орно: түүнээс өмнө гарсан тул гишүүн биш үлдвэл
       // найз орсныг огт сонсохгүй
       try { await s.game.connect(); await s.game.join(rid); } catch { /* заавал биш */ }
-      if(inviteCanceled) $("hallHint").textContent = "Та өрөөндөө үлдлээ. Дээд талын Share товчоор найзаа урьж болно.";
+      if(inviteCanceled) $("hallHint").textContent = t("stayedInRoom");
 
       // Платформын үйл явдал ирэхгүй байх нь бий. Зочин орж ирээд тулааныг
       // МАНАЙ сервер дээр үүсгэдэг тул тэндээс асууж мэдэж болно —
@@ -4232,7 +4261,7 @@ async function findOpponent(onInvited){
         if(r?.roomId) return haveRoom(r.roomId, r.success === false);
         if(r?.success === false){
           invited();
-          $("hallHint").textContent = "Та өрөөндөө үлдлээ. Дээд талын Share товчоор найзаа урьж болно.";
+          $("hallHint").textContent = t("stayedInRoom");
           return;
         }
       })
@@ -4253,7 +4282,7 @@ function openSocket(roomId){
     const m = JSON.parse(ev.data);
     if(m.type === "state") applyDuel(m.state);
     else if(m.type === "signal") onSignal(m.data);
-    else if(m.type === "error") $("hallHint").textContent = friendlyError(m.error, "Тулааны үйлдэл амжилтгүй. Дахин оролдоно уу.");
+    else if(m.type === "error") $("hallHint").textContent = friendlyError(m.error, t("errorBattleAction"));
   };
 }
 
@@ -4321,8 +4350,8 @@ async function startVideo(myId, otherId){
     remote.srcObject = e.streams[0] || new MediaStream([e.track]);
     remote.play().catch(() => {});
     e.track.onunmute = () => { remote.play().catch(() => {}); oppNote(""); };
-    e.track.onmute = () => oppNote("Өрсөлдөгчийн дүрс түр тасалдлаа");
-    e.track.onended = () => oppNote("Өрсөлдөгчийн дүрс зогслоо");
+    e.track.onmute = () => oppNote(t("opponentVideoInterrupted"));
+    e.track.onended = () => oppNote(t("opponentVideoStopped"));
   };
 
   const track = stream.getVideoTracks()[0];
@@ -4370,7 +4399,7 @@ async function flushCandidates(){
 
 async function onSignal(data){
   // Видео зогссоныг мэдэгдэх нь холболтоос үл хамаарна — pc-гүй ч ирж болно
-  if(data.vid){ oppNote(data.vid === "off" ? "Өрсөлдөгчийн видео түр зогслоо" : ""); return; }
+  if(data.vid){ oppNote(data.vid === "off" ? t("opponentVideoPaused") : ""); return; }
   // Хүлээн авагч тал freeze/packet loss-оо хамгийн түрүүнд хардаг. Түүний
   // хүсэлтээр илгээгч нэг шат хөнгөрнө; profile cooldown савлагааг хаана.
   if(data.videoQuality === "lower"){ lowerVideoQuality(); return; }
@@ -4433,7 +4462,7 @@ function watchConnection(){
     const s = pc?.connectionState;
     clearTimeout(iceTimer); iceTimer = null;
     if(s === "connected") oppNote("");
-    if(s === "failed"){ oppNote("Холболт тасарлаа — сэргээж байна"); restartIce(); }
+    if(s === "failed"){ oppNote(t("connectionRecovering")); restartIce(); }
     // "disconnected" нь өөрөө сэргэдэг тул хэсэг хүлээгээд л оролдоно
     else if(s === "disconnected") iceTimer = setTimeout(() => {
       if(pc && pc.connectionState !== "connected") restartIce();
@@ -4481,7 +4510,7 @@ function startStats(){
 
       if(pc.connectionState === "connected" && remoteMoving === false){
         if(++remoteStillTicks === 3){
-          oppNote("Дүрс сэргээж байна…");
+          oppNote(t("videoRecovering"));
           signal({ videoQuality:"lower" });
         }
         // 12 секунд шинэ decoded frame ирээгүй бол ICE замыг шинэчилнэ.
@@ -4535,10 +4564,10 @@ function renderSeat(el, side, emptyText, chipText){
   el.innerHTML = '<div class="spfp"></div><div class="info">'
     + '<div class="nm"></div><div class="elo"></div></div><div class="chip"></div>';
   setPfp(el.querySelector(".spfp"), side);
-  el.querySelector(".nm").textContent = side?.name ?? emptyText ?? "Хоосон";
+  el.querySelector(".nm").textContent = side?.name ?? emptyText ?? t("emptySeat");
   el.querySelector(".elo").textContent = side?.rating != null ? "ELO " + side.rating : "";
   const chip = el.querySelector(".chip");
-  const auto = !side ? "" : !here ? "алга" : side.ready ? "бэлэн" : "бэлдэж байна";
+  const auto = !side ? "" : !here ? t("away") : side.ready ? t("readyLower") : t("preparingLower");
   chip.textContent = chipText ?? auto;
   chip.className = "chip" + (side && here && side.ready ? " ok" : side && here ? " wait" : "");
   chip.classList.toggle("hidden", !chip.textContent);
@@ -4550,7 +4579,7 @@ function renderSeat(el, side, emptyText, chipText){
  */
 function renderHall(state){
   const you = state?.you ?? {
-    name: profile?.name ?? launchCfg?.userName ?? "Чи",
+    name: profile?.name ?? launchCfg?.userName ?? t("you"),
     rating: profile?.rating ?? null,
     avatar: launchCfg?.userAvatar ?? null,
     here: true, ready: false,
@@ -4558,8 +4587,8 @@ function renderHall(state){
   const host = state ? state.youAreHost : true;
   // Эзний хувьд «бэлэн» гэсэн ойлголт байхгүй — Start дарах нь өөрөө бэлэн
   // гэсэн үг тул түүнийг «бэлдэж байна» гэж харуулбал төөрөгдүүлнэ
-  renderSeat($("seatYou"), you, null, host ? "эзэн" : null);
-  renderSeat($("seatOpp"), state?.opponent ?? null, "Найзаа хүлээж байна");
+  renderSeat($("seatYou"), you, null, host ? t("hostLower") : null);
+  renderSeat($("seatOpp"), state?.opponent ?? null, t("waitingForFriendSeat"));
 
   const waiting = !state || state.status === "waiting";
   const opp = state?.opponent;
@@ -4576,17 +4605,17 @@ function renderHall(state){
 
   $("hallReady").classList.toggle("hidden", !state || host || !waiting);
   $("hallStart").classList.toggle("hidden", !host || !waiting);
-  $("hallReady").textContent = state?.you?.ready ? "Бэлэн ✓" : "Бэлэн";
+  $("hallReady").textContent = state?.you?.ready ? t("readyChecked") : t("ready");
   $("hallStart").disabled = !canStart;
 
   $("hallHint").textContent =
-    !waiting                 ? "Камер асааж байна…"
-    : !state                 ? "Найз чинь урилгыг хүлээж авбал энд харагдана."
-    : !oppHere               ? "Найз чинь орж ирэхийг хүлээж байна…"
-    : host && !opp.ready     ? "Найз чинь «Бэлэн» дархыг хүлээж байна."
-    : host                   ? "Эхлүүлэхэд хоёуланд нь камер асч, 10 секунд тоолоод эхэлнэ."
-    : state.you.ready        ? "Эзэн эхлүүлэхийг хүлээж байна…"
-    :                          "«Бэлэн» дарж эзэнд мэдэгд.";
+    !waiting                 ? t("cameraStarting")
+    : !state                 ? t("friendAppearsAfterAccept")
+    : !oppHere               ? t("waitingFriendJoin")
+    : host && !opp.ready     ? t("waitingFriendReady")
+    : host                   ? t("bothCamerasCountdown")
+    : state.you.ready        ? t("waitingHostStart")
+    :                          t("pressReadyHint");
 }
 
 const hallSend = msg => {
@@ -4617,24 +4646,24 @@ async function armForBattle(){
   $("quit").classList.remove("hidden");
   $("clock").textContent = "…";
   $("seek").classList.remove("hidden");
-  $("seekTitle").textContent = "Камер бэлдэж байна…";
+  $("seekTitle").textContent = t("cameraPreparing");
   try{
     await startEngine(() => {
       setMainNavActive(null);
-      $("seekTitle").textContent = "AI танилт бэлтгэж байна…";
+      $("seekTitle").textContent = t("aiPreparing");
     });
     hallSend({ type: "armed" });
-    $("seekTitle").textContent = "Өрсөлдөгчөө хүлээж байна…";
+    $("seekTitle").textContent = t("waitingOpponent");
   }catch(e){
     leaveBattle();
-    note(friendlyError(e, "Камер ассангүй. Дахин оролдоно уу."), "bad");
+    note(friendlyError(e, t("errorCameraStart")), "bad");
   }
 }
 
 function renderConnectingHall(){
   renderHall(null);
-  $("hallTitle").textContent = "Тулаанд холбогдож байна…";
-  $("hallHint").textContent = "Урилгын өрөөг нээж байна…";
+  $("hallTitle").textContent = t("connectingBattle");
+  $("hallHint").textContent = t("openingInviteRoom");
   $("battleTypes").classList.add("hidden");
   $("hallReady").classList.add("hidden");
   $("hallStart").classList.add("hidden");
@@ -4648,12 +4677,12 @@ function syncBattleExercise(state){
   reset();
   // Combined-ийн завсарлагаар squat-д хэрэгтэй доод биеийн model-ийг урьдчилан бэлдэнэ.
   if(running) ensureExerciseModel().catch(() => {
-    setMsg("Squat танилт ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.", "var(--bad)");
+    setMsg(t("errorSquatModel"), "var(--bad)");
   });
 }
 
 function roundLabel(state){
-  if(state.status === "intermission") return "АМРАЛТ";
+  if(state.status === "intermission") return t("breakUpper");
   if(state.battleType === "combined")
     return state.exercise === "squat" ? "2/2 SQUAT" : "1/2 PUSH-UP";
   return state.exercise === "squat" ? "SQUAT" : "PUSH-UP";
@@ -4661,27 +4690,27 @@ function roundLabel(state){
 
 function renderRoundBreak(state){
   const y = state.you;
-  const o = state.opponent ?? { userId:null, name:"Өрсөлдөгч", roundReps:{ pushup:0 } };
+  const o = state.opponent ?? { userId:null, name:t("opponent"), roundReps:{ pushup:0 } };
   const winner = state.roundWinners?.pushup;
   $("breakTitle").textContent = winner === null
-    ? "Push-up round тэнцлээ"
+    ? t("pushupRoundDraw")
     : winner === y.userId
-      ? "Push-up round хожлоо!"
-      : `${o.name || "Өрсөлдөгч"} push-up round хожлоо`;
+      ? t("pushupRoundWon")
+      : t("pushupRoundOpponentWon", o.name || t("opponent"));
   $("breakTitle").style.color = winner === null
     ? "var(--fg)"
     : winner === y.userId ? "var(--accent)" : "var(--bad)";
   $("breakScore").textContent = `${y.roundReps?.pushup ?? 0} : ${o.roundReps?.pushup ?? 0}`;
-  $("breakNext").textContent = "Дараагийн round: Squat · 30 сек";
+  $("breakNext").textContent = t("nextRoundSquat");
 }
 
 function applyDuel(state){
   duel = state;
   if(state.now) clockOffset = new Date(state.now).getTime() - Date.now();
   syncBattleExercise(state);
-  const y = state.you, o = state.opponent ?? { reps: 0, name: "Хүлээж байна", rating: null };
-  $("youName").textContent = y.name || "Чи";
-  $("oppName").textContent = o.name || "Өрсөлдөгч";
+  const y = state.you, o = state.opponent ?? { reps: 0, name: t("waiting"), rating: null };
+  $("youName").textContent = y.name || t("you");
+  $("oppName").textContent = o.name || t("opponent");
   $("youElo").textContent = y.rating ?? "–";
   $("oppElo").textContent = o.rating ?? "–";
   setPfp($("youAv"), y);
@@ -4749,7 +4778,7 @@ function startClock(){
       const left = Math.max(0, Math.ceil((end - now) / 1000));
       $("clock").textContent = clock(left);
       $("breakClock").textContent = left;
-      setMsg(`Squat эхлэхэд ${left} сек`, "var(--gold)");
+      setMsg(t("squatStartsIn", left), "var(--gold)");
       return;
     }
     // Хоёулаа ортол цаг тавигдаагүй байна
@@ -4765,14 +4794,14 @@ function startClock(){
       const left = Math.ceil((begin - now) / 1000);
       showBattleCountdown(left);
       $("clock").textContent = left;
-      setMsg("Бэлдэж бай…", "var(--warn)");
+      setMsg(t("getReady"), "var(--warn)");
     } else {
       resetBattleCountdown();
       $("duelBar").classList.remove("hidden");
       const left = Math.max(0, Math.ceil((end - now) / 1000));
       // clock() ашиглана — "0:60" биш "1:00" гэж гарах ёстой
       $("clock").textContent = clock(left);
-      if(left === 0) setMsg("Дууслаа", "var(--dim)");
+      if(left === 0) setMsg(t("finished"), "var(--dim)");
     }
   };
   update();
@@ -4801,11 +4830,11 @@ function cancelDuel(state){
   stopCamera();
   ws?.close(); ws = null;
   $("oTitle").textContent = state?.cancelReason === "no-reps"
-    ? "Нэг ч тоологдсонгүй"
-    : "Өрсөлдөгч ирсэнгүй";
+    ? t("noRepsCounted")
+    : t("opponentDidNotJoin");
   $("oTitle").style.color = "var(--dim)";
   $("oScore").textContent = "—";
-  $("oElo").textContent = "Рейтинг өөрчлөгдөөгүй";
+  $("oElo").textContent = t("ratingUnchanged");
   $("oRounds").textContent = "";
   $("roundBreak").classList.add("hidden");
   $("over").classList.remove("hidden");
@@ -4858,14 +4887,14 @@ function endDuel(state){
   const y = state.you, o = state.opponent;
   const draw = state.winnerId === null;
   const win = state.winnerId === y.userId;
-  $("oTitle").textContent = draw ? "Тэнцлээ" : win ? "Хожлоо!" : "Хожигдлоо";
+  $("oTitle").textContent = draw ? t("draw") : win ? t("won") : t("lost");
   $("oTitle").style.color = draw ? "var(--fg)" : win ? "var(--accent)" : "var(--bad)";
   if(state.battleType === "combined"){
     $("oScore").textContent = `${y.roundPoints} : ${o?.roundPoints ?? 0}`;
     $("oRounds").textContent = `Push-up ${y.roundReps?.pushup ?? 0}:${o?.roundReps?.pushup ?? 0} · Squat ${y.roundReps?.squat ?? 0}:${o?.roundReps?.squat ?? 0}`;
   } else {
     $("oScore").textContent = `${y.reps} : ${o?.reps ?? 0}`;
-    $("oRounds").textContent = state.exercise === "squat" ? "Squat · 30 сек" : "Push-up · 30 сек";
+    $("oRounds").textContent = t(state.exercise === "squat" ? "squat30" : "pushup30");
   }
   const r = state.ratings?.[y.userId];
   if(r){
@@ -4896,7 +4925,7 @@ async function startBattle(){
   show("hall");
   if(joiningInvite) renderConnectingHall();
   else {
-    $("hallTitle").textContent = "Хүлээлгийн өрөө";
+    $("hallTitle").textContent = t("waitingRoom");
     renderHall(null);
   }
 
@@ -4904,7 +4933,7 @@ async function startBattle(){
     const match = await findOpponent(() => {
       if(joiningInvite) renderConnectingHall();
       else {
-        $("hallTitle").textContent = "Хүлээлгийн өрөө";
+        $("hallTitle").textContent = t("waitingRoom");
         renderHall(null);
       }
     });
@@ -4915,7 +4944,7 @@ async function startBattle(){
     applyDuel(state);
   }catch(e){
     leaveBattle();
-    note(friendlyError(e, "Тулаанд холбогдож чадсангүй. Дахин оролдоно уу."), "bad");
+    note(friendlyError(e, t("errorBattleConnect")), "bad");
   }
 }
 
@@ -4958,13 +4987,13 @@ function leaveBattle(){
 
 let boardMetric = "pushup";
 let activeLeagueCode = "";
-let activeLeagueName = "Бүх тоглогч";
+let activeLeagueName = "";
 let boardRequest = 0;
 let leagueHubData = null;
 let leagueHubPromise = null;
-const boardNumber = new Intl.NumberFormat("mn-MN");
+let boardNumber = new Intl.NumberFormat("mn-MN");
 
-function boardUnit(){ return boardMetric === "battle" ? "ELO" : boardMetric === "flappy" ? "ОНОО" : "REP"; }
+function boardUnit(){ return boardMetric === "battle" ? "ELO" : boardMetric === "flappy" ? t("scoreUpper") : "REP"; }
 
 function makeRankAvatar(user){
   let el;
@@ -4987,7 +5016,7 @@ function fillLeagueCard(button, league, global = false){
   rank.className = "leagueRankBlock";
   rank.append(document.createTextNode(rankValue ? `#${rankValue}` : "–"));
   const rankLabel = document.createElement("small");
-  rankLabel.textContent = "байр";
+  rankLabel.textContent = t("rankLower");
   rank.appendChild(rankLabel);
   const meta = document.createElement("div");
   meta.className = "leagueMeta";
@@ -4999,11 +5028,11 @@ function fillLeagueCard(button, league, global = false){
     const code = document.createElement("span");
     code.className = "leagueCode";
     code.textContent = league.code;
-    sub.append(code, document.createTextNode(`${league.memberCount} гишүүн`));
+    sub.append(code, document.createTextNode(t("memberCount", league.memberCount)));
     if(league.owner){
       const owner = document.createElement("span");
       owner.className = "leagueOwner";
-      owner.textContent = " · Эзэн";
+      owner.textContent = t("ownerSuffix");
       sub.appendChild(owner);
     }
     meta.appendChild(sub);
@@ -5038,7 +5067,7 @@ function fetchLeagueHub(force = false){
 
 function renderLeagueHub(data){
   const list = $("leagueList");
-  fillLeagueCard($("globalLeague"), { name:"Бүх тоглогч", ...data.global }, true);
+  fillLeagueCard($("globalLeague"), { name:t("allPlayers"), ...data.global }, true);
   list.textContent = "";
   for(const league of data.leagues){
     const card = document.createElement("button");
@@ -5056,7 +5085,7 @@ async function loadLeagueHub(force = false){
   try{
     renderLeagueHub(await fetchLeagueHub(force));
   }catch(e){
-    if(!leagueHubData) list.textContent = friendlyError(e, "Лигүүд ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
+    if(!leagueHubData) list.textContent = friendlyError(e, t("errorLeaguesLoad"));
   }
 }
 
@@ -5069,7 +5098,7 @@ function openBoard(){
 
 function openLeagueBoard(code, name){
   activeLeagueCode = code || "";
-  activeLeagueName = name || "Бүх тоглогч";
+  activeLeagueName = name || t("allPlayers");
   $("boardHub").classList.add("hidden");
   $("boardDetail").classList.remove("hidden");
   $("detailName").textContent = activeLeagueName;
@@ -5145,8 +5174,10 @@ async function loadBoard(metric){
     const league = activeLeagueCode ? `&league=${encodeURIComponent(activeLeagueCode)}` : "";
     const data = await api(`/leaderboard?limit=50&metric=${metric}${league}`);
     if(request !== boardRequest) return;
-    $("detailName").textContent = data.league?.name || "Бүх тоглогч";
-    $("detailMeta").textContent = `${boardNumber.format(data.totalPlayers)} тоглогч${data.league ? ` · Код ${data.league.code}` : " · Дэлхийн жагсаалт"}`;
+    $("detailName").textContent = data.league?.name || t("allPlayers");
+    $("detailMeta").textContent = data.league
+      ? t("leaguePlayerCountWithCode", boardNumber.format(data.totalPlayers), data.league.code)
+      : t("globalPlayerCount", boardNumber.format(data.totalPlayers));
     renderPodium(data.players);
     const rows = $("rows");
     rows.textContent = "";
@@ -5154,13 +5185,13 @@ async function loadBoard(metric){
     if(!data.players.length){
       const empty = document.createElement("div");
       empty.className = "emptyLeague";
-      empty.textContent = metric === "battle" ? "Battle тоглосны дараа ELO байр энд нээгдэнэ." : "Одоогоор бүртгэгдсэн оноо алга.";
+      empty.textContent = t(metric === "battle" ? "emptyBattleBoard" : "emptyScoreBoard");
       rows.appendChild(empty);
     }
   }catch(e){
     if(request !== boardRequest) return;
     $("podium").textContent = "";
-    $("rows").textContent = friendlyError(e, "Жагсаалт ачаалсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
+    $("rows").textContent = friendlyError(e, t("errorLeaderboardLoad"));
   }
 }
 
@@ -5181,20 +5212,15 @@ function openSolo(kind, variant = "normal"){
   resetBattleCountdown();
   $("play").classList.remove("duel");
   $("play").classList.remove("squat-duel");
-  $("startTitle").textContent = kind === "squat" ? "Squat · Суулт" : isGame ? "Push Up Bird" : "Push Up";
+  $("startTitle").textContent = t(kind === "squat" ? "squatTitle" : isGame ? "pushupBirdTitle" : "pushupTitle");
   $("howtoPush").classList.toggle("hidden", kind === "squat" || isGame);
   $("howtoSquat").classList.toggle("hidden", kind !== "squat");
   $("howtoGame").classList.toggle("hidden", !isGame);
-  $("startHint").innerHTML = kind === "squat"
-    ? `Утсаа биеэсээ <b>2–3 метр</b> зайд, ташааны өндөрт байрлуул. Камер руу
-       хажуу эсвэл 45° харж, толгойноос хөл хүртэл бүтэн биеэ багтаа.`
-    : isGame
-      ? `Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо нугалж доошлоход шувуу доош,
-         гараа тэнийлгэж дээшлэхэд шувуу дээш явна.`
-    : `Утсаа <b>урдаа шалан дээр</b> тавь. Тохойгоо хажуу тийш задгай байлга —
-       биедээ наавал халхлагдаж, өнцөг буруу уншина.`;
+  $("startHint").innerHTML = t(kind === "squat"
+    ? "squatStartHint"
+    : isGame ? "gameStartHint" : "pushupStartHint");
   $("go").disabled = false;
-  $("go").textContent = isGame ? "Game эхлүүлэх" : "Камер асаах";
+  $("go").textContent = t(isGame ? "startGame" : "turnOnCamera");
   $("err").classList.add("hidden");
   $("err").textContent = "";
   show("play");
@@ -5245,7 +5271,7 @@ $("challengeStop").onclick = async () => {
     resetChallengeView();
   }catch(e){
     $("challengeStatus").className = "bad";
-    $("challengeStatus").textContent = friendlyError(e, "Challenge-аа зогсоож чадсангүй.");
+    $("challengeStatus").textContent = friendlyError(e, t("errorChallengeStop"));
   }finally{ $("challengeStop").disabled = false; }
 };
 function prepareMainNavDestination(){
@@ -5266,7 +5292,7 @@ $("boardPush").onclick = () => loadBoard("pushup");
 $("boardSquat").onclick = () => loadBoard("squat");
 $("boardBattle").onclick = () => loadBoard("battle");
 $("boardFlappy").onclick = () => loadBoard("flappy");
-$("globalLeague").onclick = () => openLeagueBoard("", "Бүх тоглогч");
+$("globalLeague").onclick = () => openLeagueBoard("", t("allPlayers"));
 $("leagueCode").oninput = () => {
   $("leagueCode").value = $("leagueCode").value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, "").slice(0, 6);
 };
@@ -5276,7 +5302,7 @@ $("createLeagueForm").onsubmit = async event => {
   const status = $("createLeagueStatus");
   button.disabled = true;
   status.className = "formStatus";
-  status.textContent = "Үүсгэж байна…";
+  status.textContent = t("creating");
   try{
     const league = await api("/leagues", { method:"POST", body:JSON.stringify({ name:$("leagueName").value }) });
     leagueHubData = null;
@@ -5285,7 +5311,7 @@ $("createLeagueForm").onsubmit = async event => {
     openLeagueBoard(league.code, league.name);
   }catch(e){
     status.className = "formStatus bad";
-    status.textContent = friendlyError(e, e.message || "Лиг үүсгэж чадсангүй. Дахин оролдоно уу.");
+    status.textContent = friendlyError(e, t("errorLeagueCreate"));
   }finally{ button.disabled = false; }
 };
 $("joinLeagueForm").onsubmit = async event => {
@@ -5294,7 +5320,7 @@ $("joinLeagueForm").onsubmit = async event => {
   const status = $("joinLeagueStatus");
   button.disabled = true;
   status.className = "formStatus";
-  status.textContent = "Нэгдэж байна…";
+  status.textContent = t("joining");
   try{
     const league = await api("/leagues/join", { method:"POST", body:JSON.stringify({ code:$("leagueCode").value }) });
     leagueHubData = null;
@@ -5303,7 +5329,7 @@ $("joinLeagueForm").onsubmit = async event => {
     openLeagueBoard(league.code, league.name);
   }catch(e){
     status.className = "formStatus bad";
-    status.textContent = friendlyError(e, e.message || "Лигт нэгдэж чадсангүй. Кодоо шалгана уу.");
+    status.textContent = friendlyError(e, t("errorLeagueJoin"));
   }finally{ button.disabled = false; }
 };
 $("retrySave").onclick = () => pendingSet && saveSet(pendingSet.reps, pendingSet.seconds, pendingSet.exercise);
@@ -5323,10 +5349,11 @@ $("pushGame").onclick = () => openSolo("pushup", "game");
 $("go").onclick      = startSolo;
 $("reset").onclick  = reset;
 $("done").onclick   = finish;
-$("gameEnd").onclick = () => finishPushGame("Тоглоом зогслоо", false);
+$("gameEnd").onclick = () => finishPushGame(t("gameStopped"), false);
 $("pushGameRestart").onclick = () => { reset(); startPushGame(); };
 $("pushGameExit").onclick = finish;
 
+applyLang(detectLang());
 renderDailyActivity();
 $("challengeSection").classList.toggle("hidden", !CHALLENGES_ENABLED);
 $("challengeSection").setAttribute("aria-hidden", String(!CHALLENGES_ENABLED));
@@ -5337,6 +5364,12 @@ document.addEventListener("visibilitychange", () => {
 
 setBootProgress(5);
 launchCfg = await usionInit();
+const platformLanguage = detectLang(launchCfg);
+if(platformLanguage !== i18n.language){
+  applyLang(platformLanguage);
+  renderDailyActivity();
+  if(CHALLENGES_ENABLED) renderChallenges();
+}
 const directInvite = guestLaunch();
 startupInvitePending = directInvite;
 restoreDailyActivity("pushup");

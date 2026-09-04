@@ -19,6 +19,7 @@ test('battle squat батлагдахад сервер рүү rep илгээнэ
     const sendRep = () => sent++;
     const sndRep = () => {};
     const setMsg = () => messages++;
+    const t = (key, value) => value === undefined ? key : key + ":" + value;
     const resetPoseFeedback = () => {};
     const resetSquatCycle = () => {};
     const navigator = {};
@@ -37,7 +38,7 @@ test('battle squat батлагдахад сервер рүү rep илгээнэ
 test('толгой захад байсан ч squat-ын мөр-шагай бүтэн бол cycle хүчинтэй', () => {
   const margin = html.match(/const SQUAT_FRAME_MARGIN = [^;]+;/)?.[0]
   assert.ok(margin, 'SQUAT_FRAME_MARGIN source олдсонгүй')
-  const check = new Function(`${margin}\n${sourceOf('squatPositionCheck')}\nreturn squatPositionCheck`)()
+  const check = new Function(`const t = key => key;\n${margin}\n${sourceOf('squatPositionCheck')}\nreturn squatPositionCheck`)()
 
   assert.equal(check([{ y: -0.2, visibility: 1 }], {
     shoulderY: 0.05,
@@ -70,6 +71,7 @@ test('standing → depth → standing бүтэн cycle battle-д яг нэг rep
     const sndRep = () => {};
     const setMsg = () => {};
     const setPoseMsg = setMsg;
+    const t = key => key;
     const resetPoseFeedback = () => {};
     const navigator = {};
     const node = { textContent: "", offsetWidth: 1, style: {},

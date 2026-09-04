@@ -138,8 +138,8 @@ test('газар шалгалт унтраалттай үед solo, Flappy, Batt
   assert.equal(enabled('solo', 'normal', 'squat'), false)
   assert.match(html, /if\(pushupGroundEnabled\(\)\)\{[\s\S]*?updatePushupGround/)
   assert.match(html, /pushupGroundEnabled\(\) && pushupGroundViolation/)
-  assert.match(html, /if\(bad === GROUND_CONTACT_MESSAGE\)\{[\s\S]*?idle\(\);[\s\S]*?badFrames = 0;/,
+  assert.match(html, /if\(bad === t\(GROUND_CONTACT_MESSAGE\)\)\{[\s\S]*?idle\(\);[\s\S]*?badFrames = 0;/,
     'дундуур өвдөг хүрвэл rep cycle шууд цуцлагдана')
-  assert.match(html, /const flappyStarted = mode === "solo" && soloVariant === "game"[\s\S]*?pushGameState\.started[\s\S]*?if\(flappyStarted\) finishPushGame\("Өвдөг шаланд хүрлээ"\);/,
+  assert.match(html, /const flappyStarted = mode === "solo" && soloVariant === "game"[\s\S]*?pushGameState\.started[\s\S]*?if\(flappyStarted\) finishPushGame\(t\("groundContactShort"\)\);/,
     'Flappy эхэлсний дараа өвдөг хүрвэл шууд game over болно')
 })

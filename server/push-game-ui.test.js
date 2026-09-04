@@ -6,8 +6,8 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 
 test('Push Up нь энгийн болон Game гэсэн хоёр сонголттой', () => {
   assert.match(html, /id="pushChoice"/)
-  assert.match(html, /id="pushNormal"[\s\S]*?<strong>Энгийн<\/strong>/)
-  assert.match(html, /id="pushGame"[\s\S]*?<strong>Game<\/strong>/)
+  assert.match(html, /id="pushNormal"[\s\S]*?<strong[^>]*data-i18n="pushModeNormalTitle"/)
+  assert.match(html, /id="pushGame"[\s\S]*?<strong[^>]*data-i18n="pushModeGameTitle"/)
   assert.match(html, /\$\("navPush"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\(\); \}/)
 })
 
@@ -91,7 +91,7 @@ test('Flappy түвшин тогтсоны дараах анхны тохой н
   assert.match(html, /deg <= Math\.min\(145, pushGameState\.anchorAngle - 18\)/)
   assert.match(html, /pushGameState\.started = true/)
   assert.match(html, /const started = tracked && pushGameState\.started/)
-  assert.match(html, /"Тохойгоо нугал", "Анхны push-up хийхэд тоглоом эхэлнэ"/)
+  assert.match(html, /t\("bendElbows"\), t\("gameStartsFirstPushup"\)/)
   assert.doesNotMatch(html, /readyAt = now \+ 1200/)
 })
 
@@ -190,8 +190,8 @@ test('Flappy game дуусахад хамгийн өндөр оноог серв
 })
 
 test('Flappy оноог 5 секунд харуулаад автоматаар дахин эхэлнэ', () => {
-  assert.match(html, /function finishPushGame\(title = "Тоглоом дууслаа", autoRestart = true\)/)
+  assert.match(html, /function finishPushGame\(title = t\("gameOver"\), autoRestart = true\)/)
   assert.match(html, /pushGameState\.restartTimer = setTimeout\(\(\) => \{[\s\S]*?reset\(\);[\s\S]*?startPushGame\(\);[\s\S]*?\}, 5000\)/)
   assert.match(html, /function stopPushGame\(\)[\s\S]*?clearTimeout\(pushGameState\.restartTimer\)/)
-  assert.match(html, /\$\("gameEnd"\)\.onclick = \(\) => finishPushGame\("Тоглоом зогслоо", false\)/)
+  assert.match(html, /\$\("gameEnd"\)\.onclick = \(\) => finishPushGame\(t\("gameStopped"\), false\)/)
 })

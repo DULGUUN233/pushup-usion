@@ -14,8 +14,8 @@ test('inline app JavaScript syntax хүчинтэй', () => {
 test('лиг hub нь үүсгэх, кодоор нэгдэх хоёр урсгалтай', () => {
   assert.match(html, /id="createLeagueForm" class="leagueForm"/)
   assert.match(html, /id="joinLeagueForm" class="leagueForm"/)
-  assert.match(html, /<label class="srOnly" for="leagueName">Лигийн нэр<\/label>/)
-  assert.match(html, /<label class="srOnly" for="leagueCode">6 тэмдэгт лигийн код<\/label>/)
+  assert.match(html, /<label class="srOnly" for="leagueName"[^>]*data-i18n="leagueNameLabel"/)
+  assert.match(html, /<label class="srOnly" for="leagueCode"[^>]*data-i18n="leagueCodeLabel"/)
   assert.match(html, /api\("\/leagues"[^]*method:"POST"/)
   assert.match(html, /api\("\/leagues\/join"[^]*method:"POST"/)
 })
@@ -23,7 +23,7 @@ test('лиг hub нь үүсгэх, кодоор нэгдэх хоёр урсг�
 test('hub-ийн лигийн карт rank-аа зүүн, мэдээллээ голд, chevron-оо баруун харуулна', () => {
   assert.match(html, /className = "leagueRankBlock"/)
   assert.match(html, /button\.append\(rank, meta, chevron\)/)
-  assert.match(html, /class="leagueTitleRow"><h3>Лигүүд<\/h3>/)
+  assert.match(html, /class="leagueTitleRow"><h3[^>]*data-i18n="leaguesTitle"/)
 })
 
 test('лигийг нүүрэн дээр урьдчилж ачаалаад нээхэд ижил хүсэлтийг давхардуулахгүй', () => {

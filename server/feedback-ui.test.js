@@ -5,19 +5,19 @@ import test from 'node:test'
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 
 function sourceOf(name) {
-  const match = html.match(new RegExp(`function ${name}\\([^)]*\\)\\{[\\s\\S]*?\\n\\}`))
+  const match = html.match(new RegExp(`function ${name}\\([^\\n]*\\)\\{[\\s\\S]*?\\n\\}`))
   assert.ok(match, `${name} source олдсонгүй`)
   return match[0]
 }
 
 test('техникийн алдааг хэрэглэгчид ойлгомжтой, засах алхамтай болгоно', () => {
-  const friendlyError = new Function(`${sourceOf('friendlyError')}\nreturn friendlyError`)()
+  const friendlyError = new Function('t', `${sourceOf('friendlyError')}\nreturn friendlyError`)(key => key)
 
-  assert.match(friendlyError({ name:'NotAllowedError' }), /зөвшөөрөл.*Тохиргоо/i)
-  assert.match(friendlyError({ name:'ModelLoadError' }), /AI танилт.*ачаалсангүй/i)
-  assert.match(friendlyError(new Error('HTTP 401')), /дахин нээнэ/i)
-  assert.match(friendlyError(new Error('урилга хүчингүй')), /шинэ урилга/i)
-  assert.doesNotMatch(friendlyError(new Error('USION_SERVICE_ID тохируулаагүй байна')), /USION|SERVICE_ID/)
+  assert.equal(friendlyError({ name:'NotAllowedError' }), 'errorCameraPermission')
+  assert.equal(friendlyError({ name:'ModelLoadError' }), 'errorModelLoad')
+  assert.equal(friendlyError(new Error('HTTP 401')), 'errorSessionExpired')
+  assert.equal(friendlyError(new Error('урилга хүчингүй')), 'errorInviteInvalid')
+  assert.equal(friendlyError(new Error('USION_SERVICE_ID тохируулаагүй байна')), 'errorNetwork')
 })
 
 test('raw error text UI рүү шууд гарахгүй', () => {
