@@ -84,6 +84,7 @@ test('шувуу эхлэхдээ нүдний түвшинд таарч, adapti
 
 test('Flappy урагшлах хурд 200 px/s байна', () => {
   assert.match(html, /const speed = 200;/)
+  assert.match(html, /pushGameState\.nextPipeAt = now \+ 1450;/)
 })
 
 test('Flappy түвшин тогтсоны дараах анхны тохой нугаралтаар эхэлнэ', () => {
