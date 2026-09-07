@@ -83,7 +83,7 @@ test('шувуу эхлэхдээ нүдний түвшинд таарч, adapti
 })
 
 test('Flappy урагшлах хурд өмнөхөөс бага зэрэг нэмэгдсэн', () => {
-  assert.match(html, /const speed = Math\.max\(112, width \* \.31\)/)
+  assert.match(html, /const speed = Math\.max\(120, width \* \.34\)/)
 })
 
 test('Flappy түвшин тогтсоны дараах анхны тохой нугаралтаар эхэлнэ', () => {
