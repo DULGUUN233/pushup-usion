@@ -3580,7 +3580,7 @@ function pushGameFrame(now){
       pushGameState.nextPipeAt = now + 2050;
     }
     // Урагшлах мэдрэмжийг pipe-ийн дэлгэц дээгүүр шилжих хурдаар өгнө.
-    const speed = Math.max(130, width * .37);
+    const speed = 200;
     const birdY = pushGameState.birdY * height;
     const radius = Math.max(13, Math.min(20, Math.min(width, height) * .038));
     const fruitRadius = pushGameFruitRadius(width, height);

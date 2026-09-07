@@ -82,8 +82,8 @@ test('шувуу эхлэхдээ нүдний түвшинд таарч, adapti
   assert.match(html, /pushGameState\.birdY = pushGameSmoothY\(pushGameState\.birdY, desiredY, dt\)/)
 })
 
-test('Flappy урагшлах хурд өмнөхөөс бага зэрэг нэмэгдсэн', () => {
-  assert.match(html, /const speed = Math\.max\(130, width \* \.37\)/)
+test('Flappy урагшлах хурд 200 px/s байна', () => {
+  assert.match(html, /const speed = 200;/)
 })
 
 test('Flappy түвшин тогтсоны дараах анхны тохой нугаралтаар эхэлнэ', () => {
