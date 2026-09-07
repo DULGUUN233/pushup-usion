@@ -3577,10 +3577,10 @@ function pushGameFrame(now){
       pushGameState.lastGapY = gapY;
       pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap, gapY, scored:false,
         fruitResolved:false });
-      pushGameState.nextPipeAt = now + 1450;
+      pushGameState.nextPipeAt = now + 1160;
     }
     // Урагшлах мэдрэмжийг pipe-ийн дэлгэц дээгүүр шилжих хурдаар өгнө.
-    const speed = 200;
+    const speed = 250;
     const birdY = pushGameState.birdY * height;
     const radius = Math.max(13, Math.min(20, Math.min(width, height) * .038));
     const fruitRadius = pushGameFruitRadius(width, height);
