@@ -3407,7 +3407,8 @@ function pushGameGapY(height, gap, previous = null, random = Math.random(),
 }
 
 function squatGameGapY(height, gap, previous = null, random = Math.random(),
-                       reachableTop = .3, reachableBottom = .7){
+                       reachableTop = .3, reachableBottom = .7,
+                       holdRandom = Math.random()){
   const edgeMargin = gap / 2 + Math.max(28, height * .05);
   const minReach = Math.max(.3, Math.min(reachableTop, reachableBottom));
   const maxReach = Math.min(.7, Math.max(reachableTop, reachableBottom));
@@ -3415,7 +3416,7 @@ function squatGameGapY(height, gap, previous = null, random = Math.random(),
   const maxY = Math.min(height - edgeMargin, height * maxReach);
   if(maxY <= minY) return height * ((minReach + maxReach) / 2);
 
-  // Squat Game-д саад бүр бараг босоо ба гүн суултын lane хооронд ээлжилнэ.
+  // Squat Game-д саад бүр бараг босоо ба гүн суултын lane хооронд шилжинэ.
   // 6%-ийн variation нь хөдөлгөөнийг давтагдсан мэт болголгүй endpoint-ийг
   // хүний хүрч чадах 30–70%-ийн аюулгүй бүсээс гаргахгүй.
   const span = maxY - minY;
@@ -3424,7 +3425,11 @@ function squatGameGapY(height, gap, previous = null, random = Math.random(),
   const lowerLane = maxY - span * .1;
   if(!Number.isFinite(previous))
     return Math.max(minY, Math.min(maxY, (random < .5 ? upperLane : lowerLane) + variation));
-  const target = previous <= (minY + maxY) / 2 ? lowerLane : upperLane;
+  const previousWasLower = previous > (minY + maxY) / 2;
+  // Доод lane дээр 42% магадлалаар дахин доод саад гарна. Ингэснээр заримдаа
+  // 2–3 саад дараалан гүн суултаа бариад, ихэнхдээ дараагийн саадаар босно.
+  const holdLower = previousWasLower && holdRandom < .42;
+  const target = holdLower ? lowerLane : previousWasLower ? upperLane : lowerLane;
   return Math.max(minY, Math.min(maxY, target + variation));
 }
 
@@ -3612,7 +3617,7 @@ function pushGameFrame(now){
       const random = Math.random();
       const gapY = exercise === "squat"
         ? squatGameGapY(height, gap, pushGameState.lastGapY, random,
-            reachableTop, reachableBottom)
+            reachableTop, reachableBottom, Math.random())
         : pushGameGapY(height, gap, pushGameState.lastGapY, random,
             reachableTop, reachableBottom);
       pushGameState.lastGapY = gapY;
@@ -3939,14 +3944,18 @@ async function ensureExerciseModel(){
   const needsLowerBody = exercise === "squat" || (mode === "battle" && duel?.battleType === "combined");
   if(!landmarker){
     await loadInitialPoseModel();
-  } else if(needsLowerBody && modelVariant === "lite"){
-    // Combined бол камер асаахаас өмнө, бусад тохиолдолд завсарлагаар
-    // доод биеийн цэгийг Lite-ээс Full руу ахиулна.
+  }
+  if(needsLowerBody && modelVariant !== "full"){
+    // Heavy нь mobile WebView-д удаан кадар үүсгэдэг. Squat эхлэхээс өмнө
+    // доод биеийг бүрэн таних, арай хөнгөн Full model-д нэг удаа шилжинэ.
     const next = await createLandmarker(FULL_MODEL);
     const previous = landmarker;
     landmarker = next;
     modelVariant = "full";
-    previous.close();
+    previous?.close();
+    fpsEma = 0;
+    lastFrame = 0;
+    lowFpsSince = 0;
   }
 }
 

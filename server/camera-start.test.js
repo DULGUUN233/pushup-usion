@@ -232,6 +232,31 @@ test('Heavy model ачаалахгүй бол Full model руу fallback хий�
   assert.equal(result.modelVariant, 'full')
 })
 
+test('Squat эхлэхээс өмнө Heavy model-ийг Full болгож кадрын гацалтаас хамгаална', async () => {
+  const run = new Function(`
+    const FULL_MODEL = "full.task";
+    const exercise = "squat", mode = "solo", duel = null;
+    const calls = [];
+    const oldModel = { closed: false, close(){ this.closed = true; } };
+    const createLandmarker = async path => { calls.push(path); return { path }; };
+    const loadInitialPoseModel = async () => landmarker;
+    let landmarker = oldModel, modelVariant = "heavy";
+    let fpsEma = 8, lastFrame = 10, lowFpsSince = 20;
+    ${sourceOf('ensureExerciseModel')}
+    return ensureExerciseModel().then(() => ({
+      calls, modelVariant, model: landmarker, oldClosed: oldModel.closed,
+      fpsEma, lastFrame, lowFpsSince
+    }));
+  `)
+
+  const result = await run()
+  assert.deepEqual(result.calls, ['full.task'])
+  assert.equal(result.modelVariant, 'full')
+  assert.equal(result.model.path, 'full.task')
+  assert.equal(result.oldClosed, true)
+  assert.deepEqual([result.fpsEma, result.lastFrame, result.lowFpsSince], [0, 0, 0])
+})
+
 test('model алдаа camera permission хүсэлтийг дундаас нь цуцлахгүй', () => {
   const startEngine = sourceOf('startEngine')
   assert.doesNotMatch(startEngine, /Promise\.all\(\[cameraReady, ensureExerciseModel\(\)\]\)/)
