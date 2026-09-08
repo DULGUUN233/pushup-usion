@@ -14,9 +14,18 @@
 <link rel="preload" as="image" href="./assets/flappy/fruit-orange-v1.webp" type="image/webp">
 <link rel="preload" as="image" href="./assets/figma/push-choice-2.svg" type="image/svg+xml">
 <link rel="preload" as="image" href="./assets/figma/push-choice-7.svg" type="image/svg+xml">
+<link rel="preload" as="font" href="./assets/fonts/Benzin-Regular.ttf" type="font/ttf" crossorigin>
+<link rel="preload" as="font" href="./assets/fonts/Benzin-Bold.ttf" type="font/ttf" crossorigin>
+<link rel="preload" as="font" href="./assets/fonts/Montserrat-Variable.ttf" type="font/ttf" crossorigin>
 <script src="https://usions.com/usion-sdk.js"></script>
 <script src="./assets/i18n-v1.js?v=3"></script>
 <style>
+  @font-face{font-family:"Montserrat";src:url('./assets/fonts/Montserrat-Variable.ttf') format('truetype');font-style:normal;font-weight:100 900;font-display:swap}
+  @font-face{font-family:"Benzin";src:url('./assets/fonts/Benzin-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+  @font-face{font-family:"Benzin";src:url('./assets/fonts/Benzin-Medium.ttf') format('truetype');font-style:normal;font-weight:500;font-display:swap}
+  @font-face{font-family:"Benzin";src:url('./assets/fonts/Benzin-Semibold.ttf') format('truetype');font-style:normal;font-weight:600;font-display:swap}
+  @font-face{font-family:"Benzin";src:url('./assets/fonts/Benzin-Bold.ttf') format('truetype');font-style:normal;font-weight:700;font-display:swap}
+  @font-face{font-family:"Benzin";src:url('./assets/fonts/Benzin-ExtraBold.ttf') format('truetype');font-style:normal;font-weight:800;font-display:swap}
   :root{
     --bg:#070b11; --fg:#f3f7fb; --dim:#8795a6;
     --accent:#39d98a; --warn:#ffb020; --bad:#ff5c5c; --gold:#ffd21e;
@@ -28,7 +37,7 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+    font-family:"Montserrat",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
   .screen{position:fixed;inset:0;overflow-y:auto;
     padding:calc(env(safe-area-inset-top) + 20px) 18px calc(env(safe-area-inset-bottom) + 20px)}
   .hidden{display:none!important}
@@ -299,56 +308,68 @@
   #leagueList{display:flex;flex-direction:column;gap:10px}
   .emptyLeague{padding:24px 18px;text-align:center;border:1px dashed rgba(255,255,255,.13);
     border-radius:18px;color:var(--dim);font-size:13px;line-height:1.55}
-  .detailTop{margin:2px 2px 12px}
-  .detailTop div{min-width:0}
-  .detailTop h2{margin:0;font-size:22px;letter-spacing:-.025em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .detailTop p{margin:3px 0 0;color:var(--dim);font-size:12px}
-  #boardTabs{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding:0;
-    border:0;border-bottom:1px solid var(--board-border);border-radius:0;background:transparent;margin-bottom:12px;overflow:visible}
-  .boardTabsPill{position:absolute;z-index:0;left:0;bottom:-1px;width:25%;height:3px;
-    border-radius:999px;background:linear-gradient(90deg,transparent 18%,var(--board-primary) 36%,var(--board-secondary) 64%,transparent 82%);
-    box-shadow:0 0 12px rgba(249,115,22,.28);transform:translateX(0);
-    transition:transform 250ms cubic-bezier(.22,1,.36,1);pointer-events:none}
-  #boardTabs[data-active="squat"] .boardTabsPill{transform:translateX(100%)}
-  #boardTabs[data-active="battle"] .boardTabsPill{transform:translateX(200%)}
-  #boardTabs[data-active="flappy"] .boardTabsPill{transform:translateX(300%)}
-  #boardTabs button{position:relative;z-index:1;min-height:44px;padding:8px 5px;border-radius:0;background:transparent;
-    color:#b2bac5;transition:color 200ms ease}
-  #boardTabs button:active{transform:none;background:rgba(249,115,22,.045)}
-  #boardTabs button.active{background:transparent;color:var(--board-primary)}
-  #podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;align-items:end;gap:8px;min-height:154px;margin:4px 0 12px}
+  /* Rank — Figma 479:527, 430px frame; the 126.79px host header is outside the app. */
+  #boardDetail{container-type:inline-size;isolation:isolate;padding-top:calc(19.59 / 430 * 100%)}
+  .detailTop{margin:0;text-align:center;min-height:12.26cqw;padding-inline:20px}
+  .detailTop div{min-width:0;position:relative;top:-1.1628cqw}
+  .detailTop h2{margin:0;font-family:"Benzin",sans-serif;font-size:5.5814cqw;line-height:1;font-weight:400;letter-spacing:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .detailTop p{margin:1.86cqw 0 0;color:#a5abb5;font-size:2.7907cqw;line-height:1.23}
+  .rankStage{position:relative;isolation:isolate;margin-top:14.05cqw;overflow:hidden}
+  .rankStage::before{content:"";position:absolute;z-index:-1;pointer-events:none;top:7.7195cqw;
+    left:calc(-67.296 / 430 * 100%);width:calc(564.592 / 430 * 100%);height:calc(100% - 7.7195cqw);
+    border-radius:50% 50% 0 0 / 45.2488cqw 45.2488cqw 0 0;
+    background:linear-gradient(180deg,#20252d 0,#0f1115 22.6244cqw,#0b0d10 45.2488cqw)}
+  #boardTabs{position:relative;aspect-ratio:430 / 94.343;padding:0;border:0;background:transparent}
+  .rankTabArt{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
+  .rankTabArt text{font-family:"Montserrat",sans-serif;font-size:14px;font-weight:400;fill:#a5abb5}
+  #boardTabs[data-active="pushup"] .rankTabPush,#boardTabs[data-active="squat"] .rankTabSquat,
+  #boardTabs[data-active="battle"] .rankTabBattle,#boardTabs[data-active="flappy"] .rankTabFlappy{fill:#f97316;font-weight:700}
+  .boardTabsPill{fill:none;stroke:#f97316;stroke-width:6;stroke-linecap:round;stroke-dasharray:3.2 96.8;stroke-dashoffset:-27.8}
+  #boardTabs[data-active="squat"] .boardTabsPill{stroke-dashoffset:-41.1}
+  #boardTabs[data-active="battle"] .boardTabsPill{stroke-dashoffset:-58.9}
+  #boardTabs[data-active="flappy"] .boardTabsPill{stroke-dashoffset:-74.5}
+  #boardTabs button{position:absolute;z-index:1;top:0;width:24%;min-height:44px;height:10.23cqw;padding:0;border-radius:12px;
+    background:transparent;backdrop-filter:none;cursor:pointer;touch-action:manipulation}
+  #boardTabs #boardPush{left:0;top:5.35cqw}
+  #boardTabs #boardSquat{left:25%}
+  #boardTabs #boardBattle{left:51%}
+  #boardTabs #boardFlappy{right:0;top:6.75cqw}
+  #boardTabs button:active:not(:disabled){transform:none;background:rgba(249,115,22,.07)}
+  #podium{position:relative;height:28.6047cqw;margin:0 0 6.7734cqw}
   .podiumPlace{position:relative;text-align:center;min-width:0;display:flex;flex-direction:column;align-items:center}
-  .podiumPlace.first{order:2}.podiumPlace.second{order:1}.podiumPlace.third{order:3}
-  .podiumAvatarWrap{position:relative;width:52px;height:52px;margin:0 auto 9px}
-  .podiumPlace.first .podiumAvatarWrap{width:68px;height:68px;margin-bottom:10px}
+  #podium .podiumPlace{position:absolute;bottom:0;width:17.6%}
+  #podium .podiumPlace.first{left:41.689%;width:17.286%}.podiumPlace.second{left:14.319%}.podiumPlace.third{left:68.101%}
+  .podiumAvatarWrap{position:relative;width:13.9535cqw;height:13.9535cqw;margin:0 auto 5.5814cqw}
+  .podiumPlace.first .podiumAvatarWrap{width:17.286cqw;height:17.286cqw}
   .rankAvatar{width:47px;height:47px;border-radius:50%;object-fit:cover;margin:0 auto 7px;
     display:grid;place-items:center;background:#263140;color:#fff;font-weight:900;border:2px solid rgba(255,255,255,.16)}
-  .podiumAvatarWrap .rankAvatar{width:100%;height:100%;margin:0;border-width:2px}
-  .podiumPlace.first .rankAvatar{border:3px solid var(--gold);box-shadow:0 0 0 2px rgba(255,210,30,.14)}
-  .podiumPlace.second .rankAvatar{border-color:#c7d0dc}
-  .podiumPlace.third .rankAvatar{border-color:#d69058}
-  .podiumCrown{position:absolute;left:50%;top:-28px;width:25px;height:25px;transform:translateX(-50%);
-    fill:var(--gold);stroke:#8c6800;stroke-width:1.2;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
-  .podiumBadge{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);width:22px;height:22px;
-    border-radius:50%;display:grid;place-items:center;color:#10151b;font-size:11px;font-weight:900;
-    border:2px solid #10151b;background:#c7d0dc;font-variant-numeric:tabular-nums}
-  .podiumPlace.first .podiumBadge{background:var(--gold)}
-  .podiumPlace.third .podiumBadge{background:#d69058}
-  .podiumName{width:100%;font-size:12px;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .podiumScore{font-size:10px;font-weight:700;color:#8f9baa;margin-top:4px;font-variant-numeric:tabular-nums}
-  #rows{display:flex;flex-direction:column;gap:6px}
-  .row{min-height:54px;display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:14px;
-    background:var(--board-surface);border:1px solid rgba(255,255,255,.065);box-shadow:0 6px 18px rgba(0,0,0,.12);
+  .podiumAvatarWrap .rankAvatar{width:100%;height:100%;margin:0;border:0}
+  .podiumAvatarWrap img{filter:grayscale(1)}
+  .podiumPlace.first{--medal:#fbbf24}.podiumPlace.second{--medal:#f8fafc}.podiumPlace.third{--medal:#cf7836}
+  .podiumAvatarWrap{border:1.5px solid var(--medal);border-radius:50%;box-shadow:0 0 6px color-mix(in srgb,var(--medal) 18%,transparent)}
+  .podiumBadge{position:absolute;left:50%;bottom:-2.7907cqw;transform:translateX(-50%);width:5.5814cqw;height:5.5814cqw;
+    border-radius:50%;display:grid;place-items:center;color:#20252d;font-size:2.7907cqw;font-weight:700;
+    border:1.5px solid #20252d;background:var(--medal);font-variant-numeric:tabular-nums}
+  .podiumName{width:100%;font-size:2.7907cqw;line-height:1.25;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .podiumScore{font-size:1.8605cqw;line-height:1.25;font-weight:400;color:#a5abb5;margin-top:0;font-variant-numeric:tabular-nums;text-transform:lowercase}
+  #rows{display:flex;flex-direction:column;gap:2.3256cqw;width:calc(368 / 430 * 100%);margin:0 auto}
+  .row{min-height:15.1163cqw;display:flex;align-items:center;gap:2.3256cqw;padding:2.3256cqw 3.7209cqw;border-radius:5.5814cqw;
+    background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.2),transparent 70%),#181c22;border:0;box-shadow:none;
     transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms ease,border-color 180ms ease;
     animation:rankRowIn 280ms cubic-bezier(.22,1,.36,1) both}
   .row:active{transform:scale(.99);background:var(--board-surface-raised);border-color:rgba(249,115,22,.2)}
   .row.me{background:linear-gradient(135deg,rgba(249,115,22,.11),rgba(251,191,36,.035)),var(--board-surface);
     outline:1px solid rgba(249,115,22,.38)}
-  .row .rankAvatar{width:32px;height:32px;margin:0;border-width:1px;font-size:12px}
-  .row .pos{width:26px;text-align:center;font-weight:900;color:#87919f;font-variant-numeric:tabular-nums}
-  .row .nm{flex:1;min-width:0;font-size:14px;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .row .tot{font-size:17px;font-weight:900;line-height:1;text-align:right;font-variant-numeric:tabular-nums}
-  .row .tot small{display:block;margin-top:4px;font-size:9px;line-height:1;font-weight:700;color:#7f8a99;text-transform:uppercase}
+  .row .rankAvatar{flex-shrink:0;width:7.4419cqw;height:7.4419cqw;margin:0;border-width:1px;font-size:2.7907cqw}
+  .row .pos{min-width:2.3256cqw;text-align:center;font-size:2.7907cqw;font-weight:400;color:#a5abb5;font-variant-numeric:tabular-nums}
+  .row .nm{flex:1;min-width:0;font-size:2.7907cqw;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .tot{max-width:35%;overflow-wrap:anywhere;font-size:3.7209cqw;font-weight:700;line-height:1.25;text-align:right;font-variant-numeric:tabular-nums}
+  .row .tot small{display:block;margin-top:.93cqw;font-size:2.3256cqw;line-height:1;font-weight:400;color:#a5abb5;text-transform:lowercase}
+  #boardTabs[data-active="battle"]~#podium .podiumScore,#boardTabs[data-active="battle"]~#rows .tot small{text-transform:none}
+  #podium>.boardLoading{position:absolute;inset:0 14%;height:auto}
+  .rankBottomFade{position:fixed;z-index:1;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,430px);
+    height:180px;pointer-events:none;background:linear-gradient(180deg,transparent,#181c22 85%)}
   .boardLoading{height:78px;border-radius:18px;margin:8px 0;background:linear-gradient(90deg,#131a22 25%,#202a35 50%,#131a22 75%);
     background-size:200% 100%;animation:boardShimmer 1.2s infinite}
   @keyframes boardShimmer{to{background-position:-200% 0}}
@@ -903,27 +924,30 @@
 
   #menu{width:min(100%,430px);max-width:430px;gap:0;padding:20px 20px calc(env(safe-area-inset-bottom) + 105px);
     overflow-x:hidden;overscroll-behavior-x:none;background:#0b0d10}
-  #dailyPushups{position:relative;align-self:center;width:min(calc(100vw - 40px),390px);max-width:100%;min-width:0;gap:0}
-  #dailyPushups::before{content:"";position:absolute;z-index:0;left:0;top:0;width:100%;height:auto;aspect-ratio:390/109.529;
+  #dailyPushups{position:relative;align-self:center;width:min(calc(100vw - 40px),390px);max-width:100%;min-width:0;gap:0;container-type:inline-size}
+  /* Figma 426:4994: Union 390×109.529, range (7,7) 376×41, exercise (174,70.529) 210×33. */
+  #dailyPushups::before{content:"";position:absolute;z-index:0;left:calc(-100% / 390);top:0;width:100%;height:auto;aspect-ratio:390/109.529;
     background:url('./assets/figma/home-tabs-union.svg') center top/100% 100% no-repeat;pointer-events:none}
-  .activityRangeSwitch{position:relative;z-index:1;width:calc(100% - 3.59%);max-width:376px;min-width:0;height:auto;aspect-ratio:376/49;
-    margin-top:1.795%;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:clamp(3px,.93vw,4px);align-self:center;
-    border-radius:40px;background:#181c22;border:1px solid #20252d;box-shadow:none}
-  .activityRangeSwitch button{width:auto;height:100%;min-height:0;padding:clamp(6px,1.86vw,8px) clamp(9px,2.79vw,12px);
-    border-radius:28px;font-size:clamp(11px,3.26vw,14px);font-weight:400}
-  .activityRangeSwitch button[aria-pressed="true"]{background:#20252d;font-weight:700}
-  .dailyRingCard{position:relative;z-index:1;width:100%;min-width:0;overflow:visible;min-height:0;padding:3.59% 0 0;align-items:stretch}
-  .activitySwitch{align-self:flex-end;width:53.846%;max-width:210px;height:auto;aspect-ratio:210/33;
-    margin:-.256% 1.538% 7.692% 0;border-radius:38px;background:#20252d}
-  .activitySwitch button{height:100%;padding:0;border-radius:20px;color:rgba(248,250,252,.5);font-size:clamp(8px,2.33vw,10px);font-weight:400;
-    display:flex;align-items:center;justify-content:center;gap:10px}
-  .activitySwitch button::before{content:"";width:clamp(13px,3.72vw,16px);height:clamp(13px,3.72vw,16px);background:center/contain no-repeat}
+  .activityRangeSwitch{position:relative;z-index:1;left:calc(-100% / 390);width:calc(100% * 376 / 390);max-width:376px;min-width:0;height:auto;aspect-ratio:376/41;
+    margin-top:calc(100% * 7 / 390);grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:calc(100cqw * 4 / 390);align-self:center;overflow:hidden;
+    border-radius:40px;background:#181c22;border:0;box-shadow:inset 0 0 0 1px #20252d}
+  .activityRangeSwitch button{width:auto;height:100%;min-height:0;padding:0;border-radius:28px;
+    font-family:inherit;font-size:calc(100cqw * 14 / 390);line-height:calc(100cqw * 17 / 390);font-weight:400;color:#a5abb5;backdrop-filter:none}
+  .activityRangeSwitch button[aria-pressed="true"]{background:transparent;color:#f8fafc;font-weight:600}
+  .activityRangeSwitch .activityTabsPill{top:calc(100cqw * 4 / 390);bottom:calc(100cqw * 4 / 390);height:auto;background:#20252d;box-shadow:none}
+  .dailyRingCard{position:relative;z-index:1;width:100%;min-width:0;overflow:visible;min-height:0;padding:calc(100% * 22.529 / 390) 0 0;align-items:stretch}
+  .activitySwitch{align-self:flex-end;width:calc(100% * 210 / 390);max-width:210px;height:auto;aspect-ratio:210/33;
+    margin:0 calc(100% * 7 / 390) calc(100% * 38.471 / 390) 0;border-radius:38px;background:#20252d}
+  .activitySwitch button{height:100%;padding:0;border:0;border-radius:20px;color:rgba(248,250,252,.5);font-family:inherit;
+    font-size:calc(100cqw * 10 / 390);line-height:calc(100cqw * 12 / 390);font-weight:400;backdrop-filter:none;
+    display:flex;align-items:center;justify-content:center;gap:calc(100cqw * 10 / 390)}
+  .activitySwitch button::before{content:"";flex:none;width:calc(100cqw * 16 / 390);height:calc(100cqw * 16 / 390);background:center/contain no-repeat}
   #activityPush::before{background-image:url('./assets/figma/home-push.svg')}
   #activitySquat::before{background-image:url('./assets/figma/home-squat.svg')}
-  .activitySwitch button[aria-pressed="true"]{color:#f97316;font-weight:600;border:.5px solid #f97316}
+  .activitySwitch button[aria-pressed="true"]{color:#f97316;font-weight:600;border:0;box-shadow:inset 0 0 0 .5px #f97316}
   .activitySwitch .activityTabsPill{display:none}
   .activitySectionTitle{height:22px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-  .activitySectionTitle img{width:20px;height:20px}.activitySectionTitle h2{margin:0;color:#fff;font-size:16px;font-weight:500}
+  .activitySectionTitle img{width:20px;height:20px}.activitySectionTitle h2{margin:0;color:#fff;font-family:"Benzin",sans-serif;font-size:16px;font-weight:400}
   .activityPanel{min-height:0;display:block}
   .dailyOverviewCard{height:212px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) 179px;gap:12px;border:.5px solid #20252d;
     border-radius:24px;background:radial-gradient(ellipse at 50% 105%,rgba(255,255,255,.09),transparent 62%),#181c22}
@@ -932,8 +956,8 @@
     radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.08),transparent 65%),#181c22}
   .dailyCurrentCard{padding:16px;display:flex;flex-direction:column;gap:12px}
   .dailyCurrentCard time{font-size:12px;color:#f8fafc}.dailyCountLine{display:flex;align-items:flex-end;gap:12px}
-  #dailyCount{font-size:34px;line-height:.78;font-weight:800;letter-spacing:-.045em}
-  #dailyGoal{margin:0;color:#a5abb5;font-size:16px;line-height:1}
+  #dailyCount{font-family:"Benzin",sans-serif;font-size:34px;line-height:.78;font-weight:700;letter-spacing:-.045em}
+  #dailyGoal{margin:0;color:#a5abb5;font-family:"Benzin",sans-serif;font-size:16px;line-height:1}
   .dailyCompareCard{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
   .dailyCompareCard span{font-size:10px;color:#f8fafc}.dailyCompareCard strong{font-size:10px;color:#a5abb5;white-space:nowrap}
   #dailyPreviousDifference{display:flex;align-items:center;gap:5px;font-weight:400}
@@ -943,25 +967,24 @@
   #dailyPreviousDifference.deltaUp{color:#39d98a}#dailyPreviousDifference.deltaUp .dailyDeltaIcon{display:block;transform:rotate(180deg)}
   #activityDayView .dailyRing{transform:none}.dailyRing{width:179px;height:179px;align-self:center}
   .dailyRing circle{stroke-width:5}.dailyRingTrack{stroke:#30343c}.dailyRingValue{filter:drop-shadow(0 0 3px #f97316)}
-  .dailyRingCenter strong{font-size:36px;line-height:1;color:#f8fafc}.dailyRingCenter span{margin-top:8px;color:#a5abb5;font-size:12px}
+  .dailyRingCenter strong{font-family:"Benzin",sans-serif;font-size:36px;line-height:1;font-weight:700;color:#f8fafc}.dailyRingCenter span{margin-top:8px;color:#a5abb5;font-size:12px}
 
   .activityTrendCard{height:200px;margin:36px 0 0;padding:16px;border-radius:24px;border:.5px solid #20252d;
     background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.05),transparent 62%),#181c22;box-shadow:none}
-  .activityTrendHead{margin-bottom:8px}.activityTrendHead h3{font-size:16px;color:#fff;letter-spacing:0;font-weight:500}
+  .activityTrendHead{margin-bottom:8px}.activityTrendHead h3{font-family:"Benzin",sans-serif;font-size:16px;color:#fff;letter-spacing:0;font-weight:400}
   .activityTrendHead strong{font-size:24px}.activityTrendHead small{font-size:12px;color:#f8fafc}
   .activityTrendChart{height:126px}.activityTrendLine{stroke:#a5abb5;stroke-width:1}.activityTrendArea{fill:none}
   .activityTrendPoint{fill:#f8fafc;stroke:#f8fafc;stroke-width:2}.activityTrendGrid{stroke:rgba(165,171,181,.22);stroke-dasharray:2 3}
   .activityTrendLabels{color:#a5abb5;font-size:10px}
   #dailyPushups[data-range="week"] .activityTrendCard,#dailyPushups[data-range="month"] .activityTrendCard{display:none}
 
-  #dailyPushups[data-range="week"] .activitySwitch,#dailyPushups[data-range="month"] .activitySwitch{margin-bottom:7.692%}
   #activityWeekView .activitySummary,#activityMonthView .activitySummary{padding:0;gap:12px;align-items:stretch;margin-bottom:20px}
   #activityWeekView .activitySummary>div,#activityMonthView .activitySummary>div{flex:1;min-height:83px;padding:16px;border:.5px solid #20252d;
     border-radius:24px;background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.09),transparent 65%),#181c22;text-align:left;
     display:flex;flex-direction:column-reverse;justify-content:space-between}
   #activityWeekView .activitySummaryEnd,#activityMonthView .activitySummaryEnd{background:
     radial-gradient(ellipse at 50% 110%,rgba(249,115,22,.22),transparent 70%),#181c22}
-  .activitySummary strong,.activitySummary .activityAverage{font-size:34px}.activitySummary small{margin:0;color:#f8fafc;font-size:12px;font-weight:400}
+  .activitySummary strong,.activitySummary .activityAverage{font-family:"Benzin",sans-serif;font-size:34px}.activitySummary small{margin:0;color:#f8fafc;font-size:12px;font-weight:400}
   #activityWeekView>div{width:100%!important}
   .activityWeekChart{height:244px;padding:54px 18px 16px;gap:10px;border:.5px solid #20252d;border-radius:24px;
     background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.08),transparent 65%),#181c22}
@@ -996,6 +1019,8 @@
   #mainNav>button:not(#navBattle).active span{display:block}
   #mainNav>button:not(#navBattle).active::after{content:"";position:absolute;left:21px;right:21px;bottom:0;height:4px;
     background:url('./assets/figma/nav-active.svg') center/100% 100% no-repeat}
+  #mainNav>button#navBoard.active{background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.12),transparent 70%),#20252d}
+  #mainNav>button#navBoard.active::after{display:none}
   #mainNav #navBattle{flex:none;width:65px;height:65px;min-height:65px;margin-left:25px;padding:0;transform:none;border-radius:38px;
     background:linear-gradient(180deg,rgba(249,115,22,.2),rgba(249,115,22,0));box-shadow:inset 0 -3px 13px rgba(251,191,36,.2)}
   #mainNav #navBattle:active{transform:scale(.96)}
@@ -1003,7 +1028,7 @@
   .navBattleLabel{font-size:10px;font-weight:400;color:#f97316;text-transform:uppercase}
 
   #start.squatPrep{gap:14px;padding:90px 20px calc(env(safe-area-inset-bottom) + 104px);background:#0b0d10}
-  #start.squatPrep h2{font-size:36px;font-weight:400;margin-bottom:10px}#start.squatPrep h2::after{display:none}
+  #start.squatPrep h2{font-family:"Benzin",sans-serif;font-size:36px;font-weight:400;margin-bottom:10px}#start.squatPrep h2::after{display:none}
   #start.squatPrep #howtoSquat{order:2;width:min(297px,78vw);padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
   #start.squatPrep #startHint{order:3;color:#f8fafc;font-size:14px;line-height:1.3}
   #start.squatPrep #go{order:4;min-width:163px;min-height:57px;border:.5px solid #f97316;background:transparent;color:#f97316;box-shadow:none}
@@ -1011,16 +1036,25 @@
 
   #hall,#board{background:#0b0d10}
   #hall{width:min(100%,430px);padding:16px 20px calc(env(safe-area-inset-bottom) + 105px)}
-  #hall h2{font-size:16px;font-weight:500;letter-spacing:0}
-  #board{padding-left:20px;padding-right:20px;padding-bottom:calc(env(safe-area-inset-bottom) + 105px)}
-  .boardShell{max-width:390px}.detailTop h2{font-size:24px;font-weight:500}.detailTop p{font-size:12px}
-  #boardTabs{background:transparent;border:0;overflow:visible}.boardTabsPill{background:transparent;border-bottom:3px solid #f97316;border-radius:0}
-  .row{min-height:65px;border-radius:24px;background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.08),transparent 70%),#181c22;border:.5px solid #20252d}
+  #hall h2{font-family:"Benzin",sans-serif;font-size:16px;font-weight:400;letter-spacing:0}
+  #board{width:min(100%,430px);margin-inline:auto;padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 130px);overflow-x:hidden;
+    scrollbar-width:none;scroll-padding-bottom:calc(env(safe-area-inset-bottom) + 130px)}
+  #board::-webkit-scrollbar{display:none}
+  #boardHub{padding:20px}.boardShell{max-width:430px}
+  #board:not(.hidden)~#mainNav{bottom:calc(env(safe-area-inset-bottom) + 20px)}
   @media(max-width:390px){
     .dailyOverviewCard{grid-template-columns:minmax(0,1fr) min(43vw,179px)}.dailyRing{width:min(43vw,179px);height:min(43vw,179px)}
     #mainNav{width:calc(100% - 24px);gap:8px}#mainNav::before{width:calc(100% - 73px)}
     #mainNav>button:not(#navBattle){margin-left:0}#mainNav>button:first-of-type{margin-left:6px}
     #mainNav #navBattle{margin-left:auto}.activityMonthDay,.activityMonthBlank{width:calc((100vw - 92px)/7);height:42px;min-width:0;min-height:42px}
+  }
+  @media(max-width:360px){
+    #board:not(.hidden)~#mainNav{gap:6px}
+    #board:not(.hidden)~#mainNav::before{width:calc(100% - 62px)}
+    #board:not(.hidden)~#mainNav>button#navBoard.active{width:76px;padding-inline:4px;gap:4px}
+    #board:not(.hidden)~#mainNav>button#navBoard.active img{width:20px;height:20px}
+    #board:not(.hidden)~#mainNav>button#navBoard.active span{font-size:9px}
+    #board:not(.hidden)~#mainNav>#navBattle{width:56px;height:56px;min-height:56px;margin-top:4px}
   }
 </style>
 </head>
@@ -1183,15 +1217,25 @@
       <div class="detailTop">
         <div><h2 id="detailName" data-i18n="allPlayers">Бүх тоглогч</h2><p id="detailMeta"></p></div>
       </div>
-      <div id="boardTabs" data-active="pushup">
-        <span class="boardTabsPill" aria-hidden="true"></span>
-        <button id="boardPush" class="active" data-i18n="leaderboardPushup">Push-up</button>
-        <button id="boardSquat" data-i18n="leaderboardSquat">Squat</button>
-        <button id="boardBattle" data-i18n="leaderboardBattle">Battle ELO</button>
-        <button id="boardFlappy" data-i18n="leaderboardFlappy">Flappy</button>
+      <div class="rankStage">
+        <div id="boardTabs" data-active="pushup" role="group" data-i18n-aria-label="boardTitle" aria-label="Лиг ба байр">
+          <svg class="rankTabArt" viewBox="0 0 430 94.343" aria-hidden="true" focusable="false">
+            <defs><path id="rankLabelArc" d="M-78.54 210.99 A293.54 197.47 0 0 1 508.54 210.99"/></defs>
+            <path class="boardTabsPill" aria-hidden="true" d="M-67.296 227.759 A282.296 194.565 0 0 1 497.296 227.759" pathLength="100"/>
+            <text class="rankTabPush" text-anchor="middle"><textPath href="#rankLabelArc" startOffset="28.91%" data-i18n="leaderboardPushup">Push-up</textPath></text>
+            <text class="rankTabSquat" text-anchor="middle"><textPath href="#rankLabelArc" startOffset="43.06%" data-i18n="leaderboardSquat">Squat</textPath></text>
+            <text class="rankTabBattle" text-anchor="middle"><textPath href="#rankLabelArc" startOffset="60.21%" data-i18n="leaderboardBattle">Battle ELO</textPath></text>
+            <text class="rankTabFlappy" text-anchor="middle"><textPath href="#rankLabelArc" startOffset="75.13%" data-i18n="leaderboardFlappy">Flappy</textPath></text>
+          </svg>
+          <button id="boardPush" class="active" type="button" aria-pressed="true"><span class="srOnly" data-i18n="leaderboardPushup">Push-up</span></button>
+          <button id="boardSquat" type="button" aria-pressed="false"><span class="srOnly" data-i18n="leaderboardSquat">Squat</span></button>
+          <button id="boardBattle" type="button" aria-pressed="false"><span class="srOnly" data-i18n="leaderboardBattle">Battle ELO</span></button>
+          <button id="boardFlappy" type="button" aria-pressed="false"><span class="srOnly" data-i18n="leaderboardFlappy">Flappy</span></button>
+        </div>
+        <div id="podium"></div>
+        <div id="rows" aria-live="polite"></div>
       </div>
-      <div id="podium"></div>
-      <div id="rows"></div>
+      <div class="rankBottomFade" aria-hidden="true"></div>
     </div>
   </div>
 </section>
@@ -1800,8 +1844,10 @@ function positionActivityTabsPill(container, animate = true){
   if(!pill || !active) return;
   const transition = pill.style.transition;
   if(!animate) pill.style.transition = "none";
-  pill.style.transform = `translateX(${active.offsetLeft}px)`;
-  pill.style.width = `${active.offsetWidth}px`;
+  const activeRect = active.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  pill.style.transform = `translateX(${activeRect.left - containerRect.left - container.clientLeft}px)`;
+  pill.style.width = `${activeRect.width}px`;
   if(!animate){
     pill.getBoundingClientRect();
     pill.style.transition = transition;
@@ -5307,16 +5353,6 @@ function renderPodium(players){
     place.className = `podiumPlace ${classes[index]}`;
     const avatarWrap = document.createElement("div");
     avatarWrap.className = "podiumAvatarWrap";
-    if(index === 0){
-      const crown = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      crown.setAttribute("viewBox", "0 0 24 24");
-      crown.setAttribute("aria-hidden", "true");
-      crown.classList.add("podiumCrown");
-      const crownPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      crownPath.setAttribute("d", "M3 7l4.2 3L12 4l4.8 6L21 7l-2 11H5L3 7Zm3 13h12");
-      crown.appendChild(crownPath);
-      avatarWrap.appendChild(crown);
-    }
     avatarWrap.appendChild(makeRankAvatar(player));
     const badge = document.createElement("span");
     badge.className = "podiumBadge";
@@ -5359,6 +5395,9 @@ async function loadBoard(metric){
   $("boardSquat").classList.toggle("active", metric === "squat");
   $("boardBattle").classList.toggle("active", metric === "battle");
   $("boardFlappy").classList.toggle("active", metric === "flappy");
+  for(const button of $("boardTabs").querySelectorAll("button")){
+    button.setAttribute("aria-pressed", String(button.classList.contains("active")));
+  }
   const request = ++boardRequest;
   $("podium").innerHTML = '<div class="boardLoading" style="grid-column:1/-1"></div>';
   $("rows").innerHTML = '<div class="boardLoading"></div><div class="boardLoading"></div>';

@@ -151,12 +151,25 @@ test('Нүүрийн урт content navigation-ийн цаагуур scroll хи
 test('хугацаа ба дасгалын сонголт Figma Union хүрээгээр залгаатай байна', () => {
   assert.match(html, /#dailyPushups::before\{[^}]*aspect-ratio:390\/109\.529;[^}]*home-tabs-union\.svg/)
   assert.match(html, /#dailyPushups\{position:relative;align-self:center;width:min\(calc\(100vw - 40px\),390px\)/)
-  assert.match(html, /\.activityRangeSwitch\{position:relative;z-index:1;[^}]*aspect-ratio:376\/49/)
-  assert.match(html, /\.activitySwitch\{align-self:flex-end;width:53\.846%;max-width:210px;[^}]*aspect-ratio:210\/33/)
+  assert.match(html, /\.activityRangeSwitch\{position:relative;z-index:1;[^}]*aspect-ratio:376\/41/)
+  assert.match(html, /\.activitySwitch\{align-self:flex-end;width:calc\(100% \* 210 \/ 390\);max-width:210px;[^}]*aspect-ratio:210\/33/)
 })
 
 test('өдрийн card дотор progress ring хажуу тийш overflow хийхгүй', () => {
   assert.match(html, /\.dailyOverviewCard\{height:212px;[^}]*grid-template-columns:minmax\(0,1fr\) 179px/)
+})
+
+test('Figma-ийн Benzin typography-г local font asset-аас ашиглана', () => {
+  assert.match(html, /@font-face\{font-family:"Benzin";src:url\('\.\/assets\/fonts\/Benzin-Regular\.ttf'\)/)
+  assert.match(html, /@font-face\{font-family:"Benzin";src:url\('\.\/assets\/fonts\/Benzin-Bold\.ttf'\)/)
+  assert.match(html, /\.activitySectionTitle h2\{[^}]*font-family:"Benzin",sans-serif/)
+  assert.match(html, /#dailyCount\{font-family:"Benzin",sans-serif;[^}]*font-weight:700/)
+  assert.match(html, /\.dailyRingCenter strong\{font-family:"Benzin",sans-serif/)
+})
+
+test('Figma-ийн үндсэн текст Montserrat local variable font ашиглана', () => {
+  assert.match(html, /@font-face\{font-family:"Montserrat";src:url\('\.\/assets\/fonts\/Montserrat-Variable\.ttf'\)[^}]*font-weight:100 900/)
+  assert.match(html, /font-family:"Montserrat",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif/)
 })
 
 test('өмнөх өдрийн өсөлт, уналт Figma сум болон төлөвийн өнгөтэй', () => {
@@ -180,8 +193,8 @@ test('activity switch давхар pill-гүй flat underline tab бөгөөд m
 test('activity tab-ууд сонголт руугаа sliding pill animation-тай', () => {
   assert.equal((html.match(/class="activityTabsPill"/g) || []).length, 2)
   assert.match(html, /\.activityTabsPill\{[^}]*transform:translateX\(0\);[^}]*transition:transform 250ms cubic-bezier\(\.22,1,\.36,1\),width 250ms/s)
-  assert.match(html, /pill\.style\.transform = `translateX\(\$\{active\.offsetLeft\}px\)`/)
-  assert.match(html, /pill\.style\.width = `\$\{active\.offsetWidth\}px`/)
+  assert.match(html, /pill\.style\.transform = `translateX\(\$\{activeRect\.left - containerRect\.left - container\.clientLeft\}px\)`/)
+  assert.match(html, /pill\.style\.width = `\$\{activeRect\.width\}px`/)
   assert.match(html, /if\(!animate\) pill\.style\.transition = "none"/)
   assert.match(html, /requestAnimationFrame\(\(\) => \{[\s\S]*?syncActivityTabsPills\(false\);[\s\S]*?positionMainNavPill\(false\);/)
   assert.match(html, /prefers-reduced-motion:reduce[^}]*\{[\s\S]*?\.activityTabsPill[^}]*transition:none!important/)

@@ -58,10 +58,9 @@ test('hub дээр давхардсан тайлбар, хоосон лигий�
 })
 
 test('лиг дотор дөрвөн төрлийн байрлал байна', () => {
-  assert.match(html, /id="boardPush"[^>]*>Push-up/)
-  assert.match(html, /id="boardSquat"[^>]*>Squat/)
-  assert.match(html, /id="boardBattle"[^>]*>Battle ELO/)
-  assert.match(html, /id="boardFlappy"[^>]*>Flappy/)
+  for (const [id, key] of [['boardPush', 'leaderboardPushup'], ['boardSquat', 'leaderboardSquat'], ['boardBattle', 'leaderboardBattle'], ['boardFlappy', 'leaderboardFlappy']]) {
+    assert.match(html, new RegExp(`id="${id}"[^>]*aria-pressed="(?:true|false)"[^>]*><span[^>]*data-i18n="${key}"`))
+  }
 })
 
 test('өөрийн байр зөвхөн үндсэн жагсаалтад байвал харагдана', () => {
@@ -69,10 +68,9 @@ test('өөрийн байр зөвхөн үндсэн жагсаалтад ба�
   assert.match(html, /for\(const player of data\.players\.slice\(3\)\) rows\.appendChild\(renderRankRow\(player\)\)/)
 })
 
-test('leaderboard top-3 нь титэм, medal badge-тай бөгөөд platform шатгүй', () => {
-  assert.match(html, /classList\.add\("podiumCrown"\)/)
+test('Figma top-3 нь medal badge-тай бөгөөд титэм, platform шатгүй', () => {
   assert.match(html, /className = "podiumBadge"/)
-  assert.doesNotMatch(html, /podiumStep/)
+  assert.doesNotMatch(html, /podiumCrown|podiumStep/)
 })
 
 test('дөрөвдүгээр байрнаас эхлэх row rank-аа тэмдэггүй цэвэр тоогоор харуулна', () => {
@@ -101,21 +99,20 @@ test('leaderboard hub animation нь transform, opacity ашиглаж reduced m
   assert.match(html, /\.leagueCard,\.leagueForm,\.leagueTitleRow,\.boardHead[^}]*\{animation:none!important;transition:none!important\}/)
 })
 
-test('leaderboard detail нь sliding metric pill болон compact мөрүүдтэй', () => {
+test('leaderboard detail нь нуман metric indicator болон сонголтын төлөвтэй', () => {
   assert.match(html, /id="boardTabs" data-active="pushup"/)
   assert.match(html, /class="boardTabsPill" aria-hidden="true"/)
   assert.match(html, /#boardTabs\[data-active="squat"\] \.boardTabsPill/)
   assert.match(html, /\$\("boardTabs"\)\.dataset\.active = metric/)
-  assert.match(html, /#podium\{[^}]*min-height:154px/)
-  assert.match(html, /\.row\{min-height:54px/)
+  assert.match(html, /button\.setAttribute\("aria-pressed", String\(button\.classList\.contains\("active"\)\)\)/)
 })
 
-test('leaderboard metric tab нь давхар card биш flat underline байна', () => {
-  assert.match(html, /#boardTabs\{[^}]*border:0;border-bottom:1px solid var\(--board-border\);border-radius:0;background:transparent/)
-  assert.match(html, /\.boardTabsPill\{[^}]*bottom:-1px;width:25%;height:3px/)
-  assert.match(html, /#boardTabs button\.active\{background:transparent;color:var\(--board-primary\)\}/)
-  assert.match(html, /#boardTabs\[data-active="battle"\] \.boardTabsPill\{transform:translateX\(200%\)\}/)
-  assert.match(html, /#boardTabs\[data-active="flappy"\] \.boardTabsPill\{transform:translateX\(300%\)\}/)
+test('Rank metric нэрүүд Figma шиг нуман зам дагаж, орчуулгаа хадгална', () => {
+  for (const key of ['leaderboardPushup', 'leaderboardSquat', 'leaderboardBattle', 'leaderboardFlappy']) {
+    assert.match(html, new RegExp(`<textPath href="#rankLabelArc"[^>]*data-i18n="${key}"`))
+  }
+  assert.match(html, /class="rankBottomFade" aria-hidden="true"/)
+  assert.match(html, /\.rankBottomFade\{[^}]*pointer-events:none/)
 })
 
 test('leaderboard detail podium ба мөрүүд staggered animation-тай', () => {
