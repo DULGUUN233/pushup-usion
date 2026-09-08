@@ -159,6 +159,14 @@ test('өдрийн card дотор progress ring хажуу тийш overflow х
   assert.match(html, /\.dailyOverviewCard\{height:212px;[^}]*grid-template-columns:minmax\(0,1fr\) 179px/)
 })
 
+test('өмнөх өдрийн өсөлт, уналт Figma сум болон төлөвийн өнгөтэй', () => {
+  assert.match(html, /class="dailyDeltaIcon"[^>]*aria-hidden="true"/)
+  assert.match(html, /home-trend-arrow\.svg/)
+  assert.match(html, /classList\.toggle\("deltaDown", difference < 0\)/)
+  assert.match(html, /classList\.toggle\("deltaUp", difference > 0\)/)
+  assert.match(html, /\.deltaUp \.dailyDeltaIcon\{display:block;transform:rotate\(180deg\)\}/)
+})
+
 test('activity switch давхар pill-гүй flat underline tab бөгөөд mobile touch target-аа хадгална', () => {
   assert.match(html, /\.activitySwitch\{position:relative;isolation:isolate;align-self:center;width:170px;height:48px/)
   assert.match(html, /grid-template-columns:1fr 1fr;gap:0;background:transparent;border:0;box-shadow:none/)

@@ -936,6 +936,11 @@
   #dailyGoal{margin:0;color:#a5abb5;font-size:16px;line-height:1}
   .dailyCompareCard{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
   .dailyCompareCard span{font-size:10px;color:#f8fafc}.dailyCompareCard strong{font-size:10px;color:#a5abb5;white-space:nowrap}
+  #dailyPreviousDifference{display:flex;align-items:center;gap:5px;font-weight:400}
+  .dailyDeltaIcon{display:none;width:16px;height:16px;flex:none;background:currentColor;
+    -webkit-mask:url('./assets/figma/home-trend-arrow.svg') center/contain no-repeat;mask:url('./assets/figma/home-trend-arrow.svg') center/contain no-repeat}
+  #dailyPreviousDifference.deltaDown{color:#ff5c5c}#dailyPreviousDifference.deltaDown .dailyDeltaIcon{display:block}
+  #dailyPreviousDifference.deltaUp{color:#39d98a}#dailyPreviousDifference.deltaUp .dailyDeltaIcon{display:block;transform:rotate(180deg)}
   #activityDayView .dailyRing{transform:none}.dailyRing{width:179px;height:179px;align-self:center}
   .dailyRing circle{stroke-width:5}.dailyRingTrack{stroke:#30343c}.dailyRingValue{filter:drop-shadow(0 0 3px #f97316)}
   .dailyRingCenter strong{font-size:36px;line-height:1;color:#f8fafc}.dailyRingCenter span{margin-top:8px;color:#a5abb5;font-size:12px}
@@ -1073,7 +1078,7 @@
             </div>
             <div class="dailyCompareCard">
               <span id="dailyPreviousLabel">Өмнөх өдрөөс</span>
-              <strong id="dailyPreviousDifference">—</strong>
+              <strong id="dailyPreviousDifference"><span class="dailyDeltaIcon" aria-hidden="true"></span><span id="dailyPreviousDifferenceText">—</span></strong>
             </div>
           </div>
           <div class="dailyRing">
@@ -1852,7 +1857,10 @@ function renderDailyActivity(){
   const previousKey = activityShiftDate(activityAnchor, -1);
   const previous = new Map(dailyActivity[activityExercise].map(day => [day.date, Math.max(0, Number(day.reps) || 0)])).get(previousKey) || 0;
   const difference = selected - previous;
-  $("dailyPreviousDifference").textContent = difference < 0
+  const differenceNode = $("dailyPreviousDifference");
+  differenceNode.classList.toggle("deltaDown", difference < 0);
+  differenceNode.classList.toggle("deltaUp", difference > 0);
+  $("dailyPreviousDifferenceText").textContent = difference < 0
     ? t("activityDifferenceLess", activityNumber.format(Math.abs(difference)))
     : difference > 0 ? t("activityDifferenceMore", activityNumber.format(difference)) : t("activityDifferenceSame");
   $("dailyRingValue").style.strokeDasharray = `${progress} 100`;
