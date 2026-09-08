@@ -181,9 +181,9 @@ test('Нүүр Usion-ийн жижиг утасны viewport-д нягтарна
   assert.match(html, /@media \(max-width:360px\)\{[\s\S]*?#mainNav #navBattle\{height:50px;min-height:50px;transform:translateY\(-10px\)/)
 })
 
-test('Push Up сонголт, Суулт бэлтгэл дэлгэцийг доод navigation-аас нээнэ', () => {
-  assert.match(html, /\$\("navPush"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\(\); \}/)
-  assert.match(html, /\$\("navSquat"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openSolo\("squat"\); \}/)
+test('Push Up болон Суулт горим сонгох дэлгэцийг доод navigation-аас нээнэ', () => {
+  assert.match(html, /\$\("navPush"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\("pushup"\); \}/)
+  assert.match(html, /\$\("navSquat"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\("squat"\); \}/)
 })
 
 test('доод navigation active tab руу transitions-style indicator гулгана', () => {

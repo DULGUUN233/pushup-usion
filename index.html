@@ -1095,14 +1095,14 @@
       <span class="pushChoiceIcon" aria-hidden="true">
         <img src="./assets/modes/pushup-mode-v1.png" alt="" width="52" height="52" decoding="async">
       </span>
-      <span class="pushChoiceText"><strong data-i18n="pushModeNormalTitle">Энгийн</strong><small data-i18n="pushModeNormalDescription">Зөв push-up бүрийг AI тоолно</small></span>
+      <span class="pushChoiceText"><strong data-i18n="pushModeNormalTitle">Энгийн</strong><small id="pushNormalDescription" data-i18n="pushModeNormalDescription">Зөв push-up бүрийг AI тоолно</small></span>
       <svg class="pushChoiceArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
     </button>
     <button id="pushGame" class="pushChoiceCard game" type="button">
       <span class="pushChoiceIcon" aria-hidden="true">
         <img src="./assets/modes/game-mode-v1.png" alt="" width="52" height="52" decoding="async">
       </span>
-      <span class="pushChoiceText"><strong data-i18n="pushModeGameTitle">Game</strong><small data-i18n="pushModeGameDescription">Тохойгоороо шувууг удирдаж саадыг давна</small></span>
+      <span class="pushChoiceText"><strong data-i18n="pushModeGameTitle">Game</strong><small id="pushGameDescription" data-i18n="pushModeGameDescription">Тохойгоороо шувууг удирдаж саадыг давна</small></span>
       <svg class="pushChoiceArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
     </button>
   </div>
@@ -1143,7 +1143,7 @@
   <div id="pushGameHud" aria-label="Тоглоомын оноо" data-i18n-aria-label="pushGameHudLabel">
     <div class="pushGameScore">
       <span data-i18n-html="pushGameScoreLabel">Оноо <b id="pushGameScore">0</b></span>
-      <span data-i18n-html="pushGameRepsLabel">Push Up <b id="pushGameReps">0</b></span>
+      <span id="pushGameRepLabel" data-i18n-html="pushGameRepsLabel">Push Up <b id="pushGameReps">0</b></span>
     </div>
     <div id="pushGameStreak" class="pushGameStreak" role="status" aria-live="polite"
          aria-label="Жимсний streak 0" data-i18n-aria-label="pushGameStreakLabel">
@@ -1273,7 +1273,7 @@
   <div id="pushGameOver" class="hidden" role="dialog" aria-modal="true" aria-labelledby="pushGameOverTitle">
     <h2 id="pushGameOverTitle" data-i18n="pushGameOverTitle">Тоглоом дууслаа</h2>
     <div id="pushGameFinalScore">0</div>
-    <p><span id="pushGameFinalReps">0</span> <span data-i18n="pushGameCorrectPushups">зөв push-up</span></p>
+    <p><span id="pushGameFinalReps">0</span> <span id="pushGameResultUnit" data-i18n="pushGameCorrectPushups">зөв push-up</span></p>
     <div class="pushGameOverBtns">
       <button id="pushGameRestart" type="button" data-i18n="pushGameRestart">Дахин тоглох</button>
       <button id="pushGameExit" type="button" data-i18n="pushGameSaveExit">Дүнгээ хадгалаад гарах</button>
@@ -2040,14 +2040,17 @@ function setBack(id){
   // дахин авбал цэсэн дээрх суллалтыг дарж, аппыг хаах боломжгүй болно.
   u.claimBackButton(() => {
     if(id === "play") stopCamera();
-    show(id === "play" && exercise === "pushup" ? "pushChoice" : "menu");
+    if(id === "play" && mode === "solo") openPushChoice(exercise);
+    else show("menu");
   });
 }
 
 function show(id){
   for(const s of document.querySelectorAll(".screen")) s.classList.toggle("hidden", s.id !== id);
   const navByScreen = { menu:"navHome", pushChoice:"navPush", hall:"navBattle", board:"navBoard" };
-  setMainNavActive(navByScreen[id] || null);
+  const activeNav = id === "pushChoice" && choiceExercise === "squat"
+    ? "navSquat" : navByScreen[id];
+  setMainNavActive(activeNav || null);
   if(id === "menu") requestAnimationFrame(() => syncActivityTabsPills(false));
   setBack(id);
 }
@@ -2141,6 +2144,7 @@ let armBest = -99;                      // rep дотор мөр тохойд х
 let bodyMinAngle = 180, bodyAngleSeen = false; // rep доторх хамгийн муу биеийн шугам
 let exercise = "pushup";                                  // solo дасгал
 let soloVariant = "normal";                               // энгийн эсвэл game
+let choiceExercise = "pushup";                            // горим сонгох дэлгэцийн дасгал
 let pushupGroundState = { contact:false, contactFrames:0, clearFrames:0 };
 let pushupGroundViolation = false, lastPushupGroundRatio = null;
 let groundWorker = null, groundWorkerStatus = "idle", groundPending = null;
@@ -2746,6 +2750,11 @@ function processSquatFrame(lm, world, aspect, now){
   $("poseDiag").textContent = `sq k${Math.round(knee)}/${Math.round(m.knee3d)}`
     + ` hip${Math.round(m.hip)} y${depthDelta.toFixed(3)}`
     + ` v${m.vis.toFixed(2)} ${phase} drop${midDrops} ${modelVariant}`;
+
+  // Squat Game нь одоо байгаа баталгаатай нэг-хөлийн өвдөгний хэмжилтийг
+  // ашиглана: бүтэн босолт дээд, 90° суулт доод түвшин болно.
+  if(mode === "solo" && soloVariant === "game")
+    updatePushGameControl(m.knee, now, mean(lm, [0,2,5]));
 
   const floor = 65, ceiling = 175, span = ceiling - floor;
   const pct = Math.max(0, Math.min(1, (knee - floor) / span));
@@ -3511,12 +3520,17 @@ function drawPushGame(now, width, height){
   }
   gameCtx.restore();
 
+  const squatGame = exercise === "squat";
   if(!pushGameState.poseReady)
-    drawPushGameMessage(width, height, t("extendArmsFully"), t("birdMatchesEyeLevel"));
+    drawPushGameMessage(width, height,
+      t(squatGame ? "standLegsFully" : "extendArmsFully"),
+      t(squatGame ? "birdMatchesStandingLevel" : "birdMatchesEyeLevel"));
   else if(now - pushGameState.lastPoseAt > 900)
     drawPushGameMessage(width, height, t("paused"), t("keepBodyInFrame"));
   else if(!pushGameState.started)
-    drawPushGameMessage(width, height, t("bendElbows"), t("gameStartsFirstPushup"));
+    drawPushGameMessage(width, height,
+      t(squatGame ? "bendKnees" : "bendElbows"),
+      t(squatGame ? "gameStartsFirstSquat" : "gameStartsFirstPushup"));
 }
 
 function finishPushGame(title = t("gameOver"), autoRestart = true){
@@ -5197,28 +5211,44 @@ async function loadBoard(metric){
 
 // ======================= холболт =======================
 
-function openPushChoice(){
+function openPushChoice(kind = "pushup"){
   stopCamera();
+  choiceExercise = kind === "squat" ? "squat" : "pushup";
   soloVariant = "normal";
+  const squat = choiceExercise === "squat";
+  $("pushChoiceTitle").textContent = t(squat ? "squatTitle" : "pushChoiceTitle");
+  $("pushNormalDescription").textContent = t(squat ? "squatModeNormalDescription" : "pushModeNormalDescription");
+  $("pushGameDescription").textContent = t(squat ? "squatModeGameDescription" : "pushModeGameDescription");
   show("pushChoice");
 }
 
 function openSolo(kind, variant = "normal"){
   stopPushGame();
   exercise = kind;
-  soloVariant = kind === "pushup" ? variant : "normal";
+  soloVariant = variant === "game" ? "game" : "normal";
   mode = "solo";
-  const isGame = kind === "pushup" && soloVariant === "game";
+  const isGame = soloVariant === "game";
+  const squat = kind === "squat";
   resetBattleCountdown();
   $("play").classList.remove("duel");
   $("play").classList.remove("squat-duel");
-  $("startTitle").textContent = t(kind === "squat" ? "squatTitle" : isGame ? "pushupBirdTitle" : "pushupTitle");
-  $("howtoPush").classList.toggle("hidden", kind === "squat" || isGame);
-  $("howtoSquat").classList.toggle("hidden", kind !== "squat");
+  $("startTitle").textContent = t(isGame
+    ? (squat ? "squatBirdTitle" : "pushupBirdTitle")
+    : (squat ? "squatTitle" : "pushupTitle"));
+  $("howtoPush").classList.toggle("hidden", squat || isGame);
+  $("howtoSquat").classList.toggle("hidden", !squat || isGame);
   $("howtoGame").classList.toggle("hidden", !isGame);
-  $("startHint").innerHTML = t(kind === "squat"
-    ? "squatStartHint"
-    : isGame ? "gameStartHint" : "pushupStartHint");
+  $("startHint").innerHTML = t(isGame
+    ? (squat ? "squatGameStartHint" : "gameStartHint")
+    : (squat ? "squatStartHint" : "pushupStartHint"));
+  if(isGame){
+    const repKey = squat ? "squatGameRepsLabel" : "pushGameRepsLabel";
+    $("pushGameRepLabel").dataset.i18nHtml = repKey;
+    $("pushGameRepLabel").innerHTML = t(repKey);
+    const resultKey = squat ? "pushGameCorrectSquats" : "pushGameCorrectPushups";
+    $("pushGameResultUnit").dataset.i18n = resultKey;
+    $("pushGameResultUnit").textContent = t(resultKey);
+  }
   $("go").disabled = false;
   $("go").textContent = t(isGame ? "startGame" : "turnOnCamera");
   $("err").classList.add("hidden");
@@ -5280,13 +5310,13 @@ function prepareMainNavDestination(){
 }
 
 $("navHome").onclick = () => { prepareMainNavDestination(); show("menu"); };
-$("navPush").onclick = () => { prepareMainNavDestination(); openPushChoice(); };
+$("navPush").onclick = () => { prepareMainNavDestination(); openPushChoice("pushup"); };
 $("navBattle").onclick = () => {
   if(!$("hall").classList.contains("hidden")) return;
   prepareMainNavDestination();
   startBattle();
 };
-$("navSquat").onclick = () => { prepareMainNavDestination(); openSolo("squat"); };
+$("navSquat").onclick = () => { prepareMainNavDestination(); openPushChoice("squat"); };
 $("navBoard").onclick = () => { prepareMainNavDestination(); openBoard(); };
 $("boardPush").onclick = () => loadBoard("pushup");
 $("boardSquat").onclick = () => loadBoard("squat");
@@ -5344,8 +5374,8 @@ for(const button of document.querySelectorAll(".battleType")){
 // Давхар даралт нь серверээс «эхлүүлэх боломжгүй» гэсэн хариу авчирч,
 // камер асаж байх зуур зөвлөмжийг дарна
 $("hallStart").onclick = () => { $("hallStart").disabled = true; hallSend({ type: "start" }); };
-$("pushNormal").onclick = () => openSolo("pushup", "normal");
-$("pushGame").onclick = () => openSolo("pushup", "game");
+$("pushNormal").onclick = () => openSolo(choiceExercise, "normal");
+$("pushGame").onclick = () => openSolo(choiceExercise, "game");
 $("go").onclick      = startSolo;
 $("reset").onclick  = reset;
 $("done").onclick   = finish;

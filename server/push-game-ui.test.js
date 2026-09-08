@@ -4,11 +4,14 @@ import test from 'node:test'
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 
-test('Push Up нь энгийн болон Game гэсэн хоёр сонголттой', () => {
+test('Push Up болон Squat нь энгийн болон Game гэсэн хоёр сонголттой', () => {
   assert.match(html, /id="pushChoice"/)
   assert.match(html, /id="pushNormal"[\s\S]*?<strong[^>]*data-i18n="pushModeNormalTitle"/)
   assert.match(html, /id="pushGame"[\s\S]*?<strong[^>]*data-i18n="pushModeGameTitle"/)
-  assert.match(html, /\$\("navPush"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\(\); \}/)
+  assert.match(html, /\$\("navPush"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\("pushup"\); \}/)
+  assert.match(html, /\$\("navSquat"\)\.onclick = \(\) => \{ prepareMainNavDestination\(\); openPushChoice\("squat"\); \}/)
+  assert.match(html, /\$\("pushGame"\)\.onclick = \(\) => openSolo\(choiceExercise, "game"\)/)
+  assert.match(html, /id === "pushChoice" && choiceExercise === "squat"[\s\S]*?"navSquat"/)
 })
 
 test('exercise chooser and camera prep share Carbon Ember UI and Usion system back', () => {
@@ -21,7 +24,7 @@ test('exercise chooser and camera prep share Carbon Ember UI and Usion system ba
   assert.doesNotMatch(html, /id="pushChoiceBack"/)
   assert.doesNotMatch(html, /id="pBack"/)
   assert.match(html, /if\(id === "pushChoice"\) return void u\.claimBackButton\(\(\) => show\("menu"\)\)/)
-  assert.match(html, /show\(id === "play" && exercise === "pushup" \? "pushChoice" : "menu"\)/)
+  assert.match(html, /if\(id === "play" && mode === "solo"\) openPushChoice\(exercise\)/)
 })
 
 test('горимын card-ууд generated local PNG asset ашиглана', () => {
@@ -92,8 +95,19 @@ test('Flappy түвшин тогтсоны дараах анхны тохой н
   assert.match(html, /deg <= Math\.min\(145, pushGameState\.anchorAngle - 18\)/)
   assert.match(html, /pushGameState\.started = true/)
   assert.match(html, /const started = tracked && pushGameState\.started/)
-  assert.match(html, /t\("bendElbows"\), t\("gameStartsFirstPushup"\)/)
+  assert.match(html, /t\(squatGame \? "bendKnees" : "bendElbows"\)/)
+  assert.match(html, /t\(squatGame \? "gameStartsFirstSquat" : "gameStartsFirstPushup"\)/)
   assert.doesNotMatch(html, /readyAt = now \+ 1200/)
+})
+
+test('Squat Flappy өвдөгний өнцгөөр удирдаж, анхны суултаар эхэлнэ', () => {
+  assert.match(html, /processSquatFrame[\s\S]*?updatePushGameControl\(m\.knee, now, mean\(lm, \[0,2,5\]\)\)/)
+  assert.match(html, /soloVariant = variant === "game" \? "game" : "normal"/)
+  assert.match(html, /squat \? "squatBirdTitle" : "pushupBirdTitle"/)
+  assert.match(html, /squat \? "squatGameStartHint" : "gameStartHint"/)
+  assert.match(html, /squat \? "squatGameRepsLabel" : "pushGameRepsLabel"/)
+  assert.match(html, /t\(squatGame \? "bendKnees" : "bendElbows"\)/)
+  assert.match(html, /t\(squatGame \? "gameStartsFirstSquat" : "gameStartsFirstPushup"\)/)
 })
 
 test('Flappy хажуугийн meter шувуу болон дараагийн нүхний түвшнийг харуулна', () => {
