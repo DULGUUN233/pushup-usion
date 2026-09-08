@@ -56,6 +56,26 @@ test("browser fallback болон Usion init-ийн дараах хэл хоёу
   assert.match(html, /new Intl\.NumberFormat\(locale\)/)
 })
 
-test("i18n asset cache-bust version-тэй ачаалж шинэ Squat Game текстийг авна", () => {
-  assert.match(html, /<script src="\.\/assets\/i18n-v1\.js\?v=3"><\/script>/)
+test("i18n asset cache-bust version-тэй ачаалж шинэ Home текстийг авна", () => {
+  assert.match(html, /<script src="\.\/assets\/i18n-v1\.js\?v=5"><\/script>/)
+})
+
+test("Week summary нь хоёр хэл болон хоёр дасгалын нэрийг бүрэн орчуулна", () => {
+  for(const key of ['activityWeekAverageLabel','activityWeekDaysLabel','activityWeekTotalPushupLabel','activityWeekTotalSquatLabel']){
+    assert.equal(typeof STR.mn[key], 'string')
+    assert.equal(typeof STR.en[key], 'string')
+    assert.notEqual(STR.mn[key], STR.en[key])
+  }
+  assert.equal(STR.mn.activityWeekTotalSquatLabel,'Нийт суулт')
+  assert.equal(STR.en.activityWeekTotalSquatLabel,'Total squats')
+})
+
+test("Month summary нь хоёр хэл болон хоёр дасгалын нэрийг бүрэн орчуулна", () => {
+  for(const key of ['activityMonthAverageLabel','activityMonthTotalPushupLabel','activityMonthTotalSquatLabel']){
+    assert.equal(typeof STR.mn[key], 'string')
+    assert.equal(typeof STR.en[key], 'string')
+    assert.notEqual(STR.mn[key], STR.en[key])
+  }
+  assert.equal(STR.mn.activityMonthTotalSquatLabel,'Нийт суулт')
+  assert.equal(STR.en.activityMonthTotalSquatLabel,'Total squats')
 })

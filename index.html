@@ -18,7 +18,7 @@
 <link rel="preload" as="font" href="./assets/fonts/Benzin-Bold.ttf" type="font/ttf" crossorigin>
 <link rel="preload" as="font" href="./assets/fonts/Montserrat-Variable.ttf" type="font/ttf" crossorigin>
 <script src="https://usions.com/usion-sdk.js"></script>
-<script src="./assets/i18n-v1.js?v=3"></script>
+<script src="./assets/i18n-v1.js?v=5"></script>
 <style>
   @font-face{font-family:"Montserrat";src:url('./assets/fonts/Montserrat-Variable.ttf') format('truetype');font-style:normal;font-weight:100 900;font-display:swap}
   @font-face{font-family:"Benzin";src:url('./assets/fonts/Benzin-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
@@ -1010,33 +1010,93 @@
   }
   #dailyPushups[data-range="week"] .activityTrendCard,#dailyPushups[data-range="month"] .activityTrendCard{display:none}
 
-  #activityWeekView .activitySummary,#activityMonthView .activitySummary{padding:0;gap:12px;align-items:stretch;margin-bottom:20px}
-  #activityWeekView .activitySummary>div,#activityMonthView .activitySummary>div{flex:1;min-height:83px;padding:16px;border:.5px solid #20252d;
-    border-radius:24px;background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.09),transparent 65%),#181c22;text-align:left;
-    display:flex;flex-direction:column-reverse;justify-content:space-between}
-  #activityWeekView .activitySummaryEnd,#activityMonthView .activitySummaryEnd{background:
-    radial-gradient(ellipse at 50% 110%,rgba(249,115,22,.22),transparent 70%),#181c22}
   .activitySummary strong,.activitySummary .activityAverage{font-family:"Benzin",sans-serif;font-size:34px}.activitySummary small{margin:0;color:#f8fafc;font-size:12px;font-weight:400}
-  #activityWeekView>div{width:100%!important}
-  .activityWeekChart{height:244px;padding:54px 18px 16px;gap:10px;border:.5px solid #20252d;border-radius:24px;
-    background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.08),transparent 65%),#181c22}
-  .activityWeekDay{grid-template-rows:1fr 18px;gap:8px;padding:0;background:transparent}
-  .activityWeekLabel{grid-row:2;font-size:10px;font-weight:400}.activityWeekPlot{grid-row:1}
-  .activityWeekBar{width:31px;max-width:100%;background:#f97316;box-shadow:0 0 4px #f97316}
-  .activityWeekPlot::before{content:"";position:absolute;inset:0;border-radius:32px;background:rgba(255,255,255,.1)}
-  .activityWeekBar,.activityWeekZero,.activityWeekValue{z-index:1}.activityWeekZero{width:31px;height:100%;aspect-ratio:auto;border-radius:32px;background:rgba(255,255,255,.1)}
-  .activityWeekValue{display:none}
+  /* Home-week 438:285: exported CSS in design/figma/home-week.reference.txt. */
+  #dailyPushups[data-range="week"]{margin-top:calc(2.46 * var(--home-unit))}
+  #dailyPushups[data-range="week"]::before,#dailyPushups[data-range="week"] .activityRangeSwitch{left:0}
+  #dailyPushups[data-range="week"] .activitySwitch{margin-right:calc(6 * var(--home-unit));margin-bottom:calc(36.011 * var(--home-unit))}
+  #dailyPushups[data-range="week"] .activitySectionTitle{margin-bottom:calc(20 * var(--home-unit))}
+  #activityWeekView .activitySummary{height:calc(91 * var(--home-unit));padding:0;margin-bottom:calc(20 * var(--home-unit));gap:calc(12 * var(--home-unit));align-items:flex-start}
+  #activityWeekView .activitySummary>div{flex:none;width:calc(189.5 * var(--home-unit));height:calc(91 * var(--home-unit));min-width:0;
+    display:flex;flex-direction:column;align-items:flex-start;gap:calc(14 * var(--home-unit));padding:calc(16.5 * var(--home-unit)) calc(16.5 * var(--home-unit)) calc(20.5 * var(--home-unit));
+    border-radius:calc(24 * var(--home-unit));box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d;
+    background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22}
+  #activityWeekView .activitySummary>.activitySummaryEnd{width:calc(188.5 * var(--home-unit));height:calc(90 * var(--home-unit));justify-content:center;text-align:left;
+    padding:calc(16 * var(--home-unit)) calc(16 * var(--home-unit)) calc(20 * var(--home-unit));
+    background:linear-gradient(180deg,rgba(249,115,22,.2) -30.35%,rgba(249,115,22,0) 104.12%);
+    box-shadow:inset 0 calc(-3 * var(--home-unit)) calc(13 * var(--home-unit)) rgba(251,191,36,.2)}
+  #activityWeekView .activitySummary strong{font-family:"Benzin",sans-serif;font-weight:700;font-size:calc(34 * var(--home-unit));line-height:calc(25 * var(--home-unit));color:#f8fafc;letter-spacing:0;font-variant-numeric:normal}
+  #activityWeekView .activitySummary small{margin:0;font-family:"Montserrat",sans-serif;font-weight:400;font-size:calc(12 * var(--home-unit));line-height:calc(15 * var(--home-unit));color:#f8fafc;white-space:nowrap}
+  .activityWeekCard{width:100%;height:calc(244 * var(--home-unit));padding:calc(16.5 * var(--home-unit));border-radius:calc(24 * var(--home-unit));
+    background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22;
+    box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d}
+  .activityWeekBase{position:relative;width:100%;height:calc(174 * var(--home-unit))}
+  .activityWeekChart{position:relative;width:100%;height:calc(153 * var(--home-unit));padding:0 calc(18 * var(--home-unit));gap:calc(20 * var(--home-unit));grid-template-columns:repeat(7,minmax(0,1fr))}
+  .activityWeekDay{position:relative;height:100%;padding:0;gap:0;display:block;background:transparent;backdrop-filter:none;border-radius:calc(32 * var(--home-unit))}
+  .activityWeekDay::after{content:"";position:absolute;inset:0 calc(-10 * var(--home-unit))}
+  .activityWeekDay:active:not(:disabled){transform:none}
+  .activityWeekPlot{display:block;position:relative;border-radius:calc(32 * var(--home-unit));background:rgba(255,255,255,.1)}
+  .activityWeekBar{width:calc(var(--week-bar-width,31) * var(--home-unit));height:var(--bar-height,0%);min-height:0;max-width:none;
+    background:#f97316;border-radius:calc(24 * var(--home-unit));box-shadow:0 0 calc(4 * var(--home-unit)) #f97316}
+  .activityWeekDay:nth-child(1){--week-bar-width:30}.activityWeekDay:nth-child(4){--week-bar-width:30.71}.activityWeekDay:nth-child(6) .activityWeekBar{width:100%}
+  .activityWeekZero,.activityWeekValue{display:none}
+  .activityWeekAxis{position:absolute;left:calc(.5 * var(--home-unit));top:calc(.5 * var(--home-unit));width:calc(339 * var(--home-unit));height:calc(161 * var(--home-unit));
+    display:flex;flex-direction:column;justify-content:space-between;opacity:.5;pointer-events:none}
+  .activityWeekAxisRow{display:flex;align-items:center;gap:calc(6 * var(--home-unit));height:calc(10 * var(--home-unit))}
+  .activityWeekAxisRow span{min-width:calc(11 * var(--home-unit));flex:none;font-family:"Montserrat",sans-serif;font-size:calc(8 * var(--home-unit));line-height:calc(10 * var(--home-unit));font-weight:400;color:#a5abb5}
+  .activityWeekAxisRow::after{content:"";flex:1;border-top:calc(.5 * var(--home-unit)) dashed #a5abb5;opacity:.2}
+  .activityWeekLabels{display:flex;align-items:center;justify-content:space-between;height:calc(12 * var(--home-unit));margin-top:calc(9 * var(--home-unit));padding:0 calc(18 * var(--home-unit))}
+  .activityWeekLabel{display:block;font-family:"Montserrat",sans-serif;font-size:calc(10 * var(--home-unit));line-height:calc(12 * var(--home-unit));font-weight:400;color:#a5abb5;text-transform:capitalize}
+  @supports(text-box-trim:trim-both){
+    #activityWeekView .activitySummary strong,#activityWeekChartTotal{line-height:normal;text-box-trim:trim-both;text-box-edge:cap alphabetic}
+  }
 
-  #activityMonthView .activityMonth{width:100%;margin:0}.activityMonthTitle{display:none}
-  .activityMonthWeekdays{margin:0;padding:16px 12px 4px;gap:0;color:#f8fafc;font-size:14px;font-weight:400}
-  .activityMonthGrid{gap:0;padding:0 12px 4px}.activityMonthDay,.activityMonthBlank{width:48px;height:48px;min-width:48px;min-height:48px}
-  .activityMonthDay{padding:4px;color:#f8fafc;font-size:16px;font-weight:400}
-  .activityMonthDay::before{inset:4px}.activityMonthDay::after{inset:7px;background:#181c22}
-  .activityMonthDay.complete::before{background:linear-gradient(135deg,#f97316,#fbbf24)}
-  .activityMonthDay.complete span{color:#f8fafc}.activityMonthDay.today span{color:#f8fafc}
-  .activityMonthDay.empty::before{background:transparent}.activityMonthDay.future{opacity:.38}
-  #activityMonthView .activityMonth{padding:0 14px 12px;border:.5px solid #20252d;border-radius:24px;
-    background:radial-gradient(ellipse at 50% 0,rgba(255,255,255,.08),transparent 62%),#181c22}
+  /* Home-month 450:246: exported CSS in design/figma/home-month.reference.txt. */
+  #dailyPushups[data-range="month"]{margin-top:calc(2.46 * var(--home-unit))}
+  #dailyPushups[data-range="month"]::before{left:0}
+  #dailyPushups[data-range="month"] .activityRangeSwitch{left:0;margin-top:calc(6.54 * var(--home-unit))}
+  #dailyPushups[data-range="month"] .dailyRingCard{padding-top:calc(22.99 * var(--home-unit))}
+  #dailyPushups[data-range="month"] .activitySwitch{margin-right:calc(6 * var(--home-unit));margin-bottom:calc(36.01 * var(--home-unit))}
+  #dailyPushups[data-range="month"] .activitySectionTitle{margin-bottom:calc(20 * var(--home-unit))}
+  /* The exported 83.5px summary frame intentionally contains taller 89/88px cards. */
+  #activityMonthView .activitySummary{height:calc(83.5 * var(--home-unit));padding:0;margin-bottom:calc(20 * var(--home-unit));gap:calc(12 * var(--home-unit));align-items:flex-start}
+  #activityMonthView .activitySummary>div{flex:none;width:calc(189.5 * var(--home-unit));height:calc(89 * var(--home-unit));min-width:0;
+    display:flex;flex-direction:column;align-items:flex-start;gap:calc(12 * var(--home-unit));padding:calc(16.5 * var(--home-unit)) calc(16.5 * var(--home-unit)) calc(20.5 * var(--home-unit));
+    border-radius:calc(24 * var(--home-unit));box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d;
+    background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22}
+  #activityMonthView .activitySummary>.activitySummaryEnd{width:calc(188.5 * var(--home-unit));height:calc(88 * var(--home-unit));justify-content:center;text-align:left;
+    padding:calc(16 * var(--home-unit)) calc(16 * var(--home-unit)) calc(20 * var(--home-unit));
+    background:linear-gradient(180deg,rgba(249,115,22,.2) -30.35%,rgba(249,115,22,0) 104.12%);
+    box-shadow:inset 0 calc(-3 * var(--home-unit)) calc(13 * var(--home-unit)) rgba(251,191,36,.2)}
+  #activityMonthView .activitySummary strong{font-family:"Benzin",sans-serif;font-weight:700;font-size:calc(34 * var(--home-unit));line-height:calc(25 * var(--home-unit));color:#f8fafc;letter-spacing:0;font-variant-numeric:normal}
+  #activityMonthView .activitySummary small{margin:0;font-family:"Montserrat",sans-serif;font-weight:400;font-size:calc(12 * var(--home-unit));line-height:calc(15 * var(--home-unit));color:#f8fafc;white-space:nowrap}
+  #activityMonthView .activityMonth{width:100%;height:calc(373 * var(--home-unit));margin:0;padding:calc(16.5 * var(--home-unit));border:0;border-radius:calc(24 * var(--home-unit));
+    display:flex;flex-direction:column;align-items:flex-end;box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d;
+    background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22}
+  .activityMonthTitle{display:none}
+  .activityMonthPicker{flex:none;width:calc(360 * var(--home-unit));height:calc(340 * var(--home-unit));padding:0 calc(12 * var(--home-unit)) calc(4 * var(--home-unit));border-radius:calc(16 * var(--home-unit));
+    background:radial-gradient(53.37% 53.37% at 50% -0.97%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22}
+  #activityMonthView .activityMonthWeekdays,#activityMonthView .activityMonthGrid{grid-template-columns:repeat(7,minmax(0,1fr));gap:0;margin:0;padding:0}
+  #activityMonthView .activityMonthWeekdays{height:calc(48 * var(--home-unit));align-items:center;color:#f8fafc;font-family:"Montserrat",sans-serif;font-size:calc(14 * var(--home-unit));line-height:calc(24 * var(--home-unit));font-weight:400;letter-spacing:calc(.5 * var(--home-unit));text-transform:capitalize}
+  #activityMonthView .activityMonthWeekdays span{text-transform:lowercase}
+  #activityMonthView .activityMonthWeekdays span::first-letter{text-transform:uppercase}
+  #activityMonthView .activityMonthDay,#activityMonthView .activityMonthOutside{width:calc(48 * var(--home-unit));height:calc(48 * var(--home-unit));min-width:0;min-height:0;padding:0;display:grid;place-items:center;
+    font-family:"Montserrat",sans-serif;font-size:calc(16 * var(--home-unit));line-height:calc(24 * var(--home-unit));font-weight:400;letter-spacing:calc(.5 * var(--home-unit));color:#f8fafc;backdrop-filter:none}
+  #activityMonthView .activityMonthDay span{font-variant-numeric:normal;color:inherit}
+  #activityMonthView .activityMonthDay::before{inset:calc(4 * var(--home-unit));background:transparent;box-shadow:none}
+  #activityMonthView .activityMonthDay::after{display:none}
+  #activityMonthView .activityMonthDay.partial{color:#f97316;font-weight:600}
+  #activityMonthView .activityMonthProgress{position:absolute;inset:calc(4 * var(--home-unit));filter:drop-shadow(0 0 calc(2 * var(--home-unit)) #f97316);pointer-events:none}
+  .activityMonthProgress::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 90deg,#f97316 var(--activity-progress,0%),transparent 0);
+    mask:radial-gradient(farthest-side,transparent calc(100% - 3 * var(--home-unit)),#000 0)}
+  #activityMonthView .activityMonthDay.complete{font-weight:600;color:#fff}
+  #activityMonthView .activityMonthDay.complete::before{background:radial-gradient(68.88% 68.88% at 50.16% 1.19%,#fbbf24 0%,#f97316 100%)}
+  #activityMonthView .activityMonthDay.future{opacity:.38}
+  #activityMonthView .activityMonthOutside{color:#a5abb5;opacity:.38}
+  #activityMonthGrid>:nth-child(n+36){border-radius:calc(24 * var(--home-unit));box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d}
+  @supports(text-box-trim:trim-both){
+    #activityMonthView .activitySummary strong{line-height:normal;text-box-trim:trim-both;text-box-edge:cap alphabetic}
+  }
 
   #mainNav{left:50%;bottom:20px;width:min(calc(100% - 40px),390px);height:65px;display:flex;gap:14px;padding:0;
     background:transparent;border:0;box-shadow:none;backdrop-filter:none;overflow:visible}
@@ -1178,10 +1238,31 @@
         </div>
       </div>
       <div id="activityWeekView" class="activityPanel hidden">
-        <div style="width:100%"><div class="activitySummary"><div><strong id="activityWeekTotal">0</strong><small data-i18n="activityTotalLabel">НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityWeekAverage" class="activityAverage">0</strong><small data-i18n="activityDailyAverageLabel">ӨДРИЙН ДУНДАЖ</small></div></div><div id="activityWeekChart" class="activityWeekChart" role="group" aria-label="Долоо хоногийн дасгал" data-i18n-aria-label="activityWeekChartLabel"></div></div>
+        <div class="activitySummary">
+          <div><small data-i18n="activityWeekAverageLabel">Өдрийн дундаж</small><strong id="activityWeekAverage" class="activityAverage">0</strong></div>
+          <div class="activitySummaryEnd"><small id="activityWeekTotalLabel">Нийт суниалт</small><strong id="activityWeekTotal">0</strong></div>
+        </div>
+        <section class="activityWeekCard" aria-labelledby="activityWeekChartTitle">
+          <div class="activityTrendHead"><h3 id="activityWeekChartTitle" data-i18n="activityWeekDaysLabel">Сүүлийн 7 өдөр</h3><strong><span id="activityWeekChartTotal">0</span><small data-i18n="unitRep">REP</small></strong></div>
+          <div class="activityWeekBase">
+            <div id="activityWeekAxis" class="activityWeekAxis" aria-hidden="true"></div>
+            <div id="activityWeekChart" class="activityWeekChart" role="group" aria-label="Долоо хоногийн дасгал" data-i18n-aria-label="activityWeekChartLabel"></div>
+            <div id="activityWeekLabels" class="activityWeekLabels" aria-hidden="true"></div>
+          </div>
+        </section>
       </div>
       <div id="activityMonthView" class="activityPanel hidden">
-        <div class="activityMonth"><time id="activityMonthTitle" class="activityMonthTitle" datetime=""></time><div class="activitySummary"><div><strong id="activityMonthTotal">0</strong><small data-i18n="activityTotalLabel">НИЙТ</small></div><div class="activitySummaryEnd"><strong id="activityMonthAverage" class="activityAverage">0</strong><small data-i18n="activityDailyAverageLabel">ӨДРИЙН ДУНДАЖ</small></div></div><div class="activityMonthWeekdays" aria-hidden="true"><span data-i18n="weekdayMonShort">ДА</span><span data-i18n="weekdayTueShort">МЯ</span><span data-i18n="weekdayWedShort">ЛХ</span><span data-i18n="weekdayThuShort">ПҮ</span><span data-i18n="weekdayFriShort">БА</span><span data-i18n="weekdaySatShort">БЯ</span><span data-i18n="weekdaySunShort">НЯ</span></div><div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал" data-i18n-aria-label="activityMonthChartLabel"></div></div>
+        <div class="activitySummary">
+          <div><small data-i18n="activityMonthAverageLabel">Өдрийн дундаж</small><strong id="activityMonthAverage" class="activityAverage">0</strong></div>
+          <div class="activitySummaryEnd"><small id="activityMonthTotalLabel">Нийт суниалт</small><strong id="activityMonthTotal">0</strong></div>
+        </div>
+        <div class="activityMonth">
+          <time id="activityMonthTitle" class="activityMonthTitle" datetime=""></time>
+          <div class="activityMonthPicker">
+            <div class="activityMonthWeekdays" aria-hidden="true"><span data-i18n="weekdayMonShort">ДА</span><span data-i18n="weekdayTueShort">МЯ</span><span data-i18n="weekdayWedShort">ЛХ</span><span data-i18n="weekdayThuShort">ПҮ</span><span data-i18n="weekdayFriShort">БА</span><span data-i18n="weekdaySatShort">БЯ</span><span data-i18n="weekdaySunShort">НЯ</span></div>
+            <div id="activityMonthGrid" class="activityMonthGrid" role="group" aria-label="Сарын дасгал" data-i18n-aria-label="activityMonthChartLabel"></div>
+          </div>
+        </div>
       </div>
     </div>
     <section class="activityTrendCard" aria-labelledby="activityTrendTitle">
@@ -1998,13 +2079,28 @@ function renderDailyActivity(){
   const average = completedDays.length ? Math.round(total / completedDays.length) : 0;
   $("activityWeekTotal").textContent = activityNumber.format(total);
   $("activityWeekAverage").textContent = activityNumber.format(average);
+  $("activityWeekChartTotal").textContent = activityNumber.format(total);
+  $("activityWeekTotalLabel").textContent = t(isSquat ? "activityWeekTotalSquatLabel" : "activityWeekTotalPushupLabel");
   $("activityMonthTotal").textContent = activityNumber.format(total);
   $("activityMonthAverage").textContent = activityNumber.format(average);
+  $("activityMonthTotalLabel").textContent = t(isSquat ? "activityMonthTotalSquatLabel" : "activityMonthTotalPushupLabel");
 
   const weekChart = $("activityWeekChart");
   weekChart.textContent = "";
-  const weekMax = Math.max(DAILY_GOALS[activityExercise], ...days.map(day => day.reps));
+  const weekMax = Math.ceil(Math.max(40, ...days.map(day => day.reps)) / 40) * 40;
   const weekLabels = ["weekdayMonShort","weekdayTueShort","weekdayWedShort","weekdayThuShort","weekdayFriShort","weekdaySatShort","weekdaySunShort"].map(key => t(key));
+  const weekAxis = $("activityWeekAxis");
+  weekAxis.textContent = "";
+  for(let index = 0; index < 9; index++){
+    const row = document.createElement("div");
+    row.className = "activityWeekAxisRow";
+    const tick = document.createElement("span");
+    tick.textContent = activityCompactNumber(weekMax * (8 - index) / 8);
+    row.appendChild(tick);
+    weekAxis.appendChild(row);
+  }
+  const weekLabelRow = $("activityWeekLabels");
+  weekLabelRow.textContent = "";
   days.slice(0,7).forEach((day, index) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -2018,7 +2114,7 @@ function renderDailyActivity(){
     const plot = document.createElement("span");
     plot.className = "activityWeekPlot";
     if(day.reps){
-      const barHeight = Math.max(18, day.reps / weekMax * 84);
+      const barHeight = day.reps / weekMax * 100;
       plot.style.setProperty("--bar-height", `${barHeight}%`);
       const value = document.createElement("span");
       value.className = "activityWeekValue";
@@ -2031,29 +2127,41 @@ function renderDailyActivity(){
       zero.className = "activityWeekZero";
       plot.appendChild(zero);
     }
-    button.append(label, plot);
+    button.appendChild(plot);
     weekChart.appendChild(button);
+    weekLabelRow.appendChild(label);
   });
 
   const monthGrid = $("activityMonthGrid");
   monthGrid.textContent = "";
   if(activityRange === "month"){
     const firstOffset = (activityDateFromKey(period.dates[0]).getDay() + 6) % 7;
-    for(let index = 0; index < firstOffset; index++){
-      const blank = document.createElement("span");
-      blank.className = "activityMonthBlank";
-      monthGrid.appendChild(blank);
-    }
-    for(const day of days){
+    // Six complete Monday-first rows, including muted adjacent-month dates.
+    for(let index = 0; index < 42; index++){
+      const day = days[index - firstOffset];
+      if(!day){
+        const outside = document.createElement("span");
+        outside.className = "activityMonthOutside";
+        outside.setAttribute("aria-hidden", "true");
+        outside.textContent = String(activityDateFromKey(activityShiftDate(period.dates[0], index - firstOffset)).getDate());
+        monthGrid.appendChild(outside);
+        continue;
+      }
       const button = document.createElement("button");
       button.type = "button";
       button.className = "activityMonthDay";
-      if(day.date === todayKey) button.classList.add("today");
+      if(day.date === todayKey){ button.classList.add("today"); button.setAttribute("aria-current", "date"); }
       if(day.date > todayKey){ button.classList.add("future"); button.disabled = true; }
       const dayProgress = Math.min(100, day.reps / DAILY_GOALS[activityExercise] * 100);
       button.style.setProperty("--activity-progress", `${dayProgress}%`);
       if(dayProgress >= 100) button.classList.add("complete");
-      else if(day.reps > 0) button.classList.add("partial");
+      else if(day.reps > 0){
+        button.classList.add("partial");
+        const progress = document.createElement("span");
+        progress.className = "activityMonthProgress";
+        progress.setAttribute("aria-hidden", "true");
+        button.appendChild(progress);
+      }
       else button.classList.add("empty");
       button.setAttribute("aria-label", t("activityDayAria", day.date, activityNumber.format(day.reps), exerciseA11yLabel));
       button.onclick = () => openActivityDay(day.date);
@@ -2061,11 +2169,6 @@ function renderDailyActivity(){
       number.textContent = String(activityDateFromKey(day.date).getDate());
       button.appendChild(number);
       monthGrid.appendChild(button);
-    }
-    while(monthGrid.children.length % 7){
-      const blank = document.createElement("span");
-      blank.className = "activityMonthBlank";
-      monthGrid.appendChild(blank);
     }
   }
   renderActivityTrend(period);

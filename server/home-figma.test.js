@@ -25,7 +25,8 @@ test('Home-Today uses the supplied 430 × 932 Figma reference and per-number typ
 })
 
 test('Home-Today retains the exact exported card fill and solid orange ring', () => {
-  assert.equal((html.match(/radial-gradient\(65\.39% 65\.39% at 50% 101\.11%,rgba\(255,255,255,\.2\) 0%,rgba\(255,255,255,0\) 100%\),#181c22/g) || []).length, 3)
+  const todayStyles = html.slice(html.indexOf('/* Home-Today 426:4890'), html.indexOf('/* Home-week 438:285'))
+  assert.equal((todayStyles.match(/radial-gradient\(65\.39% 65\.39% at 50% 101\.11%,rgba\(255,255,255,\.2\) 0%,rgba\(255,255,255,0\) 100%\),#181c22/g) || []).length, 3)
   assert.match(html, /\.dailyRingValue\{stroke:#f97316;/)
   assert.match(html, /id="dailyRingValue"[^>]*r="47\.5"/)
   assert.match(html, /\.dailyRing circle\{stroke-width:5\}/)

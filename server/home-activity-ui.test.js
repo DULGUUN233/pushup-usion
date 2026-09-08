@@ -86,7 +86,7 @@ test('7 хоног нь bar chart, сар нь өдрийн progress calendar х
   assert.match(html, /\.activityWeekDay\{[^}]*grid-template-rows:18px 1fr/s)
   assert.match(html, /plot\.className = "activityWeekPlot"/)
   assert.match(html, /zero\.className = "activityWeekZero"/)
-  assert.match(html, /if\(day\.reps\)\{[\s\S]*?barHeight = Math\.max\(18, day\.reps \/ weekMax \* 84\)/)
+  assert.match(html, /if\(day\.reps\)\{[\s\S]*?barHeight = day\.reps \/ weekMax \* 100/)
   assert.doesNotMatch(html, /activityWeekBarTrack/)
   assert.match(html, /className = "activityMonthDay"/)
   assert.match(html, /id="activityMonthTitle"/)
