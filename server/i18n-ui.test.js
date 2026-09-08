@@ -55,3 +55,7 @@ test("browser fallback болон Usion init-ийн дараах хэл хоёу
   assert.match(html, /document\.documentElement\.lang = lang/)
   assert.match(html, /new Intl\.NumberFormat\(locale\)/)
 })
+
+test("i18n asset cache-bust version-тэй ачаалж шинэ Squat Game текстийг авна", () => {
+  assert.match(html, /<script src="\.\/assets\/i18n-v1\.js\?v=2"><\/script>/)
+})

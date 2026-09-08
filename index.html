@@ -14,7 +14,7 @@
 <link rel="preload" as="image" href="./assets/modes/pushup-mode-v1.png" type="image/png">
 <link rel="preload" as="image" href="./assets/modes/game-mode-v1.png" type="image/png">
 <script src="https://usions.com/usion-sdk.js"></script>
-<script src="./assets/i18n-v1.js"></script>
+<script src="./assets/i18n-v1.js?v=2"></script>
 <style>
   :root{
     --bg:#070b11; --fg:#f3f7fb; --dim:#8795a6;
@@ -532,6 +532,7 @@
     box-shadow:0 8px 24px rgba(0,0,0,.32);backdrop-filter:blur(12px)}
   .pushGameScore span{display:flex;flex-direction:column;color:var(--dim);font-size:9px;font-weight:800;
     letter-spacing:.08em;text-transform:uppercase}
+  .pushGameScore small{font:inherit;color:inherit}
   .pushGameScore b{color:#fff;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
   .pushGameStreak{position:absolute;left:50%;top:1px;transform:translateX(-50%);height:46px;
     min-width:84px;padding:4px 13px 4px 7px;display:flex;align-items:center;justify-content:center;
@@ -1143,7 +1144,7 @@
   <div id="pushGameHud" aria-label="Тоглоомын оноо" data-i18n-aria-label="pushGameHudLabel">
     <div class="pushGameScore">
       <span data-i18n-html="pushGameScoreLabel">Оноо <b id="pushGameScore">0</b></span>
-      <span id="pushGameRepLabel" data-i18n-html="pushGameRepsLabel">Push Up <b id="pushGameReps">0</b></span>
+      <span id="pushGameRepLabel"><small id="pushGameRepName" data-i18n="pushGameRepsName">Push Up</small><b id="pushGameReps">0</b></span>
     </div>
     <div id="pushGameStreak" class="pushGameStreak" role="status" aria-live="polite"
          aria-label="Жимсний streak 0" data-i18n-aria-label="pushGameStreakLabel">
@@ -3629,7 +3630,8 @@ function pushGameFrame(now){
   }
 
   $("pushGameScore").textContent = pushGameState.score;
-  $("pushGameReps").textContent = count;
+  const reps = $("pushGameReps");
+  if(reps) reps.textContent = count;
   drawPushGame(now, width, height);
   pushGameState.raf = requestAnimationFrame(pushGameFrame);
 }
@@ -3661,7 +3663,8 @@ function startPushGame(){
     anchorAngle:170, anchorY:.24, locked:false, lastGapY:null,
     lastFrameAt:performance.now(), width:0 });
   $("pushGameScore").textContent = "0";
-  $("pushGameReps").textContent = count;
+  const reps = $("pushGameReps");
+  if(reps) reps.textContent = count;
   updatePushGameStreak(0);
   $("play").classList.add("push-game");
   pushGameState.raf = requestAnimationFrame(pushGameFrame);
@@ -5242,9 +5245,9 @@ function openSolo(kind, variant = "normal"){
     ? (squat ? "squatGameStartHint" : "gameStartHint")
     : (squat ? "squatStartHint" : "pushupStartHint"));
   if(isGame){
-    const repKey = squat ? "squatGameRepsLabel" : "pushGameRepsLabel";
-    $("pushGameRepLabel").dataset.i18nHtml = repKey;
-    $("pushGameRepLabel").innerHTML = t(repKey);
+    const repKey = squat ? "squatGameRepsName" : "pushGameRepsName";
+    $("pushGameRepName").dataset.i18n = repKey;
+    $("pushGameRepName").textContent = t(repKey);
     const resultKey = squat ? "pushGameCorrectSquats" : "pushGameCorrectPushups";
     $("pushGameResultUnit").dataset.i18n = resultKey;
     $("pushGameResultUnit").textContent = t(resultKey);
