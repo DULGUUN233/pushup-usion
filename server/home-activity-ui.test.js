@@ -154,6 +154,10 @@ test('хугацаа ба дасгалын сонголт Figma Union хүрээ
   assert.match(html, /\.activityRangeSwitch\{position:relative;z-index:1;width:calc\(100% - 14px\);[^}]*margin-top:7px/)
 })
 
+test('өдрийн card дотор progress ring хажуу тийш overflow хийхгүй', () => {
+  assert.match(html, /\.dailyOverviewCard\{height:212px;[^}]*grid-template-columns:minmax\(0,1fr\) 179px/)
+})
+
 test('activity switch давхар pill-гүй flat underline tab бөгөөд mobile touch target-аа хадгална', () => {
   assert.match(html, /\.activitySwitch\{position:relative;isolation:isolate;align-self:center;width:170px;height:48px/)
   assert.match(html, /grid-template-columns:1fr 1fr;gap:0;background:transparent;border:0;box-shadow:none/)
