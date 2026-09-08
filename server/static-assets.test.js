@@ -6,9 +6,11 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 const server = await readFile(new URL('./index.js', import.meta.url), 'utf8')
 
 test('loading artwork is project-local, preloaded, and served before the app fallback', () => {
-  assert.match(html, /rel="preload" as="image" href="\.\/assets\/pushup-battle-splash-v2\.webp"/)
-  assert.match(html, /class="bootArtwork" src="\.\/assets\/pushup-battle-splash-v2\.webp" width="941" height="1672"/)
-  assert.match(html, /\.bootArtwork\{[^}]*object-fit:cover;object-position:center/s)
+  assert.match(html, /rel="preload" as="image" href="\.\/assets\/figma\/splash-athlete\.svg"/)
+  assert.match(html, /rel="preload" as="image" href="\.\/assets\/figma\/splash-title\.svg"/)
+  assert.match(html, /class="bootAthlete" src="\.\/assets\/figma\/splash-athlete\.svg"/)
+  assert.match(html, /class="bootGlow" src="\.\/assets\/figma\/splash-glow\.svg"/)
+  assert.match(html, /class="bootLogo"[\s\S]*?splash-title\.svg[\s\S]*?splash-battle\.svg/)
   assert.match(html, /\$\("boot"\)\.classList\.add\("bootDone"\);[\s\S]*?setTimeout\(resolve, 220\)/)
 
   const bootStart = html.indexOf('<section id="boot"')

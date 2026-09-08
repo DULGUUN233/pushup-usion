@@ -16,7 +16,10 @@ test('Push Up болон Squat нь энгийн болон Game гэсэн хо
 
 test('exercise chooser and camera prep share Carbon Ember UI and Usion system back', () => {
   assert.match(html, /#pushChoice\{--choice-bg:#0b0d10/)
-  assert.match(html, /\.pushChoiceCard\{min-height:108px/)
+  assert.match(html, /\.pushChoiceCard\{min-height:86px/)
+  assert.match(html, /\.pushChoiceShell\{[^}]*width:min\(100%,390px\)/)
+  assert.match(html, /\.pushChoiceHead h2\{[^}]*font-size:36px/)
+  assert.match(html, /\.pushChoiceTitleAccent\{color:var\(--choice-primary\)\}/)
   assert.match(html, /@keyframes choiceEnter/)
   assert.match(html, /#start\{--prep-surface:#181c22/)
   assert.match(html, /#go\{min-width:190px;min-height:50px[\s\S]*?linear-gradient/)
@@ -27,11 +30,13 @@ test('exercise chooser and camera prep share Carbon Ember UI and Usion system ba
   assert.match(html, /if\(id === "play" && mode === "solo"\) openPushChoice\(exercise\)/)
 })
 
-test('горимын card-ууд generated local PNG asset ашиглана', () => {
-  assert.match(html, /preload" as="image" href="\.\/assets\/modes\/pushup-mode-v1\.png"/)
-  assert.match(html, /id="pushNormal"[\s\S]*?<img src="\.\/assets\/modes\/pushup-mode-v1\.png"/)
-  assert.match(html, /id="pushGame"[\s\S]*?<img src="\.\/assets\/modes\/game-mode-v1\.png"/)
-  assert.match(html, /\.pushChoiceIcon img\{width:48px;height:48px/)
+test('горимын card-ууд Figma-аас авсан exact local SVG asset ашиглана', () => {
+  assert.match(html, /preload" as="image" href="\.\/assets\/figma\/push-choice-2\.svg"/)
+  assert.match(html, /id="pushNormal"[\s\S]*?<img src="\.\/assets\/figma\/push-choice-2\.svg"/)
+  assert.match(html, /id="pushGame"[\s\S]*?<img src="\.\/assets\/figma\/push-choice-7\.svg"/)
+  assert.match(html, /id="pushNormal"[\s\S]*?push-choice-4\.svg/)
+  assert.match(html, /id="pushGame"[\s\S]*?push-choice-1\.svg/)
+  assert.match(html, /\.pushChoiceIcon img\{max-width:38px;max-height:38px/)
 })
 
 test('Game нь camera overlay canvas, score, rep, restart controls-той', () => {
