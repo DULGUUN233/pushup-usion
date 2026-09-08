@@ -192,21 +192,24 @@ test('саад хэт захад гарахгүй, дараагийн gap хүр
   assert.match(html, /prefers-reduced-motion:\s*reduce/)
 })
 
-test('Squat Flappy саад дээд доод lane-д ээлжилж бүтэн суулт шаардана', () => {
+test('Squat Flappy саад дээд болон 3 өөр доод түвшинд гарна', () => {
   const source = html.match(/function squatGameGapY\(height, gap, previous = null, random = Math\.random\(\),[\s\S]*?\n\}/)?.[0]
   assert.ok(source, 'squatGameGapY source олдсонгүй')
   const gapY = new Function(`${source}\nreturn squatGameGapY`)()
   const firstUpper = gapY(800, 240, null, 0, .22, .78)
-  const firstLower = gapY(800, 240, null, 1, .22, .78)
+  const firstLower = gapY(800, 240, null, .5, .22, .78, 1, 0)
   assert.ok(firstUpper / 800 < .4)
-  assert.ok(firstLower / 800 > .6)
-  assert.ok(gapY(800, 240, firstUpper, .5, .22, .78, .9) / 800 > .6)
+  assert.equal(firstLower / 800, .66)
+  assert.equal(gapY(800, 240, null, .5, .22, .78, 1, .4) / 800, .72)
+  assert.equal(gapY(800, 240, null, .5, .22, .78, 1, 1) / 800, .78)
+  assert.ok(gapY(800, 240, firstUpper, .5, .22, .78, .9, .4) / 800 > .6)
   assert.ok(gapY(800, 240, firstLower, .5, .22, .78, .9) / 800 < .4)
-  const heldLower = gapY(800, 240, firstLower, .5, .22, .78, .2)
+  const heldLower = gapY(800, 240, firstLower, .5, .22, .78, .2, 1)
   assert.ok(heldLower / 800 > .6, 'доод lane заримдаа дараалан үргэлжилнэ')
-  assert.ok(gapY(800, 240, heldLower, .5, .22, .78, .2) / 800 > .6,
+  assert.ok(gapY(800, 240, heldLower, .5, .22, .78, .2, .4) / 800 > .6,
     'гүн суултыг 3 саад хүртэл барьж болно')
   assert.match(html, /const holdLower = previousWasLower && holdRandom < \.42/)
+  assert.match(html, /const lowerSteps = \[\.75, \.875, 1\]/)
   assert.match(html, /exercise === "squat"[\s\S]*?squatGameGapY\(height, gap, pushGameState\.lastGapY/)
   assert.match(html, /now \+ \(exercise === "squat" \? 1700 : 1160\)/)
 })

@@ -3408,21 +3408,26 @@ function pushGameGapY(height, gap, previous = null, random = Math.random(),
 
 function squatGameGapY(height, gap, previous = null, random = Math.random(),
                        reachableTop = .3, reachableBottom = .7,
-                       holdRandom = Math.random()){
+                       holdRandom = Math.random(), depthRandom = Math.random()){
   const edgeMargin = gap / 2 + Math.max(28, height * .05);
   const minReach = Math.max(.3, Math.min(reachableTop, reachableBottom));
-  const maxReach = Math.min(.7, Math.max(reachableTop, reachableBottom));
+  const maxReach = Math.min(.78, Math.max(reachableTop, reachableBottom));
   const minY = Math.max(edgeMargin, height * minReach);
   const maxY = Math.min(height - edgeMargin, height * maxReach);
   if(maxY <= minY) return height * ((minReach + maxReach) / 2);
 
   // Squat Game-д саад бүр бараг босоо ба гүн суултын lane хооронд шилжинэ.
-  // 6%-ийн variation нь хөдөлгөөнийг давтагдсан мэт болголгүй endpoint-ийг
-  // хүний хүрч чадах 30–70%-ийн аюулгүй бүсээс гаргахгүй.
+  // Variation нь хөдөлгөөнийг давтагдсан мэт болголгүй endpoint-ийг
+  // хүний хүрч чадах 30–78%-ийн аюулгүй бүсээс гаргахгүй.
   const span = maxY - minY;
   const variation = (Math.max(0, Math.min(1, random)) - .5) * span * .12;
   const upperLane = minY + span * .1;
-  const lowerLane = maxY - span * .1;
+  // Доод саад 3 гүнтэй: хуучинтай ойролцоо 66%, дараа нь 72%, хамгийн
+  // доод 78%. Ижил төрлийн саад бүр яг ижил суулт шаардахгүй.
+  const lowerSteps = [.75, .875, 1];
+  const lowerStep = lowerSteps[Math.min(lowerSteps.length - 1,
+    Math.floor(Math.max(0, Math.min(1, depthRandom)) * lowerSteps.length))];
+  const lowerLane = minY + span * lowerStep;
   if(!Number.isFinite(previous))
     return Math.max(minY, Math.min(maxY, (random < .5 ? upperLane : lowerLane) + variation));
   const previousWasLower = previous > (minY + maxY) / 2;
@@ -3617,7 +3622,7 @@ function pushGameFrame(now){
       const random = Math.random();
       const gapY = exercise === "squat"
         ? squatGameGapY(height, gap, pushGameState.lastGapY, random,
-            reachableTop, reachableBottom, Math.random())
+            reachableTop, reachableBottom, Math.random(), Math.random())
         : pushGameGapY(height, gap, pushGameState.lastGapY, random,
             reachableTop, reachableBottom);
       pushGameState.lastGapY = gapY;
