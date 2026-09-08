@@ -87,7 +87,7 @@ test('шувуу эхлэхдээ нүдний түвшинд таарч, adapti
 
 test('Flappy урагшлах хурд 250 px/s бөгөөд саадны зай хадгалагдана', () => {
   assert.match(html, /const speed = 250;/)
-  assert.match(html, /pushGameState\.nextPipeAt = now \+ 1160;/)
+  assert.match(html, /now \+ \(exercise === "squat" \? 1700 : 1160\)/)
 })
 
 test('Flappy түвшин тогтсоны дараах анхны тохой нугаралтаар эхэлнэ', () => {
@@ -190,6 +190,20 @@ test('саад хэт захад гарахгүй, дараагийн gap хүр
   assert.doesNotMatch(html, /ТҮВШИН ТОГТЛОО/)
   assert.doesNotMatch(html, /desiredY = gapCenter/)
   assert.match(html, /prefers-reduced-motion:\s*reduce/)
+})
+
+test('Squat Flappy саад дээд доод lane-д ээлжилж бүтэн суулт шаардана', () => {
+  const source = html.match(/function squatGameGapY\(height, gap, previous = null, random = Math\.random\(\),[\s\S]*?\n\}/)?.[0]
+  assert.ok(source, 'squatGameGapY source олдсонгүй')
+  const gapY = new Function(`${source}\nreturn squatGameGapY`)()
+  const firstUpper = gapY(800, 240, null, 0, .22, .78)
+  const firstLower = gapY(800, 240, null, 1, .22, .78)
+  assert.ok(firstUpper / 800 < .4)
+  assert.ok(firstLower / 800 > .6)
+  assert.ok(gapY(800, 240, firstUpper, .5, .22, .78) / 800 > .6)
+  assert.ok(gapY(800, 240, firstLower, .5, .22, .78) / 800 < .4)
+  assert.match(html, /exercise === "squat"[\s\S]*?squatGameGapY\(height, gap, pushGameState\.lastGapY/)
+  assert.match(html, /now \+ \(exercise === "squat" \? 1700 : 1160\)/)
 })
 
 test('tracking тасрахад game pause хийж, camera хаахад loop цэвэрлэгдэнэ', () => {

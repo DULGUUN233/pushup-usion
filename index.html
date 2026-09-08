@@ -3406,6 +3406,28 @@ function pushGameGapY(height, gap, previous = null, random = Math.random(),
     Math.max(previous - maxStep, Math.min(previous + maxStep, rawY))));
 }
 
+function squatGameGapY(height, gap, previous = null, random = Math.random(),
+                       reachableTop = .3, reachableBottom = .7){
+  const edgeMargin = gap / 2 + Math.max(28, height * .05);
+  const minReach = Math.max(.3, Math.min(reachableTop, reachableBottom));
+  const maxReach = Math.min(.7, Math.max(reachableTop, reachableBottom));
+  const minY = Math.max(edgeMargin, height * minReach);
+  const maxY = Math.min(height - edgeMargin, height * maxReach);
+  if(maxY <= minY) return height * ((minReach + maxReach) / 2);
+
+  // Squat Game-д саад бүр бараг босоо ба гүн суултын lane хооронд ээлжилнэ.
+  // 6%-ийн variation нь хөдөлгөөнийг давтагдсан мэт болголгүй endpoint-ийг
+  // хүний хүрч чадах 30–70%-ийн аюулгүй бүсээс гаргахгүй.
+  const span = maxY - minY;
+  const variation = (Math.max(0, Math.min(1, random)) - .5) * span * .12;
+  const upperLane = minY + span * .1;
+  const lowerLane = maxY - span * .1;
+  if(!Number.isFinite(previous))
+    return Math.max(minY, Math.min(maxY, (random < .5 ? upperLane : lowerLane) + variation));
+  const target = previous <= (minY + maxY) / 2 ? lowerLane : upperLane;
+  return Math.max(minY, Math.min(maxY, target + variation));
+}
+
 function sizePushGameCanvas(){
   const rect = gameCanvas.getBoundingClientRect();
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -3587,12 +3609,16 @@ function pushGameFrame(now){
         pushGameState.anchorAngle, pushGameState.anchorY);
       const reachableBottom = pushGameTargetY(90, pushGameState.anchorAngle,
         pushGameState.anchorY);
-      const gapY = pushGameGapY(height, gap, pushGameState.lastGapY, Math.random(),
-        reachableTop, reachableBottom);
+      const random = Math.random();
+      const gapY = exercise === "squat"
+        ? squatGameGapY(height, gap, pushGameState.lastGapY, random,
+            reachableTop, reachableBottom)
+        : pushGameGapY(height, gap, pushGameState.lastGapY, random,
+            reachableTop, reachableBottom);
       pushGameState.lastGapY = gapY;
       pushGameState.pipes.push({ x:width + 8, width:pipeWidth, gap, gapY, scored:false,
         fruitResolved:false });
-      pushGameState.nextPipeAt = now + 1160;
+      pushGameState.nextPipeAt = now + (exercise === "squat" ? 1700 : 1160);
     }
     // Урагшлах мэдрэмжийг pipe-ийн дэлгэц дээгүүр шилжих хурдаар өгнө.
     const speed = 250;
