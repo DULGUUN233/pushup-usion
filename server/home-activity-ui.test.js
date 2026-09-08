@@ -14,7 +14,7 @@ test('Нүүрийн activity өдөр, 7 хоног, сарын гурван х
   assert.match(html, /#activityDayView \.dailyRing\{transform:translateY\(8px\)\}/)
   assert.match(html, /id="activityWeekChart"/)
   assert.match(html, /id="activityMonthGrid"/)
-  assert.match(html, /id="activityTrendChart"[^>]*viewBox="0 0 320 126"/)
+  assert.match(html, /id="activityTrendChart"[^>]*viewBox="0 0 357 109"/)
 })
 
 test('доод trend график D, W, M бүрээр сүүлийн 7 хугацааг нэгтгэнэ', () => {
@@ -145,18 +145,21 @@ test('Нүүрийн урт content navigation-ийн цаагуур scroll хи
   assert.match(html, /#menu\{[^}]*overflow-y:auto;[^}]*scroll-padding-bottom:calc\(env\(safe-area-inset-bottom\) \+ 104px\)/)
   assert.match(html, /#menu>\*\{flex-shrink:0\}/)
   assert.match(html, /#menu\{[^}]*-webkit-overflow-scrolling:touch/)
-  assert.match(html, /#menu\{width:min\(100%,430px\);[^}]*overflow-x:hidden;overscroll-behavior-x:none/)
+  assert.match(html, /#menu\{[^}]*width:min\(100%,430px\);[^}]*overflow-x:hidden;overscroll-behavior-x:none/)
 })
 
 test('хугацаа ба дасгалын сонголт Figma Union хүрээгээр залгаатай байна', () => {
   assert.match(html, /#dailyPushups::before\{[^}]*aspect-ratio:390\/109\.529;[^}]*home-tabs-union\.svg/)
-  assert.match(html, /#dailyPushups\{position:relative;align-self:center;width:min\(calc\(100vw - 40px\),390px\)/)
+  assert.match(html, /#dailyPushups\{position:relative;align-self:center;width:100%;max-width:390px/)
   assert.match(html, /\.activityRangeSwitch\{position:relative;z-index:1;[^}]*aspect-ratio:376\/41/)
   assert.match(html, /\.activitySwitch\{align-self:flex-end;width:calc\(100% \* 210 \/ 390\);max-width:210px;[^}]*aspect-ratio:210\/33/)
 })
 
-test('өдрийн card дотор progress ring хажуу тийш overflow хийхгүй', () => {
-  assert.match(html, /\.dailyOverviewCard\{height:212px;[^}]*grid-template-columns:minmax\(0,1fr\) 179px/)
+test('өдрийн card ба ring Figma-ийн хэмжээг нэг харьцаагаар багасгана', () => {
+  assert.match(html, /--home-unit:calc\(min\(100vw,430px\) \/ 430\)/)
+  assert.match(html, /\.dailyOverviewCard\{width:100%;min-width:0;height:calc\(212 \* var\(--home-unit\)\);[^}]*justify-content:flex-end/)
+  assert.match(html, /\.dailyStatsColumn\{[^}]*width:calc\(174 \* var\(--home-unit\)\)/)
+  assert.match(html, /#activityDayView \.dailyRing\{[^}]*width:calc\(179 \* var\(--home-unit\)\)/)
 })
 
 test('Figma-ийн Benzin typography-г local font asset-аас ашиглана', () => {
@@ -177,7 +180,7 @@ test('өмнөх өдрийн өсөлт, уналт Figma сум болон т�
   assert.match(html, /home-trend-arrow\.svg/)
   assert.match(html, /classList\.toggle\("deltaDown", difference < 0\)/)
   assert.match(html, /classList\.toggle\("deltaUp", difference > 0\)/)
-  assert.match(html, /\.deltaUp \.dailyDeltaIcon\{display:block;transform:rotate\(180deg\)\}/)
+  assert.match(html, /\.deltaUp \.dailyDeltaIcon\{display:block;color:#39d98a;transform:rotate\(180deg\)\}/)
 })
 
 test('activity switch давхар pill-гүй flat underline tab бөгөөд mobile touch target-аа хадгална', () => {

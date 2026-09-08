@@ -28,7 +28,7 @@
       activityDailyAverageLabel:"ӨДРИЙН ДУНДАЖ",
       activityWeekChartLabel:"Долоо хоногийн дасгал",
       activityMonthChartLabel:"Сарын дасгал",
-      activityTrendLast7Days:"СҮҮЛИЙН 7 ӨДӨР",
+      activityTrendLast7Days:"Сүүлийн 7 өдөр",
       activityTrendLast7Weeks:"СҮҮЛИЙН 7 ДОЛОО ХОНОГ",
       activityTrendLast7Months:"СҮҮЛИЙН 7 САР",
       activityTrendMonthLabel:month => `${month}-р`,

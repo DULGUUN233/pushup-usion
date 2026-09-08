@@ -922,9 +922,14 @@
   .bootLogo img{display:block;width:100%;height:auto}.bootLogo img+img{width:54.3%}
   #boot .aiLoadingCard{display:none}
 
-  #menu{width:min(100%,430px);max-width:430px;gap:0;padding:20px 20px calc(env(safe-area-inset-bottom) + 105px);
-    overflow-x:hidden;overscroll-behavior-x:none;background:#0b0d10}
-  #dailyPushups{position:relative;align-self:center;width:min(calc(100vw - 40px),390px);max-width:100%;min-width:0;gap:0;container-type:inline-size}
+  /* Home-Today 426:4890. Exact exported values: design/figma/home-today.reference.txt.
+     One design pixel scales with the 430px frame; the export's 126.79px header belongs to the host. */
+  #menu{--home-unit:calc(min(100vw,430px) / 430);width:min(100%,430px);max-width:430px;gap:0;
+    padding:calc(env(safe-area-inset-top) + 17.21 * var(--home-unit)) calc(20 * var(--home-unit)) calc(env(safe-area-inset-bottom) + 105px);
+    -webkit-text-size-adjust:100%;text-size-adjust:100%;
+    overflow-x:hidden;overscroll-behavior-x:none;scrollbar-width:none;background:#0b0d10}
+  #menu::-webkit-scrollbar{display:none}
+  #dailyPushups{position:relative;align-self:center;width:100%;max-width:390px;min-width:0;gap:0;container-type:inline-size}
   /* Figma 426:4994: Union 390×109.529, range (7,7) 376×41, exercise (174,70.529) 210×33. */
   #dailyPushups::before{content:"";position:absolute;z-index:0;left:calc(-100% / 390);top:0;width:100%;height:auto;aspect-ratio:390/109.529;
     background:url('./assets/figma/home-tabs-union.svg') center top/100% 100% no-repeat;pointer-events:none}
@@ -946,36 +951,63 @@
   #activitySquat::before{background-image:url('./assets/figma/home-squat.svg')}
   .activitySwitch button[aria-pressed="true"]{color:#f97316;font-weight:600;border:0;box-shadow:inset 0 0 0 .5px #f97316}
   .activitySwitch .activityTabsPill{display:none}
-  .activitySectionTitle{height:22px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-  .activitySectionTitle img{width:20px;height:20px}.activitySectionTitle h2{margin:0;color:#fff;font-family:"Benzin",sans-serif;font-size:16px;font-weight:400}
+  .activitySectionTitle{height:calc(22 * var(--home-unit));margin-bottom:calc(14 * var(--home-unit));display:flex;align-items:center;justify-content:space-between}
+  .activitySectionTitle img{width:calc(20 * var(--home-unit));height:calc(20 * var(--home-unit))}
+  .activitySectionTitle h2{margin:0;color:#fff;font-family:"Benzin",sans-serif;font-size:calc(16 * var(--home-unit));line-height:calc(22 * var(--home-unit));font-weight:400}
   .activityPanel{min-height:0;display:block}
-  .dailyOverviewCard{height:212px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) 179px;gap:12px;border:.5px solid #20252d;
-    border-radius:24px;background:radial-gradient(ellipse at 50% 105%,rgba(255,255,255,.09),transparent 62%),#181c22}
-  .dailyStatsColumn{display:grid;grid-template-rows:118px 49px;gap:12px}
-  .dailyCurrentCard,.dailyCompareCard{border:.5px solid #20252d;border-radius:24px;background:
-    radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.08),transparent 65%),#181c22}
-  .dailyCurrentCard{padding:16px;display:flex;flex-direction:column;gap:12px}
-  .dailyCurrentCard time{font-size:12px;color:#f8fafc}.dailyCountLine{display:flex;align-items:flex-end;gap:12px}
-  #dailyCount{font-family:"Benzin",sans-serif;font-size:34px;line-height:.78;font-weight:700;letter-spacing:-.045em}
-  #dailyGoal{margin:0;color:#a5abb5;font-family:"Benzin",sans-serif;font-size:16px;line-height:1}
-  .dailyCompareCard{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .dailyCompareCard span{font-size:10px;color:#f8fafc}.dailyCompareCard strong{font-size:10px;color:#a5abb5;white-space:nowrap}
-  #dailyPreviousDifference{display:flex;align-items:center;gap:5px;font-weight:400}
-  .dailyDeltaIcon{display:none;width:16px;height:16px;flex:none;background:currentColor;
+  .dailyOverviewCard{width:100%;min-width:0;height:calc(212 * var(--home-unit));padding:calc(16.5 * var(--home-unit));display:flex;justify-content:flex-end;align-items:flex-start;gap:calc(12 * var(--home-unit));
+    border:0;border-radius:calc(24 * var(--home-unit));box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d;
+    background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22}
+  /* Figma's inside .5px stroke contributes .5px to the layout, even below a CSS pixel. */
+  .dailyStatsColumn{display:flex;flex-direction:column;flex:none;width:calc(174 * var(--home-unit));height:calc(179 * var(--home-unit));gap:calc(12 * var(--home-unit))}
+  .dailyCurrentCard,.dailyCompareCard{flex:none;width:100%;border:0;box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d;border-radius:calc(24 * var(--home-unit));background:
+    radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22}
+  .dailyCurrentCard{height:calc(118 * var(--home-unit));padding:calc(16.5 * var(--home-unit));display:flex;flex-direction:column;align-items:flex-start;gap:calc(12 * var(--home-unit))}
+  .dailyCurrentCard time{font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--home-unit));line-height:calc(15 * var(--home-unit));font-weight:400;color:#f8fafc;white-space:nowrap}
+  .dailyCountLine{display:flex;align-items:flex-end;gap:calc(12 * var(--home-unit));white-space:nowrap}
+  #dailyCount{font-family:"Benzin",sans-serif;font-size:calc(34 * var(--home-unit));line-height:calc(25 * var(--home-unit));font-weight:700;letter-spacing:0;text-shadow:none;font-variant-numeric:normal}
+  #dailyGoal{margin:0;flex:none;color:#a5abb5;font-family:"Benzin",sans-serif;font-weight:400;font-size:calc(16 * var(--home-unit));line-height:calc(12 * var(--home-unit));white-space:nowrap}
+  .dailyCompareCard{height:calc(49 * var(--home-unit));padding:calc(16 * var(--home-unit));display:flex;align-items:center;justify-content:center;gap:calc(12 * var(--home-unit))}
+  .dailyCompareCard span,.dailyCompareCard strong{font-family:"Montserrat",sans-serif;font-size:calc(10 * var(--home-unit));line-height:calc(12 * var(--home-unit));font-weight:400;white-space:nowrap}
+  #dailyPreviousLabel{color:#f8fafc}#dailyPreviousDifferenceText{color:#a5abb5}
+  #dailyPreviousDifference{display:flex;flex:none;align-items:center;gap:calc(5 * var(--home-unit));font-weight:400}
+  .dailyDeltaIcon{display:none;width:calc(16 * var(--home-unit));height:calc(16 * var(--home-unit));flex:none;background:currentColor;
     -webkit-mask:url('./assets/figma/home-trend-arrow.svg') center/contain no-repeat;mask:url('./assets/figma/home-trend-arrow.svg') center/contain no-repeat}
-  #dailyPreviousDifference.deltaDown{color:#ff5c5c}#dailyPreviousDifference.deltaDown .dailyDeltaIcon{display:block}
-  #dailyPreviousDifference.deltaUp{color:#39d98a}#dailyPreviousDifference.deltaUp .dailyDeltaIcon{display:block;transform:rotate(180deg)}
-  #activityDayView .dailyRing{transform:none}.dailyRing{width:179px;height:179px;align-self:center}
-  .dailyRing circle{stroke-width:5}.dailyRingTrack{stroke:#30343c}.dailyRingValue{filter:drop-shadow(0 0 3px #f97316)}
-  .dailyRingCenter strong{font-family:"Benzin",sans-serif;font-size:36px;line-height:1;font-weight:700;color:#f8fafc}.dailyRingCenter span{margin-top:8px;color:#a5abb5;font-size:12px}
+  #dailyPreviousDifference.deltaDown .dailyDeltaIcon{display:block;color:#ff5c5c}
+  #dailyPreviousDifference.deltaUp .dailyDeltaIcon{display:block;color:#39d98a;transform:rotate(180deg)}
+  #activityDayView .dailyRing{transform:none;width:calc(179 * var(--home-unit));height:calc(179 * var(--home-unit));flex:none;align-self:flex-start}
+  .dailyRing svg{transform:none}.dailyRing circle{stroke-width:5}.dailyRingTrack{stroke:rgba(255,255,255,.1)}
+  /* Figma's 4px box blur => 2px Gaussian sigma, in the ring's 100/179 SVG coordinates. */
+  .dailyRingValue{stroke:#f97316;filter:drop-shadow(0 0 calc(4px / 2 / 1.79) #f97316)}
+  .dailyRingCenter{gap:calc(10 * var(--home-unit))}
+  .dailyRingCenter strong{font-family:"Benzin",sans-serif;font-size:calc(36.4307 * var(--home-unit));line-height:calc(27 * var(--home-unit));font-weight:700;letter-spacing:0;color:#fff;opacity:.9;text-shadow:0 0 calc(6 * var(--home-unit)) rgba(255,255,255,.25)}
+  .dailyRingCenter span{margin:0;color:#fff;opacity:.9;font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--home-unit));line-height:calc(8 * var(--home-unit));font-weight:400;text-shadow:0 0 calc(6 * var(--home-unit)) rgba(255,255,255,.25)}
 
-  .activityTrendCard{height:200px;margin:36px 0 0;padding:16px;border-radius:24px;border:.5px solid #20252d;
-    background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.05),transparent 62%),#181c22;box-shadow:none}
-  .activityTrendHead{margin-bottom:8px}.activityTrendHead h3{font-family:"Benzin",sans-serif;font-size:16px;color:#fff;letter-spacing:0;font-weight:400}
-  .activityTrendHead strong{font-size:24px}.activityTrendHead small{font-size:12px;color:#f8fafc}
-  .activityTrendChart{height:126px}.activityTrendLine{stroke:#a5abb5;stroke-width:1}.activityTrendArea{fill:none}
-  .activityTrendPoint{fill:#f8fafc;stroke:#f8fafc;stroke-width:2}.activityTrendGrid{stroke:rgba(165,171,181,.22);stroke-dasharray:2 3}
-  .activityTrendLabels{color:#a5abb5;font-size:10px}
+  .activityTrendCard{height:calc(200 * var(--home-unit));margin:calc(36 * var(--home-unit)) 0 0;padding:calc(16.5 * var(--home-unit));border-radius:calc(24 * var(--home-unit));border:0;
+    background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.1) 0%,rgba(255,255,255,0) 100%),#181c22;box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d}
+  .activityTrendHead{height:calc(17 * var(--home-unit));align-items:center;gap:calc(6 * var(--home-unit));margin-bottom:calc(20 * var(--home-unit))}
+  .activityTrendHead h3{font-family:"Benzin",sans-serif;font-size:calc(16 * var(--home-unit));line-height:calc(12 * var(--home-unit));color:#fff;letter-spacing:0;font-weight:400;white-space:nowrap}
+  .activityTrendHead strong{display:flex;align-items:flex-end;gap:calc(6 * var(--home-unit));font-family:"Montserrat",sans-serif;font-size:calc(24 * var(--home-unit));line-height:calc(17 * var(--home-unit));font-weight:700;font-variant-numeric:normal;color:#fff}
+  .activityTrendHead small{margin:0;font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--home-unit));line-height:calc(8 * var(--home-unit));font-weight:400;color:#f8fafc;text-transform:uppercase}
+  .activityTrendChart{height:calc(109 * var(--home-unit));overflow:visible}.activityTrendLine{stroke:#a5abb5;stroke-width:1;filter:none}.activityTrendArea{fill:url(#activityTrendGradient)}
+  .activityTrendPoint{fill:#f8fafc;stroke:#a5abb5;stroke-width:1.5}
+  .activityTrendGrid{stroke:#a5abb5;stroke-opacity:.25;stroke-width:.5;stroke-dasharray:2 3}
+  .activityTrendAxis{font-family:"Montserrat",sans-serif;font-size:8px;font-weight:400;fill:#a5abb5;opacity:.5}
+  .activityTrendLabels{display:flex;justify-content:space-between;padding-left:calc(16 * var(--home-unit));margin-top:calc(9 * var(--home-unit));color:#a5abb5;font-family:"Montserrat",sans-serif;font-size:calc(10 * var(--home-unit));line-height:calc(12 * var(--home-unit));font-weight:400;font-variant-numeric:normal;text-transform:capitalize}
+  .activityTrendSelected{fill:#fbbf24;stroke:none;filter:url(#activityTrendGlow)}
+  .activityTrendGuide{stroke:#fbbf24;stroke-width:.5;stroke-dasharray:2 3}
+  .activityTrendHit{fill:transparent;cursor:pointer}
+  .activityTrendHit:focus-visible{outline:1px solid #fbbf24;outline-offset:1px}
+  .activityTrendPlot{position:relative}
+  .activityTrendTooltip{position:absolute;top:calc(-14 * var(--home-unit));left:clamp(calc(24.04 * var(--home-unit)),var(--trend-x),calc(100% - 24.04 * var(--home-unit)));transform:translateX(-50%);
+    min-width:calc(48.08 * var(--home-unit));height:calc(25 * var(--home-unit));padding:calc(8 * var(--home-unit));display:flex;align-items:flex-end;justify-content:center;gap:calc(4 * var(--home-unit));
+    border-radius:calc(8 * var(--home-unit));box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d;background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22;pointer-events:none;color:#f8fafc}
+  .activityTrendTooltip strong{font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--home-unit));line-height:calc(8 * var(--home-unit));font-weight:600}
+  .activityTrendTooltip small{font-family:"Montserrat",sans-serif;font-size:calc(8 * var(--home-unit));line-height:calc(6 * var(--home-unit));font-weight:400;text-transform:lowercase}
+  /* Current equivalent of Figma's leading-trim: both / text-edge: cap. */
+  @supports(text-box-trim:trim-both){
+    #dailyCount,#dailyGoal,.dailyRingCenter strong,.dailyRingCenter span,.activityTrendHead h3,#activityTrendTotal,.activityTrendHead small,.activityTrendTooltip strong,.activityTrendTooltip small{line-height:normal;text-box-trim:trim-both;text-box-edge:cap alphabetic}
+  }
   #dailyPushups[data-range="week"] .activityTrendCard,#dailyPushups[data-range="month"] .activityTrendCard{display:none}
 
   #activityWeekView .activitySummary,#activityMonthView .activitySummary{padding:0;gap:12px;align-items:stretch;margin-bottom:20px}
@@ -1043,7 +1075,6 @@
   #boardHub{padding:20px}.boardShell{max-width:430px}
   #board:not(.hidden)~#mainNav{bottom:calc(env(safe-area-inset-bottom) + 20px)}
   @media(max-width:390px){
-    .dailyOverviewCard{grid-template-columns:minmax(0,1fr) min(43vw,179px)}.dailyRing{width:min(43vw,179px);height:min(43vw,179px)}
     #mainNav{width:calc(100% - 24px);gap:8px}#mainNav::before{width:calc(100% - 73px)}
     #mainNav>button:not(#navBattle){margin-left:0}#mainNav>button:first-of-type{margin-left:6px}
     #mainNav #navBattle{margin-left:auto}.activityMonthDay,.activityMonthBlank{width:calc((100vw - 92px)/7);height:42px;min-width:0;min-height:42px}
@@ -1056,6 +1087,24 @@
     #board:not(.hidden)~#mainNav>button#navBoard.active span{font-size:9px}
     #board:not(.hidden)~#mainNav>#navBattle{width:56px;height:56px;min-height:56px;margin-top:4px}
   }
+  /* Home-Today 430px reference: scale the exported navigation with the cards. */
+  #menu:not(.hidden)~#mainNav{--home-unit:calc(min(100vw,430px) / 430);width:calc(390 * var(--home-unit));height:calc(65 * var(--home-unit));
+    bottom:calc(env(safe-area-inset-bottom) + 20 * var(--home-unit));gap:calc(14 * var(--home-unit));padding:0}
+  #menu:not(.hidden)~#mainNav::before{width:calc(297 * var(--home-unit));height:100%;border:0;
+    border-radius:calc(50 * var(--home-unit));box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d}
+  #menu:not(.hidden)~#mainNav>button:not(#navBattle){width:calc(44 * var(--home-unit));height:calc(44 * var(--home-unit));min-height:0;
+    margin:calc(10 * var(--home-unit)) 0 0;padding:calc(10 * var(--home-unit));gap:calc(10 * var(--home-unit));border-radius:calc(30 * var(--home-unit))}
+  #menu:not(.hidden)~#mainNav>button:not(#navBattle):first-of-type{margin-left:calc(10 * var(--home-unit))}
+  #menu:not(.hidden)~#mainNav>button:not(#navBattle).active{width:calc(102 * var(--home-unit));background:radial-gradient(97.01% 97.01% at 50% 96.61%,rgba(249,115,22,.2) 0%,rgba(255,255,255,0) 100%)}
+  #menu:not(.hidden)~#mainNav>button:not(#navBattle) img{width:calc(24 * var(--home-unit));height:calc(24 * var(--home-unit));opacity:1;filter:none}
+  #menu:not(.hidden)~#mainNav>button:not(#navBattle) span{font-family:"Montserrat",sans-serif;font-size:calc(11 * var(--home-unit));line-height:calc(13 * var(--home-unit));font-weight:400}
+  #menu:not(.hidden)~#mainNav>button.active::after{left:50%;right:auto;transform:translateX(-50%);width:calc(60.6094 * var(--home-unit));height:calc(4 * var(--home-unit))}
+  #menu:not(.hidden)~#mainNav>#navBattle{width:calc(65 * var(--home-unit));height:calc(65 * var(--home-unit));min-height:0;margin-left:calc(25 * var(--home-unit));gap:0;
+    border-radius:calc(38 * var(--home-unit));background:linear-gradient(180deg,rgba(249,115,22,.2) -30.35%,rgba(249,115,22,0) 104.12%);
+    box-shadow:inset 0 calc(-3 * var(--home-unit)) calc(13 * var(--home-unit)) rgba(251,191,36,.2)}
+  #menu:not(.hidden)~#mainNav .navBattleOrb,#menu:not(.hidden)~#mainNav .navBattleOrb img{width:calc(20 * var(--home-unit));height:calc(20 * var(--home-unit))}
+  #menu:not(.hidden)~#mainNav .navBattleLabel{font-family:"Montserrat",sans-serif;font-size:calc(10 * var(--home-unit));line-height:calc(12 * var(--home-unit));font-weight:400}
+  #menu:not(.hidden)~#mainNav>button::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max(100%,44px);height:max(100%,44px)}
 </style>
 </head>
 <body>
@@ -1118,8 +1167,8 @@
           <div class="dailyRing">
             <svg viewBox="0 0 100 100" aria-hidden="true">
               <defs><linearGradient id="dailyGradient" x1="0" y1="0" x2="1" y2="1"><stop class="dailyGradientStart"></stop><stop class="dailyGradientEnd" offset="1"></stop></linearGradient></defs>
-              <circle class="dailyRingTrack" cx="50" cy="50" r="44" pathLength="100"></circle>
-              <circle id="dailyRingValue" class="dailyRingValue" cx="50" cy="50" r="44" pathLength="100"></circle>
+              <circle class="dailyRingTrack" cx="50" cy="50" r="47.5" pathLength="100"></circle>
+              <circle id="dailyRingValue" class="dailyRingValue" cx="50" cy="50" r="47.5" pathLength="100"></circle>
             </svg>
             <div class="dailyRingCenter">
               <strong id="dailyPercent">0%</strong>
@@ -1137,15 +1186,24 @@
     </div>
     <section class="activityTrendCard" aria-labelledby="activityTrendTitle">
       <div class="activityTrendHead"><h3 id="activityTrendTitle">СҮҮЛИЙН 7 ӨДӨР</h3><strong><span id="activityTrendTotal">0</span><small data-i18n="unitRep">REP</small></strong></div>
-      <svg id="activityTrendChart" class="activityTrendChart" viewBox="0 0 320 126" role="img" aria-describedby="activityTrendDescription">
-        <defs><linearGradient id="activityTrendGradient" x1="0" y1="0" x2="0" y2="1"><stop class="dailyGradientStart" stop-opacity=".28"></stop><stop class="dailyGradientEnd" offset="1" stop-opacity="0"></stop></linearGradient></defs>
-        <line class="activityTrendGrid" x1="18" y1="35" x2="302" y2="35"></line>
-        <line class="activityTrendGrid" x1="18" y1="68" x2="302" y2="68"></line>
-        <line class="activityTrendGrid" x1="18" y1="101" x2="302" y2="101"></line>
+      <div class="activityTrendPlot">
+      <svg id="activityTrendChart" class="activityTrendChart" viewBox="0 0 357 109" role="group" aria-describedby="activityTrendDescription">
+        <defs>
+          <linearGradient id="activityTrendGradient" x1="0" y1="0" x2="0" y2="1.0019"><stop offset=".1563" stop-color="#a5abb5" stop-opacity=".2"></stop><stop offset="1" stop-color="#181c22" stop-opacity="0"></stop></linearGradient>
+          <filter id="activityTrendGlow" x="-400%" y="-400%" width="900%" height="900%" color-interpolation-filters="sRGB">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="near"></feGaussianBlur>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="11.5" result="far"></feGaussianBlur>
+            <feMerge><feMergeNode in="far"></feMergeNode><feMergeNode in="near"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+          </filter>
+        </defs>
+        <g id="activityTrendGrid" aria-hidden="true"></g>
         <path id="activityTrendArea" class="activityTrendArea"></path>
         <path id="activityTrendLine" class="activityTrendLine"></path>
+        <line id="activityTrendGuide" class="activityTrendGuide" aria-hidden="true"></line>
         <g id="activityTrendPoints"></g>
       </svg>
+      <div id="activityTrendTooltip" class="activityTrendTooltip" aria-hidden="true"><strong id="activityTrendSelectedValue">0</strong><small data-i18n="unitRep">rep</small></div>
+      </div>
       <div id="activityTrendLabels" class="activityTrendLabels" aria-hidden="true"></div>
       <p id="activityTrendDescription" class="srOnly"></p>
     </section>
@@ -1765,14 +1823,15 @@ function renderActivityTrend(period){
     reps:group.dates.reduce((sum, date) => sum + (values.get(date) || 0), 0),
   }));
   const total = points.reduce((sum, point) => sum + point.reps, 0);
-  const max = Math.max(1, ...points.map(point => point.reps));
-  const left = 18;
-  const right = 302;
-  const top = 24;
-  const bottom = 101;
+  const max = Math.ceil(Math.max(35, ...points.map(point => point.reps)) / 7 / 5) * 5 * 7;
+  const left = 16.5;
+  const right = 354.96;
+  const top = 5;
+  const bottom = 104;
+  const dotCenters = [16.5,72.52,130.18,183.67,248.55,299.14,354.96];
   const coordinates = points.map((point, index) => ({
     ...point,
-    x:left + index * ((right - left) / 6),
+    x:dotCenters[index],
     y:bottom - (point.reps / max) * (bottom - top),
   }));
   const linePath = coordinates.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
@@ -1785,24 +1844,47 @@ function renderActivityTrend(period){
   $("activityTrendChart").setAttribute("aria-label", t("activityTrendAria", trend.title, activityNumber.format(total), t(activityExercise === "squat" ? "activitySquatCount" : "activityPushupCount")));
   $("activityTrendDescription").textContent = points.map(point => `${point.label}: ${point.reps}`).join(", ");
 
+  const svgNode = (tag, attributes) => {
+    const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for(const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
+    return node;
+  };
+  const grid = $("activityTrendGrid");
+  grid.textContent = "";
+  for(let index = 0; index < 8; index++){
+    const y = top + index * ((bottom - top) / 7);
+    const label = svgNode("text", { class:"activityTrendAxis", x:0, y:y + 3 });
+    label.textContent = activityCompactNumber(Math.round(max * (7 - index) / 7));
+    grid.append(label, svgNode("line", { class:"activityTrendGrid", x1:16, x2:357, y1:y, y2:y }));
+  }
+
+  const selectedIndex = Math.max(0, points.findIndex(point => point.dates.includes(activityAnchor)));
+  const selectPoint = index => {
+    const point = coordinates[index];
+    for(const [i, circle] of [...$("activityTrendPoints").querySelectorAll(".activityTrendPoint")].entries()){
+      circle.classList.toggle("activityTrendSelected", i === index);
+      circle.setAttribute("r", i === index ? "5" : "3.29");
+    }
+    for(const [i, hit] of [...$("activityTrendPoints").querySelectorAll(".activityTrendHit")].entries()) hit.setAttribute("aria-pressed", String(i === index));
+    const guide = $("activityTrendGuide");
+    for(const [name, value] of Object.entries({ x1:point.x, x2:point.x, y1:-7.4, y2:90.42 })) guide.setAttribute(name, value);
+    $("activityTrendTooltip").style.setProperty("--trend-x", `${point.x / 357 * 100}%`);
+    $("activityTrendSelectedValue").textContent = activityCompactNumber(point.reps);
+  };
+
   const pointGroup = $("activityTrendPoints");
   pointGroup.textContent = "";
-  for(const point of coordinates){
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circle.setAttribute("class", "activityTrendPoint");
-    circle.setAttribute("cx", point.x);
-    circle.setAttribute("cy", point.y);
-    circle.setAttribute("r", "5");
-    pointGroup.appendChild(circle);
-    if(point.reps){
-      const value = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      value.setAttribute("class", "activityTrendValue");
-      value.setAttribute("x", point.x);
-      value.setAttribute("y", Math.max(11, point.y - 9));
-      value.textContent = activityCompactNumber(point.reps);
-      pointGroup.appendChild(value);
-    }
+  for(const [index, point] of coordinates.entries()){
+    const circle = svgNode("circle", { class:"activityTrendPoint", cx:point.x, cy:point.y, r:3.29, "aria-hidden":"true" });
+    const hit = svgNode("rect", { class:"activityTrendHit", x:Math.min(309, Math.max(0, point.x - 24)), y:-14, width:48, height:130,
+      role:"button", tabindex:0, "aria-label":`${point.label}: ${activityNumber.format(point.reps)}`, "aria-pressed":"false" });
+    hit.onclick = () => selectPoint(index);
+    hit.onkeydown = event => {
+      if(event.key === "Enter" || event.key === " "){ event.preventDefault(); selectPoint(index); }
+    };
+    pointGroup.append(circle, hit);
   }
+  selectPoint(selectedIndex);
 
   const labels = $("activityTrendLabels");
   labels.textContent = "";
