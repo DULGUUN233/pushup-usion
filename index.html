@@ -904,17 +904,20 @@
   #menu{width:min(100%,430px);max-width:430px;gap:0;padding:20px 20px calc(env(safe-area-inset-bottom) + 105px);
     overflow-x:hidden;overscroll-behavior-x:none;background:#0b0d10}
   #dailyPushups{position:relative;align-self:center;width:min(calc(100vw - 40px),390px);max-width:100%;min-width:0;gap:0}
-  #dailyPushups::before{content:"";position:absolute;z-index:0;left:0;top:0;width:100%;height:110px;
+  #dailyPushups::before{content:"";position:absolute;z-index:0;left:0;top:0;width:100%;height:auto;aspect-ratio:390/109.529;
     background:url('./assets/figma/home-tabs-union.svg') center top/100% 100% no-repeat;pointer-events:none}
-  .activityRangeSwitch{position:relative;z-index:1;width:calc(100% - 14px);max-width:376px;min-width:0;margin-top:7px;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:4px;align-self:center;
+  .activityRangeSwitch{position:relative;z-index:1;width:calc(100% - 3.59%);max-width:376px;min-width:0;height:auto;aspect-ratio:376/49;
+    margin-top:1.795%;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:clamp(3px,.93vw,4px);align-self:center;
     border-radius:40px;background:#181c22;border:1px solid #20252d;box-shadow:none}
-  .activityRangeSwitch button{width:auto;min-height:41px;padding:8px 12px;border-radius:28px;font-weight:400}
+  .activityRangeSwitch button{width:auto;height:100%;min-height:0;padding:clamp(6px,1.86vw,8px) clamp(9px,2.79vw,12px);
+    border-radius:28px;font-size:clamp(11px,3.26vw,14px);font-weight:400}
   .activityRangeSwitch button[aria-pressed="true"]{background:#20252d;font-weight:700}
-  .dailyRingCard{position:relative;z-index:1;width:100%;min-width:0;overflow:visible;min-height:0;padding:14px 0 0;align-items:stretch}
-  .activitySwitch{align-self:flex-end;width:210px;height:33px;margin:-1px 6px 30px 0;border-radius:38px;background:#20252d}
-  .activitySwitch button{height:33px;padding:0;border-radius:20px;color:rgba(248,250,252,.5);font-size:10px;font-weight:400;
+  .dailyRingCard{position:relative;z-index:1;width:100%;min-width:0;overflow:visible;min-height:0;padding:3.59% 0 0;align-items:stretch}
+  .activitySwitch{align-self:flex-end;width:53.846%;max-width:210px;height:auto;aspect-ratio:210/33;
+    margin:-.256% 1.538% 7.692% 0;border-radius:38px;background:#20252d}
+  .activitySwitch button{height:100%;padding:0;border-radius:20px;color:rgba(248,250,252,.5);font-size:clamp(8px,2.33vw,10px);font-weight:400;
     display:flex;align-items:center;justify-content:center;gap:10px}
-  .activitySwitch button::before{content:"";width:16px;height:16px;background:center/contain no-repeat}
+  .activitySwitch button::before{content:"";width:clamp(13px,3.72vw,16px);height:clamp(13px,3.72vw,16px);background:center/contain no-repeat}
   #activityPush::before{background-image:url('./assets/figma/home-push.svg')}
   #activitySquat::before{background-image:url('./assets/figma/home-squat.svg')}
   .activitySwitch button[aria-pressed="true"]{color:#f97316;font-weight:600;border:.5px solid #f97316}
@@ -946,7 +949,7 @@
   .activityTrendLabels{color:#a5abb5;font-size:10px}
   #dailyPushups[data-range="week"] .activityTrendCard,#dailyPushups[data-range="month"] .activityTrendCard{display:none}
 
-  #dailyPushups[data-range="week"] .activitySwitch,#dailyPushups[data-range="month"] .activitySwitch{margin-bottom:30px}
+  #dailyPushups[data-range="week"] .activitySwitch,#dailyPushups[data-range="month"] .activitySwitch{margin-bottom:7.692%}
   #activityWeekView .activitySummary,#activityMonthView .activitySummary{padding:0;gap:12px;align-items:stretch;margin-bottom:20px}
   #activityWeekView .activitySummary>div,#activityMonthView .activitySummary>div{flex:1;min-height:83px;padding:16px;border:.5px solid #20252d;
     border-radius:24px;background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.09),transparent 65%),#181c22;text-align:left;

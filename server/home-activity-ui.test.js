@@ -149,9 +149,10 @@ test('Нүүрийн урт content navigation-ийн цаагуур scroll хи
 })
 
 test('хугацаа ба дасгалын сонголт Figma Union хүрээгээр залгаатай байна', () => {
-  assert.match(html, /#dailyPushups::before\{[^}]*height:110px;[^}]*home-tabs-union\.svg/)
+  assert.match(html, /#dailyPushups::before\{[^}]*aspect-ratio:390\/109\.529;[^}]*home-tabs-union\.svg/)
   assert.match(html, /#dailyPushups\{position:relative;align-self:center;width:min\(calc\(100vw - 40px\),390px\)/)
-  assert.match(html, /\.activityRangeSwitch\{position:relative;z-index:1;width:calc\(100% - 14px\);[^}]*margin-top:7px/)
+  assert.match(html, /\.activityRangeSwitch\{position:relative;z-index:1;[^}]*aspect-ratio:376\/49/)
+  assert.match(html, /\.activitySwitch\{align-self:flex-end;width:53\.846%;max-width:210px;[^}]*aspect-ratio:210\/33/)
 })
 
 test('өдрийн card дотор progress ring хажуу тийш overflow хийхгүй', () => {
