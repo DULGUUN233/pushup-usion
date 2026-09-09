@@ -1958,7 +1958,7 @@ function activityTrendState(period = activityPeriodState()){
   if(activityRange === "day"){
     const weekdays = ["weekdaySunShort","weekdayMonShort","weekdayTueShort","weekdayWedShort","weekdayThuShort","weekdayFriShort","weekdaySatShort"].map(key => t(key));
     groups = Array.from({ length:7 }, (_, index) => {
-      const date = activityShiftDate(activityAnchor, index - 6);
+      const date = activityShiftDate(today, index - 6);
       return { dates:[date], label:weekdays[activityDateFromKey(date).getDay()] };
     });
   }else if(activityRange === "week"){
@@ -2291,9 +2291,16 @@ async function loadDailyActivity(exercise = activityExercise){
   const end = trend.requestEnd;
   const request = ++activityRequests[exercise];
   try{
-    const data = await api(`/activity?days=${days}&end=${end}&exercise=${exercise}&timeZone=${encodeURIComponent(localTimeZone)}`);
+    const historyEnd = activityRange === "day" && activityShiftDate(period.requestEnd, -1) < trend.groups[0].dates[0]
+      ? period.requestEnd : null;
+    const [data, history] = await Promise.all([
+      api(`/activity?days=${days}&end=${end}&exercise=${exercise}&timeZone=${encodeURIComponent(localTimeZone)}`),
+      historyEnd ? api(`/activity?days=2&end=${historyEnd}&exercise=${exercise}&timeZone=${encodeURIComponent(localTimeZone)}`) : null,
+    ]);
     if(request !== activityRequests[exercise]) return;
-    dailyActivity[exercise] = Array.isArray(data.days) ? data.days : [];
+    const recentDays = Array.isArray(data.days) ? data.days : [];
+    const historyDays = Array.isArray(history?.days) ? history.days : [];
+    dailyActivity[exercise] = [...new Map([...historyDays, ...recentDays].map(day => [day.date, day])).values()];
     if(includesToday) cacheDailyActivity(exercise);
   }catch{ /* сүлжээ тасарсан үед хамгийн сүүлийн амжилттай утгаа хадгална */ }
   if(exercise === activityExercise){
