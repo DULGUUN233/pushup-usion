@@ -151,6 +151,32 @@ Chrome at430 × 805 measured the guide296.546875 × 207.953125 and navigation390
 positions match the source within0.04px after header subtraction. This was a
 static/offline UI preview, not a physical camera or backend test.
 
+### Squat guide motion follow-up
+
+Squat's mode chooser now uses the same430px layout, card dimensions, typography,
+artwork and navigation sizing as Push Up, as requested. Only the exercise title
+and descriptions differ; existing normal/game actions remain exercise-specific.
+At430px, the normal card measures390 × 85.3125 and uses Montserrat; the title uses Benzin.
+
+The `Squad Guide` component set (`479:463`) has two prototype variants:
+standing `479:460` and seated `479:462`. Both interactions were inspected in
+Figma's Prototype panel: **After delay500ms → Change to → Instant**. A complete
+loop is1000ms; it is intentionally a pose swap, not a morph or crossfade.
+
+Both SVGs were exported directly from those variants (`squat-guide.svg` and
+`squat-guide-down.svg`). Figma rounds their export bounds to297 × 208; the app
+keeps the existing296.55 × 207.96 layout box. Temporary export settings were
+removed after download. The standing variant replaces the earlier static export.
+
+CSS step-end opacity tracks switch the two images without moving the guide box.
+They run only while normal Squat preparation is visible, stop when that screen
+is hidden, and are disabled by `prefers-reduced-motion` (standing pose remains).
+No timers, new libraries, camera, counting or game logic were introduced.
+
+Verification:16 targeted tests passed. Local Chrome at375 × 760 showed both
+poses with identical258.609 × 181.359 bounds and both local SVGs loaded.
+The backend is not running in this static preview; camera access was not requested.
+
 ## Rank leaderboard detail
 
 The user confirmed that the supplied `Battle` frame is the Rank detail screen,

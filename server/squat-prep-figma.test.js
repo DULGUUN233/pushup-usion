@@ -25,8 +25,23 @@ test('Squat reuses source artwork and the exact navigation while preparation is 
   const guide = await readFile(new URL('../assets/figma/squat-guide.svg', import.meta.url), 'utf8')
   assert.match(camera, /width="24" height="24" viewBox="0 0 24 24"/)
   assert.match(camera, /stroke="#F97316" stroke-width="1.5"/)
-  assert.match(guide, /width="296.55" height="207.96"/)
+  assert.match(guide, /viewBox="0 0 297 208"/)
+  assert.match(guide, /clip0_479_460/)
   assert.match(html, /#mainNav:has\(~#play:not\(\.hidden\) #start\.squatPrep:not\(\.hidden\)\)>#navSquat::before\{background:#f8fafc/)
+})
+
+test('Squat guide swaps the original poses at the Figma 500ms cadence without moving its layout', async () => {
+  const seated = await readFile(new URL('../assets/figma/squat-guide-down.svg', import.meta.url), 'utf8')
+  assert.match(seated, /clip0_479_462/)
+  assert.match(seated, /#FBBF24/)
+  assert.match(html, /<div id="howtoSquat" class="howto hidden" aria-hidden="true">/)
+  assert.match(styles, /#howtoSquat img\{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:fill\}/)
+  for (const pose of ['Up','Down']) {
+    assert.ok(styles.includes(`#play:not(.hidden) #start.squatPrep:not(.hidden) #howtoSquat:not(.hidden) .squatGuide${pose}{animation:squatGuide${pose} 1s step-end infinite}`))
+  }
+  assert.match(styles, /@keyframes squatGuideUp\{0%,100%\{opacity:1\}50%\{opacity:0\}\}/)
+  assert.match(styles, /@keyframes squatGuideDown\{0%,100%\{opacity:0\}50%\{opacity:1\}\}/)
+  assert.match(styles, /@media \(prefers-reduced-motion:reduce\)\{\s*#play:not\(\.hidden\) #start\.squatPrep:not\(\.hidden\) #howtoSquat:not\(\.hidden\) img\{animation:none\}/)
 })
 
 test('Normal Squat alone shows the new prep; Flappy and Push Up keep their instructions', () => {
@@ -42,7 +57,7 @@ test('Normal Squat alone shows the new prep; Flappy and Push Up keep their instr
     return nodes.get(id)
   }
   const shown=[], nav=[]
-  const context={$:get,t:key=>key,stopPushGame:()=>{},resetBattleCountdown:()=>{},show:id=>shown.push(id),setMainNavActive:id=>nav.push(id)}
+  const context={$:get,t:key=>key,stopPushGame:()=>{},resetBattleCountdown:()=>{},show:id=>shown.push(id),setMainNavActive:id=>nav.push(id),requestAnimationFrame:()=>{},restoreSoloBack:()=>{}}
   const source=html.slice(html.indexOf('function openSolo('),html.indexOf('$("activityPush").onclick'))
   runInNewContext('let exercise,soloVariant,mode;'+source,context)
   for(const [kind,variant,title,hint] of [

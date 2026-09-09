@@ -7,9 +7,9 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 const reference = await readFile(new URL('../design/figma/push-choice.reference.txt', import.meta.url), 'utf8')
 const styles = html.slice(html.indexOf('  /* Push Up chooser 450:10239'), html.indexOf('</style>'))
 
-test('Push Up chooser follows the 430px reference without changing the Squat layout', () => {
+test('Push Up and Squat choosers share the 430px reference', () => {
   assert.match(reference, /width: 430px;\s*height: 932px;/)
-  assert.match(styles, /#pushChoice\[data-exercise="pushup"\]\{--choice-unit:calc\(min\(100vw,430px\) \/ 430\)/)
+  assert.match(styles, /#pushChoice\[data-exercise\]\{--choice-unit:calc\(min\(100vw,430px\) \/ 430\)/)
   assert.match(styles, /159\.21 \* var\(--choice-unit\)/)
   assert.match(styles, /min-height:calc\(85\.32 \* var\(--choice-unit\)\)/)
   assert.match(styles, /min-height:calc\(93 \* var\(--choice-unit\)\)/)
@@ -22,7 +22,7 @@ test('Push Up chooser follows the 430px reference without changing the Squat lay
 test('Chooser reuses exact SVG bounds and the scaled Home navigation', () => {
   assert.match(styles, /width:calc\(38\.3629 \* var\(--choice-unit\)\);height:calc\(20\.3064 \* var\(--choice-unit\)\)/)
   assert.match(styles, /width:calc\(34\.6403 \* var\(--choice-unit\)\);height:calc\(37\.2833 \* var\(--choice-unit\)\)/)
-  assert.match(html, /#mainNav:has\(~#pushChoice\[data-exercise="pushup"\]:not\(\.hidden\),~:where\(#play:not\(\.hidden\)\) #start\.squatPrep:not\(\.hidden\)\)\{--home-unit:/)
+  assert.match(html, /#mainNav:has\(~#pushChoice\[data-exercise\]:not\(\.hidden\),~:where\(#play:not\(\.hidden\)\) #start\.squatPrep:not\(\.hidden\)\)\{--home-unit:/)
   assert.match(styles, /background:#f8fafc;mask-image:url\('\.\/assets\/figma\/nav-push\.svg'\)/)
 })
 
