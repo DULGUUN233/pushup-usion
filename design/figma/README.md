@@ -95,3 +95,85 @@ Reduced verification requested: 21 relevant Home/i18n tests and one Chrome view 
 430 × 848 (the 975px frame minus its host header). Measured card dimensions match;
 positions differ by under 0.04px due to browser subpixel rounding. No full suite or
 physical-device sweep was run for this change.
+
+## Push Up mode chooser
+
+Source: node `450:10239`, user CSS in `push-choice.reference.txt`. Figma names
+this frame `Home-Today`, but its content is the Push Up chooser (430 × 932).
+
+- Content starts at (20, 286), i.e. 159.21px below the 126.79px host header.
+- Heading: Benzin Regular 36px, cap-trimmed 27px box; subtitle Montserrat 14/17px.
+- Heading/subtitle/card-list gaps: 14px. Card-to-card gap: 12px.
+- Classic card: (20, 358), 390 × 85.32; Game: (20, 455.32), 390 × 93.
+- Card inset: 16.5px including the exported half-pixel border; radius 24px.
+- Icons: 52.32px tiles, with the existing SVGs at their exact stroke-inclusive
+  bounds. Text column: 256.68px; arrows: 24px. Card titles: Montserrat Bold 18/22px;
+  descriptions: Montserrat Regular 12/15px, separated by 8px.
+- Exact exported gradients and `#20252D` inset borders; `Up` retains the orange
+  text run visible in Figma (the plain CSS export flattens that mixed text color).
+- Reuses the 390 × 65 proportional Home navigation, with Push Up active and the
+  existing exported icon geometry masked to the supplied active/inactive colors.
+
+Changes are scoped to `data-exercise="pushup"`; Squat's chooser remains unchanged.
+Cards can grow if translated text needs more space. The content scrolls on short
+viewports while navigation stays bottom-anchored. Camera and game actions are unchanged.
+
+Reduced verification: 32 relevant chooser/game-UI/i18n tests passed; one 430 × 805
+Chrome preview checked the exported sizes, local assets and navigation. This was
+a static/offline UI preview, not a camera, backend or physical-device test.
+
+## Normal Squat preparation
+
+Source: node `475:2`, user CSS in `squat-prep.reference.txt`. The frame is again
+named `Home-Today`, but is the preparation screen reached through Squat → Classic.
+Figma MCP was quota-limited; the supplied CSS and browser-visible source frame
+were used. The camera glyph was exported directly from node `478:179` into
+`assets/figma/squat-camera.svg`; the existing `squat-guide.svg` is reused.
+
+- Frame: 430 × 932, background `#0B0D10`; subtract the external 126.79px host header.
+- Heading: y223.61, Benzin Regular 36px with a 27px trimmed box.
+- Content: x20, y286, width390; top hint34px, gap14, guide296.55 × 207.96,
+  gap14, bottom hint34px. Both hints use Montserrat Regular 14/17px.
+- Camera button: y613.96, minimum163 × 57, 24px icon, 12px gap, 16.5px insets,
+  radius24 and half-pixel `#F97316` border; Montserrat Semibold 14/17px.
+- Shared navigation: 390 × 65, 20px from the bottom, Squat active. Exported
+  Home/Squat glyphs use the reference muted/active colors without double rendering.
+
+Only normal Squat receives this layout. Camera, counting, Flappy and battle logic
+are unchanged. Existing loading/retry text remains functional; translated button
+text may widen the button rather than clip. The title is localized as `Суулт` /
+`Squat` instead of the source's English typo `Squad`. Short screens scroll above
+the fixed navigation; widths below430 scale proportionally. Hidden preparation
+removes the scoped navigation styling and restores the exercise HUD.
+
+Reduced verification: 27 relevant preparation/chooser/i18n/camera tests passed.
+Chrome at430 × 805 measured the guide296.546875 × 207.953125 and navigation390 × 65;
+positions match the source within0.04px after header subtraction. This was a
+static/offline UI preview, not a physical camera or backend test.
+
+## Rank leaderboard detail
+
+The user confirmed that the supplied `Battle` frame is the Rank detail screen,
+not the Battle waiting room. Source node `479:527`; CSS is preserved in
+`rank.reference.txt`. MCP was quota-limited, so the supplied CSS and browser-visible
+frame were used. `assets/figma/rank-union.svg` is the direct export of `490:536`,
+clipped by Figma to the 430px frame. Temporary export settings were removed afterward.
+
+The 430 × 932 reference excludes the external 126.79px host header in the app.
+The podium uses 74.33 × 74 / 60 × 60 portraits and 24px medal badges; rows use
+368 × 65 cards, 16.5px insets, 12px gaps and 32px portraits. The bottom fade is
+220.91px high; navigation is 390 × 65 with a 102px active Rank item. Extra scroll
+space lets the final rows move above the fade. Narrower widths scale these values.
+Existing live metric labels, sorting, league navigation and translated text remain.
+The default Push Up marker uses the source 32px orange circle; other metric states
+position the same marker along the existing interactive arc.
+
+Removed the podium grayscale filter: portraits retain their actual colors rather
+than imposing the monochrome appearance of the designer's sample photos. No sample
+players or scores were added to the production app.
+
+At430 × 805, a temporary populated UI fixture measured rows368 × 65 atx31,
+first portrait74.328 × 74 atx179.25, and navigation390 × 65 atx20/y720.
+Vertical positions were within0.06px of the reference after host-header subtraction.
+All9 local test images loaded with computed filter `none`. This checks layout with
+test data, not the live backend or physical-device behavior.

@@ -18,7 +18,7 @@
 <link rel="preload" as="font" href="./assets/fonts/Benzin-Bold.ttf" type="font/ttf" crossorigin>
 <link rel="preload" as="font" href="./assets/fonts/Montserrat-Variable.ttf" type="font/ttf" crossorigin>
 <script src="https://usions.com/usion-sdk.js"></script>
-<script src="./assets/i18n-v1.js?v=5"></script>
+<script src="./assets/i18n-v1.js?v=7"></script>
 <style>
   @font-face{font-family:"Montserrat";src:url('./assets/fonts/Montserrat-Variable.ttf') format('truetype');font-style:normal;font-weight:100 900;font-display:swap}
   @font-face{font-family:"Benzin";src:url('./assets/fonts/Benzin-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
@@ -309,26 +309,26 @@
   .emptyLeague{padding:24px 18px;text-align:center;border:1px dashed rgba(255,255,255,.13);
     border-radius:18px;color:var(--dim);font-size:13px;line-height:1.55}
   /* Rank — Figma 479:527, 430px frame; the 126.79px host header is outside the app. */
-  #boardDetail{container-type:inline-size;isolation:isolate;padding-top:calc(19.59 / 430 * 100%)}
-  .detailTop{margin:0;text-align:center;min-height:12.26cqw;padding-inline:20px}
-  .detailTop div{min-width:0;position:relative;top:-1.1628cqw}
-  .detailTop h2{margin:0;font-family:"Benzin",sans-serif;font-size:5.5814cqw;line-height:1;font-weight:400;letter-spacing:0;
+  #boardDetail{--rank-unit:calc(min(100vw,430px) / 430);container-type:inline-size;isolation:isolate;padding-top:calc(19.59 * var(--rank-unit))}
+  .detailTop{margin:0;text-align:center;height:calc(52.73 * var(--rank-unit));padding-inline:calc(20 * var(--rank-unit))}
+  .detailTop div{min-width:0;display:flex;flex-direction:column;align-items:center;gap:calc(8 * var(--rank-unit))}
+  .detailTop h2{margin:0;min-height:calc(18 * var(--rank-unit));font-family:"Benzin",sans-serif;font-size:calc(24 * var(--rank-unit));line-height:calc(18 * var(--rank-unit));font-weight:400;letter-spacing:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .detailTop p{margin:1.86cqw 0 0;color:#a5abb5;font-size:2.7907cqw;line-height:1.23}
-  .rankStage{position:relative;isolation:isolate;margin-top:14.05cqw;overflow:hidden}
-  .rankStage::before{content:"";position:absolute;z-index:-1;pointer-events:none;top:7.7195cqw;
-    left:calc(-67.296 / 430 * 100%);width:calc(564.592 / 430 * 100%);height:calc(100% - 7.7195cqw);
-    border-radius:50% 50% 0 0 / 45.2488cqw 45.2488cqw 0 0;
-    background:linear-gradient(180deg,#20252d 0,#0f1115 22.6244cqw,#0b0d10 45.2488cqw)}
-  #boardTabs{position:relative;aspect-ratio:430 / 94.343;padding:0;border:0;background:transparent}
+  .detailTop p{margin:0;color:#a5abb5;font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--rank-unit));line-height:calc(15 * var(--rank-unit));font-weight:400}
+  .rankStage{position:relative;isolation:isolate;margin-top:calc(60.42 * var(--rank-unit));overflow:hidden}
+  #boardTabs::before{content:"";position:absolute;z-index:-1;pointer-events:none;top:calc(33.2 * var(--rank-unit));
+    left:0;width:100%;height:calc(626 * var(--rank-unit));background:url('./assets/figma/rank-union.svg') top center/100% 100% no-repeat}
+  #boardTabs{position:relative;isolation:isolate;aspect-ratio:430 / 94.343;padding:0;border:0;background:transparent}
   .rankTabArt{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
   .rankTabArt text{font-family:"Montserrat",sans-serif;font-size:14px;font-weight:400;fill:#a5abb5}
   #boardTabs[data-active="pushup"] .rankTabPush,#boardTabs[data-active="squat"] .rankTabSquat,
   #boardTabs[data-active="battle"] .rankTabBattle,#boardTabs[data-active="flappy"] .rankTabFlappy{fill:#f97316;font-weight:700}
-  .boardTabsPill{fill:none;stroke:#f97316;stroke-width:6;stroke-linecap:round;stroke-dasharray:3.2 96.8;stroke-dashoffset:-27.8}
-  #boardTabs[data-active="squat"] .boardTabsPill{stroke-dashoffset:-41.1}
-  #boardTabs[data-active="battle"] .boardTabsPill{stroke-dashoffset:-58.9}
-  #boardTabs[data-active="flappy"] .boardTabsPill{stroke-dashoffset:-74.5}
+  .boardTabsPill{position:absolute;z-index:-2;pointer-events:none;left:calc(45.91 * var(--rank-unit));top:calc(47.51 * var(--rank-unit));
+    width:calc(32 * var(--rank-unit));height:calc(32 * var(--rank-unit));border-radius:calc(24 * var(--rank-unit));
+    background:#f97316;box-shadow:0 0 calc(4 * var(--rank-unit)) #f97316;transform:rotate(-30.08deg)}
+  #boardTabs[data-active="squat"] .boardTabsPill{left:calc(144 * var(--rank-unit));top:calc(21 * var(--rank-unit))}
+  #boardTabs[data-active="battle"] .boardTabsPill{left:calc(264 * var(--rank-unit));top:calc(22 * var(--rank-unit))}
+  #boardTabs[data-active="flappy"] .boardTabsPill{left:calc(363 * var(--rank-unit));top:calc(54 * var(--rank-unit))}
   #boardTabs button{position:absolute;z-index:1;top:0;width:24%;min-height:44px;height:10.23cqw;padding:0;border-radius:12px;
     background:transparent;backdrop-filter:none;cursor:pointer;touch-action:manipulation}
   #boardTabs #boardPush{left:0;top:5.35cqw}
@@ -336,40 +336,51 @@
   #boardTabs #boardBattle{left:51%}
   #boardTabs #boardFlappy{right:0;top:6.75cqw}
   #boardTabs button:active:not(:disabled){transform:none;background:rgba(249,115,22,.07)}
-  #podium{position:relative;height:28.6047cqw;margin:0 0 6.7734cqw}
+  #podium{position:relative;height:calc(123 * var(--rank-unit));margin:0 0 calc(29.13 * var(--rank-unit))}
   .podiumPlace{position:relative;text-align:center;min-width:0;display:flex;flex-direction:column;align-items:center}
-  #podium .podiumPlace{position:absolute;bottom:0;width:17.6%}
-  #podium .podiumPlace.first{left:41.689%;width:17.286%}.podiumPlace.second{left:14.319%}.podiumPlace.third{left:68.101%}
-  .podiumAvatarWrap{position:relative;width:13.9535cqw;height:13.9535cqw;margin:0 auto 5.5814cqw}
-  .podiumPlace.first .podiumAvatarWrap{width:17.286cqw;height:17.286cqw}
+  #podium .podiumPlace{position:absolute;top:0}
+  #podium .podiumPlace.first{left:calc(179.26 * var(--rank-unit));width:calc(74.33 * var(--rank-unit))}
+  #podium .podiumPlace.second{left:calc(61.57 * var(--rank-unit));top:calc(11.13 * var(--rank-unit));width:calc(75.26 * var(--rank-unit))}
+  #podium .podiumPlace.third{left:calc(292.84 * var(--rank-unit));top:calc(13.13 * var(--rank-unit));width:calc(75.59 * var(--rank-unit))}
+  .podiumAvatarWrap{position:relative;width:calc(60 * var(--rank-unit));height:calc(60 * var(--rank-unit));margin:0 auto calc(24 * var(--rank-unit))}
+  .podiumPlace.first .podiumAvatarWrap{width:calc(74.33 * var(--rank-unit));height:calc(74 * var(--rank-unit))}
   .rankAvatar{width:47px;height:47px;border-radius:50%;object-fit:cover;margin:0 auto 7px;
     display:grid;place-items:center;background:#263140;color:#fff;font-weight:900;border:2px solid rgba(255,255,255,.16)}
   .podiumAvatarWrap .rankAvatar{width:100%;height:100%;margin:0;border:0}
-  .podiumAvatarWrap img{filter:grayscale(1)}
   .podiumPlace.first{--medal:#fbbf24}.podiumPlace.second{--medal:#f8fafc}.podiumPlace.third{--medal:#cf7836}
-  .podiumAvatarWrap{border:1.5px solid var(--medal);border-radius:50%;box-shadow:0 0 6px color-mix(in srgb,var(--medal) 18%,transparent)}
-  .podiumBadge{position:absolute;left:50%;bottom:-2.7907cqw;transform:translateX(-50%);width:5.5814cqw;height:5.5814cqw;
-    border-radius:50%;display:grid;place-items:center;color:#20252d;font-size:2.7907cqw;font-weight:700;
-    border:1.5px solid #20252d;background:var(--medal);font-variant-numeric:tabular-nums}
-  .podiumName{width:100%;font-size:2.7907cqw;line-height:1.25;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .podiumScore{font-size:1.8605cqw;line-height:1.25;font-weight:400;color:#a5abb5;margin-top:0;font-variant-numeric:tabular-nums;text-transform:lowercase}
-  #rows{display:flex;flex-direction:column;gap:2.3256cqw;width:calc(368 / 430 * 100%);margin:0 auto}
-  .row{min-height:15.1163cqw;display:flex;align-items:center;gap:2.3256cqw;padding:2.3256cqw 3.7209cqw;border-radius:5.5814cqw;
-    background:radial-gradient(ellipse at 50% 110%,rgba(255,255,255,.2),transparent 70%),#181c22;border:0;box-shadow:none;
+  .podiumAvatarWrap{border:calc(2 * var(--rank-unit)) solid var(--medal);border-radius:50%;box-shadow:none}
+  .podiumBadge{position:absolute;left:50%;bottom:calc(-14 * var(--rank-unit));transform:translateX(-50%);width:calc(24 * var(--rank-unit));height:calc(24 * var(--rank-unit));
+    border-radius:50%;display:grid;place-items:center;color:#20252d;font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--rank-unit));line-height:1;font-weight:700;
+    border:calc(2 * var(--rank-unit)) solid #20252d;background:var(--medal);font-variant-numeric:tabular-nums}
+  .podiumName{width:100%;min-height:calc(8 * var(--rank-unit));font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--rank-unit));line-height:calc(8 * var(--rank-unit));font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .podiumScore{width:100%;min-height:calc(7 * var(--rank-unit));font-family:"Montserrat",sans-serif;font-size:calc(10 * var(--rank-unit));line-height:calc(7 * var(--rank-unit));font-weight:400;color:#a5abb5;margin-top:calc(10 * var(--rank-unit));font-variant-numeric:tabular-nums;text-transform:lowercase}
+  .podiumPlace.second .podiumName,.podiumPlace.second .podiumScore{min-height:calc(8.94 * var(--rank-unit));line-height:calc(8.94 * var(--rank-unit))}
+  .podiumPlace.third .podiumName,.podiumPlace.third .podiumScore{min-height:calc(7.94 * var(--rank-unit));line-height:calc(7.94 * var(--rank-unit))}
+  #rows{display:flex;flex-direction:column;gap:calc(10 * var(--rank-unit));width:calc(368 * var(--rank-unit));margin:0 auto}
+  .row{min-height:calc(65 * var(--rank-unit));display:grid;grid-template-columns:max-content calc(32 * var(--rank-unit)) minmax(0,1fr) max-content;
+    align-items:center;gap:calc(12 * var(--rank-unit));padding:calc(16.5 * var(--rank-unit));border-radius:calc(24 * var(--rank-unit));
+    background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22;
+    border:0;box-shadow:inset 0 0 0 calc(.5 * var(--rank-unit)) #20252d;
     transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms ease,border-color 180ms ease;
     animation:rankRowIn 280ms cubic-bezier(.22,1,.36,1) both}
   .row:active{transform:scale(.99);background:var(--board-surface-raised);border-color:rgba(249,115,22,.2)}
   .row.me{background:linear-gradient(135deg,rgba(249,115,22,.11),rgba(251,191,36,.035)),var(--board-surface);
     outline:1px solid rgba(249,115,22,.38)}
-  .row .rankAvatar{flex-shrink:0;width:7.4419cqw;height:7.4419cqw;margin:0;border-width:1px;font-size:2.7907cqw}
-  .row .pos{min-width:2.3256cqw;text-align:center;font-size:2.7907cqw;font-weight:400;color:#a5abb5;font-variant-numeric:tabular-nums}
-  .row .nm{flex:1;min-width:0;font-size:2.7907cqw;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .row .tot{max-width:35%;overflow-wrap:anywhere;font-size:3.7209cqw;font-weight:700;line-height:1.25;text-align:right;font-variant-numeric:tabular-nums}
-  .row .tot small{display:block;margin-top:.93cqw;font-size:2.3256cqw;line-height:1;font-weight:400;color:#a5abb5;text-transform:lowercase}
+  .row .rankAvatar{width:calc(32 * var(--rank-unit));height:calc(32 * var(--rank-unit));margin:0;border:calc(1 * var(--rank-unit)) solid #a5abb5;font-size:calc(12 * var(--rank-unit))}
+  .row .pos{min-width:0;text-align:center;font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--rank-unit));line-height:calc(8 * var(--rank-unit));font-weight:400;color:#fff;font-variant-numeric:tabular-nums}
+  .row .nm{min-width:0;font-family:"Montserrat",sans-serif;font-size:calc(12 * var(--rank-unit));line-height:calc(8 * var(--rank-unit));font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .tot{display:flex;flex-direction:column;align-items:center;gap:calc(10 * var(--rank-unit));font-family:"Montserrat",sans-serif;
+    font-size:calc(16 * var(--rank-unit));font-weight:700;line-height:calc(11 * var(--rank-unit));text-align:center;font-variant-numeric:tabular-nums}
+  .rankScoreValue{display:block;min-height:calc(11 * var(--rank-unit))}
+  .row .tot small{display:block;min-height:calc(7 * var(--rank-unit));margin:0;font-size:calc(10 * var(--rank-unit));line-height:calc(7 * var(--rank-unit));font-weight:400;color:#a5abb5;text-transform:lowercase}
+  @supports(text-box-trim:trim-both){
+    .detailTop h2,.podiumName,.podiumScore,.row .pos,.row .nm,.rankScoreValue,.row .tot small{line-height:normal;text-box-trim:trim-both;text-box-edge:cap alphabetic}
+  }
   #boardTabs[data-active="battle"]~#podium .podiumScore,#boardTabs[data-active="battle"]~#rows .tot small{text-transform:none}
   #podium>.boardLoading{position:absolute;inset:0 14%;height:auto}
   .rankBottomFade{position:fixed;z-index:1;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,430px);
-    height:180px;pointer-events:none;background:linear-gradient(180deg,transparent,#181c22 85%)}
+    height:calc(220.91 * var(--rank-unit));bottom:calc(-1.16 * var(--rank-unit));margin-left:calc(-.54 * var(--rank-unit));
+    pointer-events:none;background:linear-gradient(180deg,rgba(24,28,34,0) -1.74%,#181c22 62.61%)}
   .boardLoading{height:78px;border-radius:18px;margin:8px 0;background:linear-gradient(90deg,#131a22 25%,#202a35 50%,#131a22 75%);
     background-size:200% 100%;animation:boardShimmer 1.2s infinite}
   @keyframes boardShimmer{to{background-position:-200% 0}}
@@ -1119,12 +1130,37 @@
   .navBattleOrb{width:20px;height:20px;border:0;background:transparent;box-shadow:none}.navBattleOrb img{width:20px;height:20px}
   .navBattleLabel{font-size:10px;font-weight:400;color:#f97316;text-transform:uppercase}
 
-  #start.squatPrep{gap:14px;padding:90px 20px calc(env(safe-area-inset-bottom) + 104px);background:#0b0d10}
-  #start.squatPrep h2{font-family:"Benzin",sans-serif;font-size:36px;font-weight:400;margin-bottom:10px}#start.squatPrep h2::after{display:none}
-  #start.squatPrep #howtoSquat{order:2;width:min(297px,78vw);padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
-  #start.squatPrep #startHint{order:3;color:#f8fafc;font-size:14px;line-height:1.3}
-  #start.squatPrep #go{order:4;min-width:163px;min-height:57px;border:.5px solid #f97316;background:transparent;color:#f97316;box-shadow:none}
+  /* Normal Squat preparation, Figma 475:2. The 126.79px host header is external. */
+  #squatPlacementHint{display:none}
+  #play:has(#start.squatPrep:not(.hidden)) #hud{visibility:hidden}
+  #start.squatPrep,body.mainNavVisible #start.squatPrep{--squat-unit:calc(min(100vw,430px) / 430);display:flex;flex-direction:column;
+    width:min(100%,430px);margin-inline:auto;gap:calc(14 * var(--squat-unit));
+    padding:calc(env(safe-area-inset-top) + 96.82 * var(--squat-unit)) calc(20 * var(--squat-unit)) calc(env(safe-area-inset-bottom) + 105 * var(--squat-unit));
+    overflow-x:hidden;overflow-y:auto;scrollbar-width:none;background:#0b0d10;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  #start.squatPrep::-webkit-scrollbar{display:none}
+  #start.squatPrep>*{flex-shrink:0}
+  #start.squatPrep h2{order:0;min-height:calc(27 * var(--squat-unit));margin:0 0 calc(21.39 * var(--squat-unit));
+    font-family:"Benzin",sans-serif;font-size:calc(36 * var(--squat-unit));line-height:calc(27 * var(--squat-unit));font-weight:400;letter-spacing:0;color:#fff}
+  #start.squatPrep h2::after{display:none}
+  #start.squatPrep p{width:100%;max-width:none;min-height:calc(34 * var(--squat-unit));margin:0;
+    font-family:"Montserrat",sans-serif;font-size:calc(14 * var(--squat-unit));line-height:calc(17 * var(--squat-unit));font-weight:400;color:#f8fafc}
+  #start.squatPrep p b{font-weight:700}
+  #start.squatPrep #squatPlacementHint{display:block;order:1}
+  #start.squatPrep #howtoSquat{order:2;width:calc(296.55 * var(--squat-unit));height:calc(207.96 * var(--squat-unit));
+    padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+  #start.squatPrep #startHint{order:3}
+  #start.squatPrep #go{order:4;display:flex;align-items:center;justify-content:center;gap:calc(12 * var(--squat-unit));
+    width:max-content;max-width:100%;min-width:calc(163 * var(--squat-unit));min-height:max(44px,calc(57 * var(--squat-unit)));
+    margin:calc(10 * var(--squat-unit)) 0 0;padding:calc(16.5 * var(--squat-unit));border:0;border-radius:calc(24 * var(--squat-unit));
+    font-family:"Montserrat",sans-serif;font-size:calc(14 * var(--squat-unit));line-height:calc(17 * var(--squat-unit));font-weight:600;letter-spacing:0;
+    background:transparent;color:#f97316;box-shadow:inset 0 0 0 calc(.5 * var(--squat-unit)) #f97316}
+  #start.squatPrep #go::before{content:"";flex:none;width:calc(24 * var(--squat-unit));height:calc(24 * var(--squat-unit));
+    background:url('./assets/figma/squat-camera.svg') center/100% 100% no-repeat}
+  #start.squatPrep #go:active:not(:disabled){box-shadow:inset 0 0 0 calc(.5 * var(--squat-unit)) #f97316}
   #start.squatPrep #err{order:5}
+  @supports(text-box-trim:trim-both){
+    #start.squatPrep h2{line-height:normal;text-box-trim:trim-both;text-box-edge:cap alphabetic}
+  }
 
   #hall,#board{background:#0b0d10}
   #hall{width:min(100%,430px);padding:16px 20px calc(env(safe-area-inset-bottom) + 105px)}
@@ -1147,24 +1183,77 @@
     #board:not(.hidden)~#mainNav>button#navBoard.active span{font-size:9px}
     #board:not(.hidden)~#mainNav>#navBattle{width:56px;height:56px;min-height:56px;margin-top:4px}
   }
-  /* Home-Today 430px reference: scale the exported navigation with the cards. */
-  #menu:not(.hidden)~#mainNav{--home-unit:calc(min(100vw,430px) / 430);width:calc(390 * var(--home-unit));height:calc(65 * var(--home-unit));
+
+  /* Home, Rank, Push Up and Squat preparation 430px references: scale the exported navigation with the cards. */
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav,#menu:not(.hidden)~#mainNav,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden)){--home-unit:calc(min(100vw,430px) / 430);width:calc(390 * var(--home-unit));height:calc(65 * var(--home-unit));
     bottom:calc(env(safe-area-inset-bottom) + 20 * var(--home-unit));gap:calc(14 * var(--home-unit));padding:0}
-  #menu:not(.hidden)~#mainNav::before{width:calc(297 * var(--home-unit));height:100%;border:0;
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav::before,#menu:not(.hidden)~#mainNav::before,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))::before{width:calc(297 * var(--home-unit));height:100%;border:0;
     border-radius:calc(50 * var(--home-unit));box-shadow:inset 0 0 0 calc(.5 * var(--home-unit)) #20252d}
-  #menu:not(.hidden)~#mainNav>button:not(#navBattle){width:calc(44 * var(--home-unit));height:calc(44 * var(--home-unit));min-height:0;
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button:not(#navBattle),#menu:not(.hidden)~#mainNav>button:not(#navBattle),#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))>button:not(#navBattle){width:calc(44 * var(--home-unit));height:calc(44 * var(--home-unit));min-height:0;
     margin:calc(10 * var(--home-unit)) 0 0;padding:calc(10 * var(--home-unit));gap:calc(10 * var(--home-unit));border-radius:calc(30 * var(--home-unit))}
-  #menu:not(.hidden)~#mainNav>button:not(#navBattle):first-of-type{margin-left:calc(10 * var(--home-unit))}
-  #menu:not(.hidden)~#mainNav>button:not(#navBattle).active{width:calc(102 * var(--home-unit));background:radial-gradient(97.01% 97.01% at 50% 96.61%,rgba(249,115,22,.2) 0%,rgba(255,255,255,0) 100%)}
-  #menu:not(.hidden)~#mainNav>button:not(#navBattle) img{width:calc(24 * var(--home-unit));height:calc(24 * var(--home-unit));opacity:1;filter:none}
-  #menu:not(.hidden)~#mainNav>button:not(#navBattle) span{font-family:"Montserrat",sans-serif;font-size:calc(11 * var(--home-unit));line-height:calc(13 * var(--home-unit));font-weight:400}
-  #menu:not(.hidden)~#mainNav>button.active::after{left:50%;right:auto;transform:translateX(-50%);width:calc(60.6094 * var(--home-unit));height:calc(4 * var(--home-unit))}
-  #menu:not(.hidden)~#mainNav>#navBattle{width:calc(65 * var(--home-unit));height:calc(65 * var(--home-unit));min-height:0;margin-left:calc(25 * var(--home-unit));gap:0;
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button:not(#navBattle):first-of-type,#menu:not(.hidden)~#mainNav>button:not(#navBattle):first-of-type,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))>button:not(#navBattle):first-of-type{margin-left:calc(10 * var(--home-unit))}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button:not(#navBattle).active,#menu:not(.hidden)~#mainNav>button:not(#navBattle).active,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))>button:not(#navBattle).active{width:calc(102 * var(--home-unit));background:radial-gradient(97.01% 97.01% at 50% 96.61%,rgba(249,115,22,.2) 0%,rgba(255,255,255,0) 100%)}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button:not(#navBattle) img,#menu:not(.hidden)~#mainNav>button:not(#navBattle) img,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))>button:not(#navBattle) img{width:calc(24 * var(--home-unit));height:calc(24 * var(--home-unit));opacity:1;filter:none}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button:not(#navBattle) span,#menu:not(.hidden)~#mainNav>button:not(#navBattle) span,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))>button:not(#navBattle) span{font-family:"Montserrat",sans-serif;font-size:calc(11 * var(--home-unit));line-height:calc(13 * var(--home-unit));font-weight:400}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button.active::after,#menu:not(.hidden)~#mainNav>button.active::after,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))>button.active::after{left:50%;right:auto;transform:translateX(-50%);width:calc(60.6094 * var(--home-unit));height:calc(4 * var(--home-unit))}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>#navBattle,#menu:not(.hidden)~#mainNav>#navBattle,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))>#navBattle{width:calc(65 * var(--home-unit));height:calc(65 * var(--home-unit));min-height:0;margin-left:calc(25 * var(--home-unit));gap:0;
     border-radius:calc(38 * var(--home-unit));background:linear-gradient(180deg,rgba(249,115,22,.2) -30.35%,rgba(249,115,22,0) 104.12%);
     box-shadow:inset 0 calc(-3 * var(--home-unit)) calc(13 * var(--home-unit)) rgba(251,191,36,.2)}
-  #menu:not(.hidden)~#mainNav .navBattleOrb,#menu:not(.hidden)~#mainNav .navBattleOrb img{width:calc(20 * var(--home-unit));height:calc(20 * var(--home-unit))}
-  #menu:not(.hidden)~#mainNav .navBattleLabel{font-family:"Montserrat",sans-serif;font-size:calc(10 * var(--home-unit));line-height:calc(12 * var(--home-unit));font-weight:400}
-  #menu:not(.hidden)~#mainNav>button::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max(100%,44px);height:max(100%,44px)}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav .navBattleOrb,#board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav .navBattleOrb img,#menu:not(.hidden)~#mainNav .navBattleOrb,#menu:not(.hidden)~#mainNav .navBattleOrb img,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden)) .navBattleOrb,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden)) .navBattleOrb img{width:calc(20 * var(--home-unit));height:calc(20 * var(--home-unit))}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav .navBattleLabel,#menu:not(.hidden)~#mainNav .navBattleLabel,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden)) .navBattleLabel{font-family:"Montserrat",sans-serif;font-size:calc(10 * var(--home-unit));line-height:calc(12 * var(--home-unit));font-weight:400}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button::before,#menu:not(.hidden)~#mainNav>button::before,#mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden),~:where(#play:not(.hidden)) #start.squatPrep:not(.hidden))>button::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max(100%,44px);height:max(100%,44px)}
+
+  #board:has(#boardDetail:not(.hidden)){--rank-unit:calc(min(100vw,430px) / 430);padding-bottom:calc(env(safe-area-inset-bottom) + 240 * var(--rank-unit))}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button#navHome img,#board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button#navBoard img{opacity:0}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button#navHome::before,#board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button#navBoard::before{left:calc(22 * var(--home-unit));background:#a5abb5;
+    mask:url('./assets/figma/nav-home.svg') center/calc(24 * var(--home-unit)) calc(24 * var(--home-unit)) no-repeat}
+  #board:not(.hidden):has(#boardDetail:not(.hidden))~#mainNav>button#navBoard::before{background:#f8fafc;mask-image:url('./assets/figma/nav-rank.svg')}
+
+  #mainNav:has(~#play:not(.hidden) #start.squatPrep:not(.hidden))>#navHome img,
+  #mainNav:has(~#play:not(.hidden) #start.squatPrep:not(.hidden))>#navSquat img{opacity:0}
+  #mainNav:has(~#play:not(.hidden) #start.squatPrep:not(.hidden))>#navHome::before,
+  #mainNav:has(~#play:not(.hidden) #start.squatPrep:not(.hidden))>#navSquat::before{left:calc(22 * var(--home-unit));background:#a5abb5;
+    mask:url('./assets/figma/nav-home.svg') center/calc(24 * var(--home-unit)) calc(24 * var(--home-unit)) no-repeat}
+  #mainNav:has(~#play:not(.hidden) #start.squatPrep:not(.hidden))>#navSquat::before{background:#f8fafc;mask-image:url('./assets/figma/nav-squat.svg')}
+
+  /* Push Up chooser 450:10239, not Home-Today despite the exported frame name.
+     Reference: 430x932; its 126.79px host header is outside the mini-app. */
+  #mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden))>#navHome img,
+  #mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden))>#navPush img{opacity:0}
+  #mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden))>#navHome::before,
+  #mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden))>#navPush::before{left:calc(22 * var(--home-unit));background:#a5abb5;
+    mask:url('./assets/figma/nav-home.svg') center/calc(24 * var(--home-unit)) calc(24 * var(--home-unit)) no-repeat}
+  #mainNav:has(~#pushChoice[data-exercise="pushup"]:not(.hidden))>#navPush::before{background:#f8fafc;mask-image:url('./assets/figma/nav-push.svg')}
+  #pushChoice[data-exercise="pushup"]{--choice-unit:calc(min(100vw,430px) / 430);width:min(100%,430px);margin-inline:auto;
+    padding:calc(env(safe-area-inset-top) + 159.21 * var(--choice-unit)) calc(20 * var(--choice-unit)) calc(env(safe-area-inset-bottom) + 105 * var(--choice-unit));
+    overflow-x:hidden;overflow-y:auto;scrollbar-width:none;scroll-padding-bottom:calc(env(safe-area-inset-bottom) + 105 * var(--choice-unit));
+    -webkit-text-size-adjust:100%;text-size-adjust:100%;background:#0b0d10}
+  #pushChoice[data-exercise="pushup"]::-webkit-scrollbar{display:none}
+  #pushChoice[data-exercise="pushup"] .pushChoiceShell{display:flex;flex-direction:column;width:100%;min-width:0;gap:calc(12 * var(--choice-unit));flex-shrink:0}
+  #pushChoice[data-exercise="pushup"] .pushChoiceHead{display:flex;flex-direction:column;align-items:flex-start;gap:calc(14 * var(--choice-unit));margin:0 0 calc(2 * var(--choice-unit))}
+  #pushChoice[data-exercise="pushup"] .pushChoiceHead h2{font-family:"Benzin",sans-serif;font-size:calc(36 * var(--choice-unit));font-weight:400;
+    min-height:calc(27 * var(--choice-unit));line-height:calc(27 * var(--choice-unit));letter-spacing:0;color:#fff}
+  #pushChoice[data-exercise="pushup"] .pushChoiceHead p{margin:0;font-family:"Montserrat",sans-serif;font-size:calc(14 * var(--choice-unit));line-height:calc(17 * var(--choice-unit));font-weight:400;color:#fff}
+  #pushChoice[data-exercise="pushup"] .pushChoiceCard{min-height:calc(85.32 * var(--choice-unit));padding:calc(16.5 * var(--choice-unit));
+    grid-template-columns:calc(52.32 * var(--choice-unit)) minmax(0,1fr) calc(24 * var(--choice-unit));gap:calc(12 * var(--choice-unit));
+    border:0;border-radius:calc(24 * var(--choice-unit));box-shadow:inset 0 0 0 calc(.5 * var(--choice-unit)) #20252d;backdrop-filter:none;
+    background:radial-gradient(97.01% 97.01% at 50% 96.61%,rgba(249,115,22,.2) 0%,rgba(255,255,255,0) 100%)}
+  #pushChoice[data-exercise="pushup"] .pushChoiceCard.game{min-height:calc(93 * var(--choice-unit));
+    background:radial-gradient(65.39% 65.39% at 50% 101.11%,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 100%),#181c22}
+  #pushChoice[data-exercise="pushup"] .pushChoiceIcon{position:relative;width:calc(52.32 * var(--choice-unit));height:calc(52.32 * var(--choice-unit));border-radius:calc(12 * var(--choice-unit));
+    background:radial-gradient(97.01% 97.01% at 50% 96.61%,rgba(249,115,22,.2) 0%,rgba(255,255,255,0) 100%)}
+  #pushChoice[data-exercise="pushup"] .game .pushChoiceIcon{background:rgba(255,255,255,.1)}
+  /* Exported SVG bounds include half of the 0.953353px stroke outside each edge. */
+  #pushChoice[data-exercise="pushup"] .pushChoiceIcon img{position:absolute;max-width:none;max-height:none;
+    left:calc(6.5233235 * var(--choice-unit));top:calc(15.5233235 * var(--choice-unit));width:calc(38.3629 * var(--choice-unit));height:calc(20.3064 * var(--choice-unit))}
+  #pushChoice[data-exercise="pushup"] .game .pushChoiceIcon img{left:calc(8.5233235 * var(--choice-unit));top:calc(7.5233235 * var(--choice-unit));width:calc(34.6403 * var(--choice-unit));height:calc(37.2833 * var(--choice-unit))}
+  #pushChoice[data-exercise="pushup"] .pushChoiceText{min-width:0;display:flex;flex-direction:column;gap:calc(8 * var(--choice-unit));font-family:"Montserrat",sans-serif}
+  #pushChoice[data-exercise="pushup"] .pushChoiceText strong{font-size:calc(18 * var(--choice-unit));line-height:calc(22 * var(--choice-unit));font-weight:700;letter-spacing:0}
+  #pushChoice[data-exercise="pushup"] .pushChoiceText small{margin:0;font-size:calc(12 * var(--choice-unit));line-height:calc(15 * var(--choice-unit));font-weight:400;letter-spacing:0}
+  #pushChoice[data-exercise="pushup"] .pushChoiceArrow{width:calc(24 * var(--choice-unit));height:calc(24 * var(--choice-unit))}
+  @supports(text-box-trim:trim-both){
+    #pushChoice[data-exercise="pushup"] .pushChoiceHead h2{line-height:normal;text-box-trim:trim-both;text-box-edge:cap alphabetic}
+  }
 </style>
 </head>
 <body>
@@ -1358,9 +1447,9 @@
       </div>
       <div class="rankStage">
         <div id="boardTabs" data-active="pushup" role="group" data-i18n-aria-label="boardTitle" aria-label="Лиг ба байр">
+          <span class="boardTabsPill" aria-hidden="true"></span>
           <svg class="rankTabArt" viewBox="0 0 430 94.343" aria-hidden="true" focusable="false">
             <defs><path id="rankLabelArc" d="M-78.54 210.99 A293.54 197.47 0 0 1 508.54 210.99"/></defs>
-            <path class="boardTabsPill" aria-hidden="true" d="M-67.296 227.759 A282.296 194.565 0 0 1 497.296 227.759" pathLength="100"/>
             <text class="rankTabPush" text-anchor="middle"><textPath href="#rankLabelArc" startOffset="28.91%" data-i18n="leaderboardPushup">Push-up</textPath></text>
             <text class="rankTabSquat" text-anchor="middle"><textPath href="#rankLabelArc" startOffset="43.06%" data-i18n="leaderboardSquat">Squat</textPath></text>
             <text class="rankTabBattle" text-anchor="middle"><textPath href="#rankLabelArc" startOffset="60.21%" data-i18n="leaderboardBattle">Battle ELO</textPath></text>
@@ -1404,7 +1493,7 @@
 </nav>
 
 <!-- ================= PUSH UP ГОРИМ ================= -->
-<section id="pushChoice" class="screen hidden" aria-labelledby="pushChoiceTitle">
+<section id="pushChoice" class="screen hidden" data-exercise="pushup" aria-labelledby="pushChoiceTitle">
   <div class="pushChoiceShell">
     <header class="pushChoiceHead">
       <h2 id="pushChoiceTitle"><span id="pushChoiceTitleMain">Push </span><span id="pushChoiceTitleAccent" class="pushChoiceTitleAccent">Up</span></h2>
@@ -1414,7 +1503,7 @@
       <span class="pushChoiceIcon" aria-hidden="true">
         <img src="./assets/figma/push-choice-2.svg" alt="" width="38" height="21" decoding="async">
       </span>
-      <span class="pushChoiceText"><strong data-i18n="pushModeNormalTitle">Энгийн</strong><small id="pushNormalDescription" data-i18n="pushModeNormalDescription">Зөв push-up бүрийг AI тоолно</small></span>
+      <span class="pushChoiceText"><strong data-i18n="pushModeNormalTitle">Энгийн</strong><small id="pushNormalDescription" data-i18n="pushModeNormalDescription">Зөв суниалт бүрийг AI тоолно</small></span>
       <img class="pushChoiceArrow" src="./assets/figma/push-choice-4.svg" alt="" width="24" height="24" aria-hidden="true">
     </button>
     <button id="pushGame" class="pushChoiceCard game" type="button">
@@ -1546,6 +1635,7 @@
 
   <div id="start">
     <h2 id="startTitle" data-i18n="startTitlePushup">Push Up</h2>
+    <p id="squatPlacementHint" data-i18n-html="squatPlacementHint">Утсаа <b>2–3</b> метрийн зайд, ташааны өндөрт байрлуулна уу.</p>
     <svg id="howtoPush" class="howto" viewBox="0 0 280 168" aria-label="Тохойгоо задгай байлгах зураг" data-i18n-aria-label="pushupInstructionImageLabel">
       <line x1="18" y1="132" x2="262" y2="132" stroke="rgba(255,255,255,.28)" stroke-width="3"/>
       <path d="M140,70 L140,106" stroke="#ff6a3d" stroke-width="6" stroke-linecap="round"/>
@@ -1563,7 +1653,7 @@
       <text x="140" y="160" text-anchor="middle" font-size="13" font-weight="700" data-i18n="pushupInstructionCaption"
             fill="#ffd21e">тохой хоёулаа ил, задгай</text>
     </svg>
-    <img id="howtoSquat" class="howto hidden" src="./assets/figma/squat-guide.svg" alt="" aria-hidden="true">
+    <img id="howtoSquat" class="howto hidden" src="./assets/figma/squat-guide.svg" width="296.55" height="207.96" alt="" aria-hidden="true">
     <img id="howtoGame" class="howto hidden" src="./assets/flappy/game-howto-v2.webp"
          width="840" height="504" alt="Шувууг дээш доош хөдөлгөн хоолойн завсраар гаргах заавар" data-i18n-alt="flappyInstructionImageLabel"
          aria-label="Шувууг дээш доош хөдөлгөн хоолойн завсраар гаргах заавар" data-i18n-aria-label="flappyInstructionImageLabel">
@@ -5565,7 +5655,10 @@ function renderRankRow(player){
   name.textContent = player.name || player.userId;
   const total = document.createElement("div");
   total.className = "tot";
-  total.append(document.createTextNode(boardNumber.format(player.score)));
+  const value = document.createElement("span");
+  value.className = "rankScoreValue";
+  value.textContent = boardNumber.format(player.score);
+  total.appendChild(value);
   const unit = document.createElement("small");
   unit.textContent = boardUnit();
   total.appendChild(unit);
@@ -5616,6 +5709,7 @@ async function loadBoard(metric){
 function openPushChoice(kind = "pushup"){
   stopCamera();
   choiceExercise = kind === "squat" ? "squat" : "pushup";
+  $("pushChoice").dataset.exercise = choiceExercise;
   soloVariant = "normal";
   const squat = choiceExercise === "squat";
   const choiceTitle = t(squat ? "squatTitle" : "pushChoiceTitle");
@@ -5638,15 +5732,19 @@ function openSolo(kind, variant = "normal"){
   resetBattleCountdown();
   $("play").classList.remove("duel");
   $("play").classList.remove("squat-duel");
-  $("startTitle").textContent = t(isGame
+  const startTitleKey = isGame
     ? (squat ? "squatBirdTitle" : "pushupBirdTitle")
-    : (squat ? "squatTitle" : "pushupTitle"));
+    : (squat ? "squatPrepTitle" : "pushupTitle");
+  $("startTitle").dataset.i18n = startTitleKey;
+  $("startTitle").textContent = t(startTitleKey);
   $("howtoPush").classList.toggle("hidden", squat || isGame);
   $("howtoSquat").classList.toggle("hidden", !squat || isGame);
   $("howtoGame").classList.toggle("hidden", !isGame);
-  $("startHint").innerHTML = t(isGame
+  const startHintKey = isGame
     ? (squat ? "squatGameStartHint" : "gameStartHint")
-    : (squat ? "squatStartHint" : "pushupStartHint"));
+    : (squat ? "squatFacingHint" : "pushupStartHint");
+  $("startHint").dataset.i18nHtml = startHintKey;
+  $("startHint").innerHTML = t(startHintKey);
   if(isGame){
     const repKey = squat ? "squatGameRepsName" : "pushGameRepsName";
     $("pushGameRepName").dataset.i18n = repKey;
