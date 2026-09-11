@@ -15,7 +15,7 @@ for (const exercise of ['pushup','squat']) for (const variant of ['normal','game
     const context={mode:'solo',exercise,soloVariant:variant,sdk:()=>sdk,queueMicrotask,
       $:id=>({classList:{contains:()=>screen!==id}}),
       document:{visibilityState:'visible',addEventListener:(name,fn)=>{events[name]=fn}},
-      window:{addEventListener:(name,fn)=>{events[name]=fn},BackDiagnostics:{record:(event,screen)=>trace.push({event,screen})}},
+      window:{HostBack:sdk,addEventListener:(name,fn)=>{events[name]=fn},BackDiagnostics:{record:(event,screen)=>trace.push({event,screen})}},
       stopCamera:()=>{stopped++},
       openPushChoice:kind=>{assert.equal(kind,exercise);screen='pushChoice';context.setBack(screen)},
       show:id=>{screen=id;context.setBack(id)},
