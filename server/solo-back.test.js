@@ -7,11 +7,11 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 const source = html.slice(html.indexOf('function setBack('), html.indexOf('function show('))
 
 for (const exercise of ['pushup','squat']) for (const variant of ['normal','game']) {
-  test(`${exercise}/${variant}: resumed camera screen backs to chooser, then Home`, () => {
+  test(`${exercise}/${variant}: resumed camera screen backs to chooser, then Home`, async () => {
     let screen='play', callback=null, stopped=0
     const events={}
     const sdk={claimBackButton:fn=>{callback=fn},releaseBackButton:()=>{callback=null}}
-    const context={mode:'solo',exercise,soloVariant:variant,sdk:()=>sdk,
+    const context={mode:'solo',exercise,soloVariant:variant,sdk:()=>sdk,queueMicrotask,
       $:id=>({classList:{contains:()=>screen!==id}}),
       document:{visibilityState:'visible',addEventListener:(name,fn)=>{events[name]=fn}},
       window:{addEventListener:(name,fn)=>{events[name]=fn}},
@@ -27,9 +27,18 @@ for (const exercise of ['pushup','squat']) for (const variant of ['normal','game
       assert.equal(typeof callback,'function')
     }
     let press=callback;callback=null;press() // SDK consumes the claim before invoking it
+    callback=null // destination claim is lost during the host back event
+    await new Promise(resolve=>queueMicrotask(resolve))
     assert.equal(screen,'pushChoice')
     assert.equal(stopped,1)
+    assert.equal(typeof callback,'function')
+    for(const event of ['focus','pageshow','visibilitychange']) {
+      callback=null
+      events[event]()
+      assert.equal(typeof callback,'function')
+    }
     press=callback;callback=null;press()
+    await new Promise(resolve=>queueMicrotask(resolve))
     assert.equal(screen,'menu')
     events.focus()
     assert.equal(callback,null)

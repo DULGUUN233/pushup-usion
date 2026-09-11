@@ -2498,6 +2498,11 @@ async function loadProfile(){
 function setBack(id){
   const u = sdk();
   if(!u?.claimBackButton) return;
+  const claim = onBack => u.claimBackButton(() => {
+    onBack();
+    // Re-arm the destination after the one-shot back event has finished.
+    queueMicrotask(restoreSoloBack);
+  });
 
   // Цэс бол үндэс — хаах нь зөв. Тулаанд ч ЗОРИУДААР авахгүй: rated
   // тулааныг санамсаргүй даралтаар орхих ёсгүй, гарах нь «Гарах» товчоор
@@ -2509,16 +2514,15 @@ function setBack(id){
   // Хүлээлгийн өрөөнөөс буцах нь аюулгүй — тулаан хараахан эхлээгүй.
   // Өрөөгөө үлдээхгүйн тулд `leaveBattle` дуудна: урилга үхэж, найз хоосон
   // өрөө рүү орохгүй.
-  if(id === "hall") return void u.claimBackButton(() => leaveBattle());
-  if(id === "pushChoice") return void u.claimBackButton(() => show("menu"));
-  if(id === "board") return void u.claimBackButton(() => {
+  if(id === "hall") return void claim(() => leaveBattle());
+  if(id === "pushChoice") return void claim(() => show("menu"));
+  if(id === "board") return void claim(() => {
     if(!$('boardDetail').classList.contains('hidden')) showBoardHub(true);
     else show('menu');
   });
 
-  // Дахин авахгүй: `show` нь очих дэлгэцийн төлөвийг өөрөө тавина. Энд
-  // дахин авбал цэсэн дээрх суллалтыг дарж, аппыг хаах боломжгүй болно.
-  u.claimBackButton(() => {
+  // Reclaim only a visible exercise screen, never the root close action.
+  claim(() => {
     if(id === "play") stopCamera();
     if(id === "play" && mode === "solo") openPushChoice(exercise);
     else show("menu");
@@ -2526,10 +2530,11 @@ function setBack(id){
 }
 
 // Native camera permission can suspend the WebView and reset the host's claim.
-// Restore only the current solo screen; never override the root close action.
+// Restore the chooser as well as the camera screen; leave root/Battle alone.
 function restoreSoloBack(){
   if(document.visibilityState === "hidden") return;
-  if(mode === "solo" && !$('play').classList.contains('hidden')) setBack("play");
+  if(!$('pushChoice').classList.contains('hidden')) setBack("pushChoice");
+  else if(mode === "solo" && !$('play').classList.contains('hidden')) setBack("play");
 }
 window.addEventListener("focus", restoreSoloBack);
 window.addEventListener("pageshow", restoreSoloBack);
