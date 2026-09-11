@@ -18,6 +18,7 @@
 <link rel="preload" as="font" href="./assets/fonts/Benzin-Bold.ttf" type="font/ttf" crossorigin>
 <link rel="preload" as="font" href="./assets/fonts/Montserrat-Variable.ttf" type="font/ttf" crossorigin>
 <script src="https://usions.com/usion-sdk.js"></script>
+<script src="./assets/back-diagnostics.js" defer></script>
 <script src="./assets/i18n-v1.js?v=7"></script>
 <style>
   @font-face{font-family:"Montserrat";src:url('./assets/fonts/Montserrat-Variable.ttf') format('truetype');font-style:normal;font-weight:100 900;font-display:swap}
@@ -2497,17 +2498,27 @@ async function loadProfile(){
  */
 function setBack(id){
   const u = sdk();
-  if(!u?.claimBackButton) return;
-  const claim = onBack => u.claimBackButton(() => {
-    onBack();
-    // Re-arm the destination after the one-shot back event has finished.
-    queueMicrotask(restoreSoloBack);
-  });
+  const trace = event => window.BackDiagnostics?.record(event, id);
+  if(!u?.claimBackButton){ trace("claim-unavailable"); return; }
+  const claim = onBack => {
+    trace("claim-call");
+    try {
+      u.claimBackButton(() => {
+        trace("back-callback");
+        try { onBack(); } catch(error) { trace("back-handler-error"); throw error; }
+        trace("back-handler-done");
+        // Re-arm the destination after the one-shot back event has finished.
+        queueMicrotask(restoreSoloBack);
+      });
+      trace("claim-returned"); // Not an acknowledgement from the host.
+    } catch(error) { trace("claim-error"); throw error; }
+  };
 
   // Цэс бол үндэс — хаах нь зөв. Тулаанд ч ЗОРИУДААР авахгүй: rated
   // тулааныг санамсаргүй даралтаар орхих ёсгүй, гарах нь «Гарах» товчоор
   // л байна. chess-puzzle яг ижил шийдэлтэй.
   if(id === "menu" || (id === "play" && mode === "battle")){
+    trace("release-call");
     return void u.releaseBackButton?.();
   }
 
@@ -5940,6 +5951,7 @@ document.addEventListener("visibilitychange", () => {
 
 setBootProgress(5);
 launchCfg = await usionInit();
+window.BackDiagnostics?.record(launchCfg ? "init-config" : "init-no-config");
 const platformLanguage = detectLang(launchCfg);
 if(platformLanguage !== i18n.language){
   applyLang(platformLanguage);

@@ -10,11 +10,12 @@ for (const exercise of ['pushup','squat']) for (const variant of ['normal','game
   test(`${exercise}/${variant}: resumed camera screen backs to chooser, then Home`, async () => {
     let screen='play', callback=null, stopped=0
     const events={}
+    const trace=[]
     const sdk={claimBackButton:fn=>{callback=fn},releaseBackButton:()=>{callback=null}}
     const context={mode:'solo',exercise,soloVariant:variant,sdk:()=>sdk,queueMicrotask,
       $:id=>({classList:{contains:()=>screen!==id}}),
       document:{visibilityState:'visible',addEventListener:(name,fn)=>{events[name]=fn}},
-      window:{addEventListener:(name,fn)=>{events[name]=fn}},
+      window:{addEventListener:(name,fn)=>{events[name]=fn},BackDiagnostics:{record:(event,screen)=>trace.push({event,screen})}},
       stopCamera:()=>{stopped++},
       openPushChoice:kind=>{assert.equal(kind,exercise);screen='pushChoice';context.setBack(screen)},
       show:id=>{screen=id;context.setBack(id)},
@@ -31,6 +32,9 @@ for (const exercise of ['pushup','squat']) for (const variant of ['normal','game
     await new Promise(resolve=>queueMicrotask(resolve))
     assert.equal(screen,'pushChoice')
     assert.equal(stopped,1)
+    assert.ok(trace.some(row=>row.event==='claim-returned' && row.screen==='play'))
+    assert.ok(trace.some(row=>row.event==='back-callback' && row.screen==='play'))
+    assert.ok(trace.some(row=>row.event==='back-handler-done' && row.screen==='play'))
     assert.equal(typeof callback,'function')
     for(const event of ['focus','pageshow','visibilitychange']) {
       callback=null
